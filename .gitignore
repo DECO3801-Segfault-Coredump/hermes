@@ -56,12 +56,6 @@ www-test/
 ## TeaVM:
 # Not sure yet...
 
-## IntelliJ, Android Studio:
-.idea/
-*.ipr
-*.iws
-*.iml
-
 ## Eclipse:
 .classpath
 .project

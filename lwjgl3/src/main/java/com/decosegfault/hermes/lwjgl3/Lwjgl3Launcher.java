@@ -5,11 +5,20 @@ import com.badlogic.gdx.backends.lwjgl3.Lwjgl3ApplicationConfiguration;
 import com.decosegfault.hermes.HermesGame;
 import org.tinylog.Logger;
 
+import java.io.File;
+
 /** Launches the desktop (LWJGL3) application. */
 public class Lwjgl3Launcher {
     public static void main(String[] args) {
         if (StartupHelper.startNewJvmIfRequired()) return; // This handles macOS support and helps on Windows.
         Logger.info("DECO3801 Hermes Traffic Simulator, by Team Segmentation fault (core dumped)");
+        Logger.info("Working dir: " + new File(".").getAbsolutePath());
+
+        Thread.setDefaultUncaughtExceptionHandler((thread, throwable) -> {
+            Logger.error("Uncaught exception in thread " + thread.getName() + ": " + throwable);
+            Logger.error(throwable);
+        });
+
         createApplication();
     }
 

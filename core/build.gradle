@@ -28,4 +28,7 @@ dependencies {
 
   api 'org.tinylog:tinylog-api-kotlin:2.6.1'
   api 'org.tinylog:tinylog-impl:2.6.2'
+
+  // this is just for the GL profiler
+  api "com.badlogicgames.gdx:gdx-backend-lwjgl3:$gdxVersion"
 }
