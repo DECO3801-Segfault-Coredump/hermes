@@ -4,11 +4,14 @@ import com.badlogic.gdx.Game
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.Input
 import com.badlogic.gdx.ScreenAdapter
-import com.badlogic.gdx.graphics.Texture
+import com.badlogic.gdx.graphics.g2d.Animation
+import com.badlogic.gdx.graphics.g2d.TextureAtlas
 import com.badlogic.gdx.scenes.scene2d.Stage
 import com.badlogic.gdx.scenes.scene2d.ui.*
 import com.badlogic.gdx.utils.viewport.ScreenViewport
 import ktx.app.clearScreen
+import org.tinylog.kotlin.Logger
+import kotlin.concurrent.thread
 
 private enum class LoadingStage(val text: String) {
     STARTING_TILESERVER("Starting tile server..."),
@@ -25,31 +28,50 @@ class LoadingScreen(private val game: Game) : ScreenAdapter() {
     private lateinit var stage: Stage
     private lateinit var label: Label
     private var currentStage = LoadingStage.STARTING_TILESERVER
-    private lateinit var whatTheScallop: Texture
-    private lateinit var loader: Image
+    private lateinit var bkLoader: TextureAtlas
+    private lateinit var loader: ImageAnimation
 
     override fun show() {
         skin = Skin(Gdx.files.internal("ui/uiskin.json"))
         stage = Stage(ScreenViewport())
-        whatTheScallop = Texture(Gdx.files.internal("sprite/whatthescallop.jpg"))
+        bkLoader = TextureAtlas(Gdx.files.internal("sprite/bkloader.atlas"))
 
         label = Label(currentStage.text, skin, "window")
         label.pack()
 
-        loader = Image(whatTheScallop)
-        loader.setSize(128.0f, 128.0f)
+        loader = ImageAnimation()
+        loader.setAnimation(Animation(0.1f, bkLoader.regions))
         loader.setOrigin(64.0f, 64.0f)
         loader.pack()
 
         val container = Table()
-        container.add(loader).maxWidth(128.0f).minWidth(128.0f).width(128.0f).height(128.0f)
-        container.row()
+        container.add(loader).width(160.0f).height(120.0f)
+        container.row().pad(10.0f)
         container.add(label)
         container.setFillParent(true)
         container.center()
         container.pack()
 
         stage.addActor(container)
+
+        // run checks outside of render loop so we don't block render
+        thread(isDaemon = true) {
+            // Start tile server
+            TileServerManager.maybeStartTileServer()
+            currentStage = LoadingStage.CHECKING_CONNECTIVITY
+
+            // Wait for tile server
+            Logger.debug("Checking tile server connectivity")
+            while (!TileServerManager.pollTileServer()) {
+                Thread.sleep(1000)
+            }
+            Thread.sleep(500)
+            currentStage = LoadingStage.LOADING_3D_ASSETS
+
+            // Load 3D assets
+            // TODO
+            currentStage = LoadingStage.DONE
+        }
     }
 
     override fun render(delta: Float) {
@@ -62,29 +84,8 @@ class LoadingScreen(private val game: Game) : ScreenAdapter() {
             Gdx.app.exit()
         }
 
-        loader.rotation += 100.0f * delta
-
-        // loading state machine
-        when (currentStage) {
-            LoadingStage.STARTING_TILESERVER -> {
-                TileServerManager.maybeStartTileServer()
-                currentStage = LoadingStage.CHECKING_CONNECTIVITY
-            }
-
-            LoadingStage.CHECKING_CONNECTIVITY -> {
-                // TODO
-                currentStage = LoadingStage.LOADING_3D_ASSETS
-            }
-
-            LoadingStage.LOADING_3D_ASSETS -> {
-                // TODO
-                currentStage = LoadingStage.DONE
-            }
-
-            LoadingStage.DONE -> {
-                // TODO change screens
-                game.screen = AtlasScreen(game)
-            }
+        if (currentStage == LoadingStage.DONE) {
+            game.screen = AtlasScreen(game)
         }
 
 //        if (ASSETS.update()) {
@@ -109,7 +110,7 @@ class LoadingScreen(private val game: Game) : ScreenAdapter() {
     override fun dispose() {
         skin.dispose()
         stage.dispose()
-        whatTheScallop.dispose()
+        bkLoader.dispose()
     }
 }
 

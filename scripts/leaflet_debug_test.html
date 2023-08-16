@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Custom Tile Server</title>
+
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <link rel="stylesheet" href="http://localhost:8080/leaflet.css"/>
+        <script src="http://localhost:8080/leaflet.js"></script>
+
+        <style>
+            html, body, #map {
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                padding: 0;
+            }
+        </style>
+    </head>
+
+    <body>
+        <div id="map"></div>
+
+        <script>
+            var map = L.map('map').setView([0, 0], 3);
+
+            L.tileLayer('http://localhost:8080/tile/{z}/{x}/{y}.png', {
+                maxNativeZoom: 20,
+                maxZoom: 32,
+                attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>',
+                id: 'base'
+            }).addTo(map);
+
+            // https://gis.stackexchange.com/questions/149062/display-tile-grid-borders-with-leaflet-visual-debugging
+            L.GridLayer.GridDebug = L.GridLayer.extend({
+              createTile: function (coords) {
+                const tile = document.createElement('div');
+                tile.style.outline = '1px solid green';
+                tile.style.fontWeight = 'bold';
+                tile.style.fontSize = '14pt';
+                tile.innerHTML = [coords.z, coords.x, coords.y].join('/');
+                return tile;
+              },
+            });
+
+            L.gridLayer.gridDebug = function (opts) {
+              return new L.GridLayer.GridDebug(opts);
+            };
+
+            map.addLayer(L.gridLayer.gridDebug());
+        </script>
+    </body>
+</html>
