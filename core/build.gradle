@@ -29,6 +29,7 @@ dependencies {
   api 'org.tinylog:tinylog-api-kotlin:2.6.1'
   api 'org.tinylog:tinylog-impl:2.6.2'
   api "com.github.mgsx-dev.gdx-gltf:gltf:-SNAPSHOT"
+  api "com.github.ben-manes.caffeine:caffeine:3.1.8"
 
   // this is just for the GL profiler
   api "com.badlogicgames.gdx:gdx-backend-lwjgl3:$gdxVersion"

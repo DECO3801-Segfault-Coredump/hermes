@@ -9,9 +9,11 @@ import com.badlogic.gdx.graphics.g2d.TextureAtlas
 import com.badlogic.gdx.scenes.scene2d.Stage
 import com.badlogic.gdx.scenes.scene2d.ui.*
 import com.badlogic.gdx.utils.viewport.ScreenViewport
+import com.decosegfault.atlas.Assets.ASSETS
 import ktx.app.clearScreen
 import org.tinylog.kotlin.Logger
 import kotlin.concurrent.thread
+import kotlin.math.roundToInt
 
 private enum class LoadingStage(val text: String) {
     STARTING_TILESERVER("Starting tile server..."),
@@ -66,11 +68,12 @@ class LoadingScreen(private val game: Game) : ScreenAdapter() {
                 Thread.sleep(1000)
             }
             Thread.sleep(500)
-            currentStage = LoadingStage.LOADING_3D_ASSETS
 
-            // Load 3D assets
-            // TODO
-            currentStage = LoadingStage.DONE
+            // 3D assets will now load in main thread
+            Logger.info("Loading assets")
+            Assets.load(ASSETS)
+            currentStage = LoadingStage.LOADING_3D_ASSETS
+            Thread.sleep(1000)
         }
     }
 
@@ -84,7 +87,16 @@ class LoadingScreen(private val game: Game) : ScreenAdapter() {
             Gdx.app.exit()
         }
 
-        if (currentStage == LoadingStage.DONE) {
+        if (currentStage == LoadingStage.LOADING_3D_ASSETS) {
+            if (ASSETS.update()) {
+                Logger.info("Done loading assets")
+                currentStage = LoadingStage.DONE
+            } else {
+                // not yet done
+                val completion = (ASSETS.progress * 100.0).roundToInt()
+                label.setText("Loading 3D assets... ($completion%)")
+            }
+        } else if (currentStage == LoadingStage.DONE) {
             game.screen = AtlasScreen(game)
         }
 

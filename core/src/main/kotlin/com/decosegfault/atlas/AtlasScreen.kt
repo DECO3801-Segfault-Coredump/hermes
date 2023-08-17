@@ -8,6 +8,7 @@ import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Graphics
 import com.badlogic.gdx.graphics.g2d.BitmapFont
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.gdx.graphics.profiling.GLProfiler
+import com.decosegfault.atlas.Assets.ASSETS
 import ktx.app.clearScreen
 import org.tinylog.kotlin.Logger
 
@@ -59,5 +60,6 @@ class AtlasScreen(private val game: Game) : Screen {
         font.dispose()
         batch.dispose()
         profiler.disable()
+        ASSETS.dispose()
     }
 }
