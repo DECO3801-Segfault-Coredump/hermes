@@ -11,7 +11,7 @@ import java.io.File;
 public class Lwjgl3Launcher {
     public static void main(String[] args) {
         if (StartupHelper.startNewJvmIfRequired()) return; // This handles macOS support and helps on Windows.
-        Logger.info("DECO3801 Hermes Traffic Simulator, by Team Segmentation fault (core dumped)");
+        Logger.info("DECO3801 Hermes Traffic Simulator, by Team Segmentation fault (core dumped) - UQ 2023 Semester 2");
         Logger.info("Working dir: " + new File(".").getAbsolutePath());
 
         Thread.setDefaultUncaughtExceptionHandler((thread, throwable) -> {

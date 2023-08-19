@@ -1,4 +1,4 @@
-package com.decosegfault.atlas;
+package com.decosegfault.atlas.util;
 
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;

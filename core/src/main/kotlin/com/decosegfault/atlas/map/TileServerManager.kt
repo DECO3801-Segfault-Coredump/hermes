@@ -1,16 +1,22 @@
-package com.decosegfault.atlas
+package com.decosegfault.atlas.map
 
+import com.badlogic.gdx.graphics.Pixmap
+import com.badlogic.gdx.math.Vector3
 import org.tinylog.kotlin.Logger
 import java.io.IOException
+import java.io.InputStream
 import java.net.URL
 import java.util.concurrent.TimeUnit
+import kotlin.math.roundToInt
 
 /**
- * This file manages starting the Docker tileserver
+ * This file manages the Docker tile server
+ *
+ * @author Matt Young
  */
 object TileServerManager {
     /** URL of the tile server */
-    private const val TILESERVER_URL = "http://localhost:8080/tile/{z}/{x}/{y}.png"
+    const val TILESERVER_URL = "http://localhost:8080/tile/{z}/{x}/{y}.png"
 
     /** Command to start the OSM docker container */
     private val DOCKER_START_CMD = "docker run -p 8080:80 -p 5432:5432 -e THREADS=16 -v osm-data:/data/database -v osm-tiles:/data/tiles -d overv/openstreetmap-tile-server run".split(" ")
@@ -58,25 +64,44 @@ object TileServerManager {
     }
 
     /**
+     * Fetch a tile from the tile server. Returns the PNG bytes if the response was successful, otherwise
+     * null.
+     * @param pos tile pos (x, y, zoom)
+     */
+    fun fetchTile(pos: Vector3): ByteArray? {
+        val url = URL(
+            TILESERVER_URL
+                .replace("{x}", pos.x.toInt().toString())
+                .replace("{y}", pos.y.toInt().toString())
+                .replace("{z}", pos.z.toInt().toString()))
+        Logger.debug("Fetching tile: $url")
+
+        var conn: InputStream? = null
+        return try {
+            conn = url.openStream()
+            val bytes = conn?.readAllBytes()
+            bytes
+        } catch (e: IOException) {
+            Logger.warn("Unable to contact tile server: $e")
+            null
+        } finally {
+            conn?.close()
+        }
+    }
+
+    /**
+     * Calls [fetchTile] and converts the result into a [Pixmap] if the URL returned a valid response
+     */
+    fun fetchTileAsPixmap(pos: Vector3): Pixmap? {
+        val bytes = fetchTile(pos) ?: return null
+        return Pixmap(bytes, 0, bytes.size)
+    }
+
+    /**
      * Polls the tile server for a response. Uses HttpUrlConnection, so **blocks thread**.
      * @return true if the tile server is up and running
      */
     fun pollTileServer(): Boolean {
-        val url = URL(TILESERVER_URL
-            .replace("{x}", "0")
-            .replace("{y}", "0")
-            .replace("{z}", "0"))
-        Logger.debug("Attempting to contact tile server on $url")
-
-        return try {
-            val conn = url.openStream()
-            conn.readAllBytes()
-            conn.close()
-            Logger.debug("Tile server confirmed running")
-            true
-        } catch (e: IOException) {
-            Logger.info("Unable to contact tile server: $e")
-            false
-        }
+        return fetchTile(Vector3.Zero) != null
     }
 }

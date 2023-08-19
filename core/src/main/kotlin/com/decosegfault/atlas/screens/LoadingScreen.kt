@@ -1,4 +1,4 @@
-package com.decosegfault.atlas
+package com.decosegfault.atlas.screens
 
 import com.badlogic.gdx.Game
 import com.badlogic.gdx.Gdx
@@ -7,9 +7,13 @@ import com.badlogic.gdx.ScreenAdapter
 import com.badlogic.gdx.graphics.g2d.Animation
 import com.badlogic.gdx.graphics.g2d.TextureAtlas
 import com.badlogic.gdx.scenes.scene2d.Stage
-import com.badlogic.gdx.scenes.scene2d.ui.*
+import com.badlogic.gdx.scenes.scene2d.ui.Label
+import com.badlogic.gdx.scenes.scene2d.ui.Skin
+import com.badlogic.gdx.scenes.scene2d.ui.Table
 import com.badlogic.gdx.utils.viewport.ScreenViewport
-import com.decosegfault.atlas.Assets.ASSETS
+import com.decosegfault.atlas.map.TileServerManager
+import com.decosegfault.atlas.util.Assets
+import com.decosegfault.atlas.util.ImageAnimation
 import ktx.app.clearScreen
 import org.tinylog.kotlin.Logger
 import kotlin.concurrent.thread
@@ -71,7 +75,7 @@ class LoadingScreen(private val game: Game) : ScreenAdapter() {
 
             // 3D assets will now load in main thread
             Logger.info("Loading assets")
-            Assets.load(ASSETS)
+            Assets.load(Assets.ASSETS)
             currentStage = LoadingStage.LOADING_3D_ASSETS
             Thread.sleep(1000)
         }
@@ -88,12 +92,12 @@ class LoadingScreen(private val game: Game) : ScreenAdapter() {
         }
 
         if (currentStage == LoadingStage.LOADING_3D_ASSETS) {
-            if (ASSETS.update()) {
+            if (Assets.ASSETS.update()) {
                 Logger.info("Done loading assets")
                 currentStage = LoadingStage.DONE
             } else {
                 // not yet done
-                val completion = (ASSETS.progress * 100.0).roundToInt()
+                val completion = (Assets.ASSETS.progress * 100.0).roundToInt()
                 label.setText("Loading 3D assets... ($completion%)")
             }
         } else if (currentStage == LoadingStage.DONE) {
@@ -125,4 +129,3 @@ class LoadingScreen(private val game: Game) : ScreenAdapter() {
         bkLoader.dispose()
     }
 }
-
