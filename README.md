@@ -43,10 +43,46 @@ Now, you can open the project in IntelliJ. You should also go to Settings (CTRL+
 -> Build, Execution & Deployment -> Build Tools -> Gradle, and change "Build and run using" _from_ Gradle to
 IntelliJ IDEA.
 
+## Editing
+Before writing code, please read `docs/guidelines.md` for some very loose code style guidelines. Please
+remember to add `@author <Your Name>` to each class you write or append your name to the list of authors.
+
 ## Running
 Run `Lwjgl3Launcher` in the "lwjgl3" subproject, or from the terminal use `./gradlew lwjgl3:run`. Log files
 are available in `${HOME}/Documents/DECOSegfault/hermes.log`
 
+You can make a release build with `./gradlew lwjgl3:jar`. This will write a runnable JAR file to lwjgl3/build/lib.
+This JAR file can be run anywhere with a JRE, and it includes all the app's assets.
+
+It should also be possible to use JPackager to generate bundled native binaries for Windows, Mac and Linux, but
+I haven't got around to doing this yet. If it does become necessary ping @matt.
+
+**Key bindings for SimulationScreen:**
+
+- ESCAPE: Quit
+- G: Show/hide debug info
+- ]: Purge LRUTileCache
+
 ## Licence
 Unfortunately (or fortunately, depending on who you ask), the University of Queensland owns all the IP to
 this project, so you'll have to talk to them.
+
+Hermes and Atlas use open-source data and 3D models, which are available in 
+[atlas_data_raw](https://github.com/DECO3801-Segfault-Coredump/atlas_data_raw).
+The following copyright applies to them:
+
+**Attribution**
+
+- OpenStreetMap by OpenStreetMap contributors
+    - Open Data Commons Open Database License
+    - https://www.openstreetmap.org/copyright
+- Bus model by Jotrain
+    - CC Attribution-NonCommercial-NoDerivs
+    - https://sketchfab.com/3d-models/brisbane-city-scania-l94ub-bus-rhd-8f41b49ba5344d3a8391a4c0d144d8e8
+    - TODO see if we can get a derivs licence to strip the interior
+- EMU train model by Jotrain
+    - CC Attribution-NonCommercial
+    - https://sketchfab.com/3d-models/queensland-rail-emu-low-poly-47f3a898ef624ec59bc29b0a3f6c23c1
+- Ferry model
+    - TODO
+    - TODO

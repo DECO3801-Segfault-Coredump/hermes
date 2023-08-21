@@ -7,7 +7,6 @@ import java.io.IOException
 import java.io.InputStream
 import java.net.URL
 import java.util.concurrent.TimeUnit
-import kotlin.math.roundToInt
 
 /**
  * This file manages the Docker tile server
@@ -16,7 +15,7 @@ import kotlin.math.roundToInt
  */
 object TileServerManager {
     /** URL of the tile server */
-    const val TILESERVER_URL = "http://localhost:8080/tile/{z}/{x}/{y}.png"
+    private const val TILESERVER_URL = "http://localhost:8080/tile/{z}/{x}/{y}.png"
 
     /** Command to start the OSM docker container */
     private val DOCKER_START_CMD = "docker run -p 8080:80 -p 5432:5432 -e THREADS=16 -v osm-data:/data/database -v osm-tiles:/data/tiles -d overv/openstreetmap-tile-server run".split(" ")
@@ -68,7 +67,7 @@ object TileServerManager {
      * null.
      * @param pos tile pos (x, y, zoom)
      */
-    fun fetchTile(pos: Vector3): ByteArray? {
+    private fun fetchTile(pos: Vector3): ByteArray? {
         val url = URL(
             TILESERVER_URL
                 .replace("{x}", pos.x.toInt().toString())

@@ -38,7 +38,7 @@ object Assets {
      * Loads all assets required into the specified AssetManager
      */
     fun load(assets: AssetManager) {
-        assets.logger.level = com.badlogic.gdx.utils.Logger.DEBUG
+//        assets.logger.level = com.badlogic.gdx.utils.Logger.DEBUG
         assets.setLoader(SceneAsset::class.java, ".gltf", GLTFAssetLoader())
         assets.setLoader(SceneAsset::class.java, ".glb", GLBAssetLoader())
 

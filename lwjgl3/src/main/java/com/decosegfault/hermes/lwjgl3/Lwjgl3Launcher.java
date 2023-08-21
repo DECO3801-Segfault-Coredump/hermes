@@ -2,7 +2,7 @@ package com.decosegfault.hermes.lwjgl3;
 
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Application;
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3ApplicationConfiguration;
-import com.decosegfault.hermes.HermesGame;
+import com.decosegfault.atlas.AtlasGame;
 import org.tinylog.Logger;
 
 import java.io.File;
@@ -23,7 +23,7 @@ public class Lwjgl3Launcher {
     }
 
     private static Lwjgl3Application createApplication() {
-        return new Lwjgl3Application(new HermesGame(), getDefaultConfiguration());
+        return new Lwjgl3Application(new AtlasGame(), getDefaultConfiguration());
     }
 
     private static Lwjgl3ApplicationConfiguration getDefaultConfiguration() {

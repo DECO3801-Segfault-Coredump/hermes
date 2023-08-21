@@ -4,12 +4,14 @@ import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.graphics.Pixmap
 import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.math.Vector3
+import com.badlogic.gdx.utils.Disposable
 import com.github.benmanes.caffeine.cache.AsyncLoadingCache
 import com.github.benmanes.caffeine.cache.Cache
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.github.benmanes.caffeine.cache.LoadingCache
 import ktx.assets.disposeSafely
 import org.tinylog.kotlin.Logger
+import java.util.concurrent.Executors
 import kotlin.math.roundToInt
 
 /**
@@ -18,7 +20,7 @@ import kotlin.math.roundToInt
  *
  * @author Matt Young
  */
-class LRUTileCache {
+class LRUTileCache : Disposable {
     /**
      * Mapping between (x, y, zoom) and the tile texture.
      *
@@ -38,19 +40,47 @@ class LRUTileCache {
     private val tileCache: Cache<Vector3?, Texture?> = Caffeine.newBuilder()
         .maximumSize(MAX_TILES_RAM)
         .removalListener { key: Vector3?, value: Texture?, cause ->
-            Logger.debug("Tile $key being removed because of $cause (evicted ${cause.wasEvicted()})")
+            val tileStr = "(${key?.x?.toInt()},${key?.y?.toInt()},${key?.z?.toInt()})"
+            Logger.debug("Tile $tileStr being removed by $cause (evicted ${cause.wasEvicted()})")
             Gdx.app.postRunnable { value.disposeSafely() }
         }
         .recordStats()
         .build()
-//        .buildAsync { pos: Vector3? ->
-//            if (pos == null) return@buildAsync null
-//            val pixmap = TileServerManager.fetchTileAsPixmap(pos)
-//            Gdx.app.postRunnable {
-//                val texture = Texture(pixmap)
-//                return@buildAsync texture
-//            }
-//        }
+    /** Executor used for HTTP requests */
+    private val executor = Executors.newCachedThreadPool()
+
+    /**
+     * Asynchronously retrieves a tile from the tile server. If the tile isn't in the cache, it will be
+     * downloaded asynchronously. [onRetrieved] is invoked after the tile is made available.
+     * @return tile texture if it was possible to load, otherwise null
+     */
+    fun retrieve(pos: Vector3, onRetrieved: (Texture) -> Unit) {
+        val maybeTexture = tileCache.getIfPresent(pos)
+        if (maybeTexture != null) {
+            // tile was already in cache
+            onRetrieved(maybeTexture)
+            return
+        }
+        executor.submit {
+            // download the tile async on the executor thread
+            val pixmap = TileServerManager.fetchTileAsPixmap(pos) ?: return@submit
+            // now that we have the pixmap, we need to context switch into the render thread in order to
+            // upload the texture
+            Gdx.app.postRunnable {
+                val texture = Texture(pixmap)
+                pixmap.dispose()
+                tileCache.put(pos, texture)
+                onRetrieved(texture)
+            }
+        }
+    }
+
+    fun purge() {
+        Logger.debug("Purging LRUTileCache")
+        tileCache.cleanUp()
+        tileCache.invalidateAll()
+        tileCache.cleanUp()
+    }
 
     /** @return cache hit rate stats for displaying */
     fun getStats(): String {
@@ -63,5 +93,11 @@ class LRUTileCache {
     companion object {
         /** Maximum number of tiles in VRAM, size will be approx 100 KiB * this */
         private const val MAX_TILES_RAM = 1024L
+    }
+
+    override fun dispose() {
+        Logger.debug("Shutdown LRUTileCache")
+        purge()
+        executor.shutdownNow()
     }
 }

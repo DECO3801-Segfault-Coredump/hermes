@@ -19,17 +19,21 @@ import org.tinylog.kotlin.Logger
 import kotlin.concurrent.thread
 import kotlin.math.roundToInt
 
-private enum class LoadingStage(val text: String) {
-    STARTING_TILESERVER("Starting tile server..."),
-    CHECKING_CONNECTIVITY("Checking tile server connectivity..."),
-    LOADING_3D_ASSETS("Loading 3D assets..."),
-
-    DONE("Done.")
-}
-
-// This class is based on my (Matt)'s previous work:
-// https://github.com/UQRacing/gazilla/blob/master/core/src/main/kotlin/com/uqracing/gazilla/client/screens/LoadingScreen.kt
+/**
+ * Loading screen for the application. This class is based on my (Matt)'s previous work:
+ * https://github.com/UQRacing/gazilla/blob/master/core/src/main/kotlin/com/uqracing/gazilla/client/screens/LoadingScreen.kt
+ *
+ * @author Matt Young
+ */
 class LoadingScreen(private val game: Game) : ScreenAdapter() {
+    private enum class LoadingStage(val text: String) {
+        STARTING_TILESERVER("Starting tile server..."),
+        CHECKING_CONNECTIVITY("Checking tile server connectivity..."),
+        LOADING_3D_ASSETS("Loading 3D assets..."),
+
+        DONE("Done.")
+    }
+
     private lateinit var skin: Skin
     private lateinit var stage: Stage
     private lateinit var label: Label
@@ -101,7 +105,7 @@ class LoadingScreen(private val game: Game) : ScreenAdapter() {
                 label.setText("Loading 3D assets... ($completion%)")
             }
         } else if (currentStage == LoadingStage.DONE) {
-            game.screen = AtlasScreen(game)
+            game.screen = SimulationScreen(game)
         }
 
 //        if (ASSETS.update()) {
@@ -121,6 +125,10 @@ class LoadingScreen(private val game: Game) : ScreenAdapter() {
 
     override fun resize(width: Int, height: Int) {
         stage.viewport.update(width, height, true)
+    }
+
+    override fun hide() {
+        dispose()
     }
 
     override fun dispose() {

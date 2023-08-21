@@ -3,7 +3,7 @@ package com.decosegfault.hermes.headless;
 import com.badlogic.gdx.Application;
 import com.badlogic.gdx.backends.headless.HeadlessApplication;
 import com.badlogic.gdx.backends.headless.HeadlessApplicationConfiguration;
-import com.decosegfault.hermes.HermesGame;
+import com.decosegfault.atlas.AtlasGame;
 
 /** Launches the headless application. Can be converted into a utilities project or a server application. */
 public class HeadlessLauncher {
@@ -13,7 +13,7 @@ public class HeadlessLauncher {
 
     private static Application createApplication() {
         // Note: you can use a custom ApplicationListener implementation for the headless project instead of Hermes.
-        return new HeadlessApplication(new HermesGame(), getDefaultConfiguration());
+        return new HeadlessApplication(new AtlasGame(), getDefaultConfiguration());
     }
 
     private static HeadlessApplicationConfiguration getDefaultConfiguration() {
