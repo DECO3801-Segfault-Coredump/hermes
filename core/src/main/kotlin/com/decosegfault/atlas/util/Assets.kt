@@ -20,25 +20,10 @@ object Assets {
     private val allowedExtensions = listOf("glb", "atlas", "png", "jpg", "fnt")
 
     /**
-     * Recursively loads all assets from the directory [path] as a [clazz] type into [assets]
-     */
-    private fun <T> loadFromDir(assets: AssetManager, path: FileHandle, clazz: Class<T>) {
-        val files = path.list()
-
-        for (file in files) {
-            if (file.isDirectory) {
-                loadFromDir(assets, file, clazz)
-            } else if (file.extension() in allowedExtensions) {
-                assets.load(file.path(), clazz)
-            }
-        }
-    }
-
-    /**
      * Loads all assets required into the specified AssetManager
      */
     fun load(assets: AssetManager) {
-//        assets.logger.level = com.badlogic.gdx.utils.Logger.DEBUG
+        assets.logger.level = com.badlogic.gdx.utils.Logger.DEBUG
         assets.setLoader(SceneAsset::class.java, ".gltf", GLTFAssetLoader())
         assets.setLoader(SceneAsset::class.java, ".glb", GLBAssetLoader())
 
@@ -48,7 +33,11 @@ object Assets {
         assets.load("ui/uiskin.json", Skin::class.java)
 
         // load vehicle 3D models
-        loadFromDir(assets, Gdx.files.internal("assets/atlas"), SceneAsset::class.java)
+        val vehicles = listOf("bus", "train") // TODO ferry
+        for (vehicle in vehicles) {
+            assets.load("atlas/${vehicle}_low.glb", SceneAsset::class.java)
+            assets.load("atlas/${vehicle}_high.glb", SceneAsset::class.java)
+        }
     }
 
     val ASSETS = AssetManager()

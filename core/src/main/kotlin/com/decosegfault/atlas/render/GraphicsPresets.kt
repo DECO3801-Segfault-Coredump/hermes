@@ -5,7 +5,7 @@ package com.decosegfault.atlas.render
  *
  * @author Matt Young
  */
-class GraphicsPresets {
+object GraphicsPresets {
     // presets will be:
     // - Genuine Potato (Worst possible settings, honestly just terrible)
     // - Standard (Balanced settings for most users)
@@ -15,17 +15,17 @@ class GraphicsPresets {
     private val genuinePotato = GraphicsPreset(
         name="Genuine Potato",
         description="Worst possible settings for atrocious computers",
-        vehicleDrawDist=10.0f,
-        vehicleLodDist=Float.MAX_VALUE, // always draw low LoDs
+        vehicleDrawDist=50.0f,
+        vehicleLodDist=Float.MIN_VALUE, // always draw low LoDs
         tileDrawDist=25.0f,
     )
 
     private val standard = GraphicsPreset(
         name="Standard",
         description="Balanced settings for good framerate on most computers",
-        vehicleDrawDist=100.0f,
-        vehicleLodDist=50.0f,
-        tileDrawDist=100.0f,
+        vehicleDrawDist=130.0f,
+        vehicleLodDist=70.0f,
+        tileDrawDist=130.0f,
     )
 
     private val itRunsCrysis = GraphicsPreset(
@@ -48,5 +48,9 @@ class GraphicsPresets {
 
     fun forName(name: String): GraphicsPreset {
         return presets.first { it.name == name }
+    }
+
+    fun getNames(): List<String> {
+        return presets.map { it.name }
     }
 }
