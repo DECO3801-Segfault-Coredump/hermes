@@ -18,6 +18,7 @@ object GraphicsPresets {
         vehicleDrawDist=50.0f,
         vehicleLodDist=Float.MIN_VALUE, // always draw low LoDs
         tileDrawDist=25.0f,
+        anisotropic=1.0f,
     )
 
     private val standard = GraphicsPreset(
@@ -26,22 +27,25 @@ object GraphicsPresets {
         vehicleDrawDist=130.0f,
         vehicleLodDist=70.0f,
         tileDrawDist=130.0f,
+        anisotropic=16.0f,
     )
 
     private val itRunsCrysis = GraphicsPreset(
         name="It Runs Crysis",
         description="High settings for powerful gaming PCs or workstations",
-        vehicleDrawDist=200.0f,
+        vehicleDrawDist=400.0f,
         vehicleLodDist=100.0f,
         tileDrawDist=200.0f,
+        anisotropic=16.0f,
     )
 
     private val nasaSupercomputer = GraphicsPreset(
         name="NASA Supercomputer",
         description="Max possible settings for ridiculously overpowered PCs to flex",
         vehicleDrawDist=Float.MAX_VALUE, // always draw every vehicle
-        vehicleLodDist=Float.MIN_VALUE, // always draw high LoDs
+        vehicleLodDist=Float.MAX_VALUE, // always draw high LoDs
         tileDrawDist=Float.MAX_VALUE, // always draw every tile
+        anisotropic=32.0f, // this is insane lmao
     )
 
     private val presets = listOf(genuinePotato, standard, itRunsCrysis, nasaSupercomputer)

@@ -12,6 +12,7 @@ import com.badlogic.gdx.graphics.g3d.environment.SpotLight;
 import com.badlogic.gdx.graphics.g3d.utils.DepthShaderProvider;
 import com.badlogic.gdx.graphics.g3d.utils.RenderableSorter;
 import com.badlogic.gdx.graphics.g3d.utils.ShaderProvider;
+import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Disposable;
 import net.mgsx.gltf.scene3d.attributes.PBRMatrixAttribute;
@@ -55,7 +56,12 @@ public class AtlasSceneManager implements Disposable {
     private MirrorSource mirrorSource;
     private CascadeShadowMap cascadeShadowMap;
     private GraphicsPreset graphics;
+
+    /** Vehicles that were not rendered */
     private int culledVehicles = 0;
+    /** Vehicles that used low LoD */
+    private int lowLodVehicles = 0;
+    /** Vehicles that were fully rendered */
     private int renderedVehicles = 0;
 
 
@@ -167,13 +173,19 @@ public class AtlasSceneManager implements Disposable {
         for (AtlasVehicle vehicle : vehicles) {
             ModelInstance model = vehicle.getRenderModel(camera, graphics);
             if (model == null) {
-                // don't render
+                // we were asked not to render this vehicle
                 culledVehicles++;
                 continue;
             }
-            // do render vehicles
+            // we were asked to render this vehicle
             renderableProviders.add(model);
-            renderedVehicles++;
+
+            // check if we used low LoD
+            if (vehicle.getDidUseLowLod()) {
+                lowLodVehicles++;
+            } else {
+                renderedVehicles++;
+            }
         }
 
         if (camera != null) {
@@ -185,18 +197,32 @@ public class AtlasSceneManager implements Disposable {
     public void resetStats() {
         culledVehicles = 0;
         renderedVehicles = 0;
-    }
-
-    public int getCulledVehicles() {
-        return culledVehicles;
-    }
-
-    public int getRenderedVehicles() {
-        return renderedVehicles;
+        lowLodVehicles = 0;
     }
 
     public int getTotalVehicles() {
-        return culledVehicles + renderedVehicles;
+        return culledVehicles + renderedVehicles + lowLodVehicles;
+    }
+
+    public float getCullRate() {
+        if (getTotalVehicles() <= 0) {
+            return 0f;
+        }
+        return Math.round(((float) culledVehicles / getTotalVehicles()) * 100f);
+    }
+
+    public float getLowLodRate() {
+        if (getTotalVehicles() <= 0) {
+            return 0f;
+        }
+        return Math.round(((float) lowLodVehicles / getTotalVehicles()) * 100f);
+    }
+
+    public float getFullRenderRate() {
+        if (getTotalVehicles() <= 0) {
+            return 0f;
+        }
+        return Math.round(((float) renderedVehicles / getTotalVehicles()) * 100f);
     }
 
     /**

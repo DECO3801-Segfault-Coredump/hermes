@@ -1,30 +1,29 @@
 package com.decosegfault.atlas.screens
 
 import com.badlogic.gdx.*
+import com.badlogic.gdx.backends.lwjgl3.Lwjgl3ApplicationConfiguration
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Graphics
 import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.PerspectiveCamera
 import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import com.badlogic.gdx.graphics.profiling.GLProfiler
+import com.badlogic.gdx.math.MathUtils
 import com.badlogic.gdx.math.Vector3
 import com.badlogic.gdx.scenes.scene2d.Stage
 import com.badlogic.gdx.scenes.scene2d.ui.Label
 import com.badlogic.gdx.scenes.scene2d.ui.Skin
 import com.badlogic.gdx.scenes.scene2d.ui.Table
 import com.badlogic.gdx.utils.viewport.ExtendViewport
-import com.badlogic.gdx.utils.viewport.ScreenViewport
+import com.badlogic.gdx.utils.viewport.FitViewport
 import com.decosegfault.atlas.map.LRUTileCache
-import com.decosegfault.atlas.render.AtlasCameraController
-import com.decosegfault.atlas.render.AtlasSceneManager
-import com.decosegfault.atlas.render.AtlasVehicle
-import com.decosegfault.atlas.render.GraphicsPresets
+import com.decosegfault.atlas.render.*
 import com.decosegfault.atlas.util.Assets.ASSETS
 import ktx.app.clearScreen
+import ktx.preferences.get
 import net.mgsx.gltf.scene3d.attributes.PBRCubemapAttribute
 import net.mgsx.gltf.scene3d.attributes.PBRTextureAttribute
 import net.mgsx.gltf.scene3d.lights.DirectionalLightEx
-import net.mgsx.gltf.scene3d.scene.Scene
 import net.mgsx.gltf.scene3d.scene.SceneAsset
 import net.mgsx.gltf.scene3d.scene.SceneSkybox
 import net.mgsx.gltf.scene3d.utils.IBLBuilder
@@ -46,21 +45,33 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
     private val cam = PerspectiveCamera().apply {
         fieldOfView = 75f
         near = 0.1f
-        far = 500f
+        far = 900f
     }
     private val camController = AtlasCameraController(cam).apply {
         translateButton = Input.Buttons.RIGHT
-        translateUnits = 40f
+        baseTranslateUnits = 40f
         scrollFactor = -0.1f
     }
-    private val cameraViewport = ExtendViewport(1600f, 900f, cam)
+    private val cameraViewport = ExtendViewport(1920f, 1080f, cam)
     private lateinit var sceneManager: AtlasSceneManager
     private lateinit var sun: DirectionalLightEx
-    private val graphics = GraphicsPresets.forName("It Runs Crysis") // TODO load from Gdx.preferences
+    private lateinit var graphics: GraphicsPreset
     private lateinit var shapeRender: ShapeRenderer
+    private val vehicles = mutableListOf<AtlasVehicle>()
+    private var debugCounter = 0.0f
+    private var isDebugDraw = true
 
     private fun createTextUI() {
+        stage = Stage(FitViewport(1920f, 1080f))
         val skin = ASSETS["ui/uiskin.json", Skin::class.java]
+
+        // hack to use linear scaling instead of nearest neighbour for text
+        // makes the text slightly less ugly, but ideally we should use FreeType
+        // https://stackoverflow.com/a/33633682/5007892
+        for (region in skin.getFont("window").regions) {
+            region.texture.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear)
+        }
+
         debugLabel = Label("", skin, "window")
         debugLabel.pack()
 
@@ -77,7 +88,7 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
         // ref: https://www.openstreetmap.org/copyright
         val container2 = Table()
         container2.pad(10f)
-        container2.add(Label("(c) OpenStreetMap contributors", skin))
+        container2.add(Label("(c) OpenStreetMap contributors", skin, "window"))
         container2.setFillParent(true)
         container2.bottom().right()
         container2.pack()
@@ -121,20 +132,42 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
         // force anisotropic filtering for all assets
         val models = com.badlogic.gdx.utils.Array<SceneAsset>()
         ASSETS.getAll(SceneAsset::class.java, models)
+        Logger.info("Updating ${models.size} models to have ${graphics.anisotropic}x anisotropic filtering")
         for (model in models) {
             for (texture in model.textures) {
-                texture.setAnisotropicFilter(16.0f) // TODO make this customisable in graphics
+                texture.setAnisotropicFilter(graphics.anisotropic)
             }
+        }
+    }
+
+    private fun constructTestScene() {
+        Logger.debug("Construct test scene")
+        vehicles.clear()
+        for (i in 0..200) {
+            val modelName = if (MathUtils.randomBoolean()) "train" else "bus"
+            val modelLow = ASSETS["atlas/${modelName}_low.glb", SceneAsset::class.java]
+            val modelHigh = ASSETS["atlas/${modelName}_high.glb", SceneAsset::class.java]
+            val vehicle = AtlasVehicle(modelHigh, modelLow)
+            // x, y, theta degrees
+            val pos = Vector3(MathUtils.random(-10f, 10f), MathUtils.random(-10f, 10f), MathUtils.random(0f, 360f))
+            vehicle.updateTransform(pos)
+            vehicles.add(vehicle)
+            Logger.debug("Added $modelName at $pos")
         }
     }
 
     override fun show() {
         Logger.info("Creating AtlasScreen")
         profiler.enable()
-        stage = Stage(ScreenViewport())
+
+        val prefs = Gdx.app.getPreferences("decosegfault_atlas")
+        val presetName = prefs["graphicsPreset", "It Runs Crysis"]
+        Logger.info("Using graphics preset: $presetName")
+        graphics = GraphicsPresets.forName(presetName)
 
         createTextUI()
         initialise3D()
+        constructTestScene()
 
         mux.addProcessor(camController)
         mux.addProcessor(stage)
@@ -150,44 +183,65 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
         } else if (Gdx.input.isKeyJustPressed(Input.Keys.G)) {
             // toggle debug
             Logger.debug("Toggling debug")
-            debugLabel.isVisible = !debugLabel.isVisible
+            isDebugDraw = !isDebugDraw
         } else if (Gdx.input.isKeyJustPressed(Input.Keys.RIGHT_BRACKET)) {
             // clears tile LRU cache
             tileCache.purge()
+        } else if (Gdx.input.isKeyJustPressed(Input.Keys.ENTER)) {
+            // toggle fullscreen
+            if (Gdx.graphics.isFullscreen) {
+                Logger.debug("Enter windowed mode from fullscreen")
+                Gdx.graphics.setWindowedMode(1600, 900)
+            } else {
+                Logger.debug("Enter fullscreen from window mode")
+                Gdx.graphics.setFullscreenMode(Lwjgl3ApplicationConfiguration.getDisplayMode())
+            }
+        }
+
+        // update scene
+        debugCounter += delta
+        if (debugCounter >= 0.5f) {
+            debugCounter = 0f
+            for (vehicle in vehicles) {
+                // x, y, theta degrees
+                val pos = Vector3(MathUtils.random(-5f, 5f), MathUtils.random(-5f, 5f), MathUtils.random(0f, 360f))
+                vehicle.updateTransform(pos)
+            }
         }
 
         // render 3D
         camController.update()
         cam.update()
-        // TESTING CODE
-        val trainLow = Scene(ASSETS["atlas/train_low.glb", SceneAsset::class.java].scene)
-        val trainHigh = Scene(ASSETS["atlas/train_high.glb", SceneAsset::class.java].scene)
-        val vehicle = AtlasVehicle(trainHigh.modelInstance, trainLow.modelInstance)
-        vehicle.updateTransform(Vector3.Zero)
-        val vehicles = listOf(vehicle)
         sceneManager.update(delta, vehicles)
         sceneManager.render()
 
         // render debug UI
-        val mem = ((Gdx.app.javaHeap + Gdx.app.nativeHeap) / 1e6).roundToInt()
-        val cullRate = ((sceneManager.culledVehicles / sceneManager.totalVehicles) * 100f).roundToInt()
-        debugLabel.setText("""FPS: ${Gdx.graphics.framesPerSecond}    Memory: $mem MB    Draw calls: ${profiler.drawCalls}
+        if (isDebugDraw) {
+            val mem = ((Gdx.app.javaHeap + Gdx.app.nativeHeap) / 1e6).roundToInt()
+            debugLabel.setText(
+            """FPS: ${Gdx.graphics.framesPerSecond}    Memory: $mem MB    Draw calls: ${profiler.drawCalls}
             |${tileCache.getStats()}
-            |Vehicles    cull rate: $cullRate%    total rendered: ${sceneManager.renderedVehicles}
+            |Vehicles    culled: ${sceneManager.cullRate}%    low LoD: ${sceneManager.lowLodRate}%    full: ${sceneManager.fullRenderRate}%    total: ${sceneManager.totalVehicles}
             |Graphics preset: ${graphics.name}
-        """.trimMargin())
+            |translate: ${camController.actualTranslateUnits}    zoom target: ${camController.zoomTarget}
+            """.trimMargin())
+        } else {
+            debugLabel.setText("FPS: ${Gdx.graphics.framesPerSecond}    Draw calls: ${profiler.drawCalls}")
+        }
         stage.act()
         stage.draw()
 
-        if (debugLabel.isVisible) {
+        if (isDebugDraw) {
             shapeRender.projectionMatrix = cam.combined
             shapeRender.begin(ShapeRenderer.ShapeType.Line)
-            vehicle.debug(shapeRender, cam)
+            for (vehicle in vehicles) {
+                vehicle.debug(shapeRender)
+            }
             shapeRender.end()
 
-            shapeRender.begin(ShapeRenderer.ShapeType.Filled)
-            shapeRender.point(camController.target.x, camController.target.y, camController.target.z)
-            shapeRender.end()
+//            shapeRender.begin(ShapeRenderer.ShapeType.Filled)
+//            shapeRender.point(camController.target.x, camController.target.y, camController.target.z)
+//            shapeRender.end()
         }
 
         profiler.reset()
@@ -195,7 +249,7 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
     }
 
     override fun resize(width: Int, height: Int) {
-        stage.viewport.update(width, height)
+        stage.viewport.update(width, height, true)
         cameraViewport.update(width, height)
     }
 

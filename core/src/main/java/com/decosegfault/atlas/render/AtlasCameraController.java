@@ -30,7 +30,7 @@ import org.tinylog.Logger;
  * Camera controller for Atlas. Based on
  * <a href="https://github.com/libgdx/libgdx/blob/master/gdx/src/com/badlogic/gdx/graphics/g3d/utils/CameraInputController.java">libGDX code</a>
  * <p>
- * Features added for Atlas: smooth zoom, zoom distance changes translation speed
+ * Features to be added for Atlas: smooth zoom, zoom distance changes translation speed, min/max angles
  *
  * @author libGDX authors
  * @author Matt Young
@@ -43,7 +43,9 @@ public class AtlasCameraController extends InputAdapter {
     /** The button for translating the camera along the up/right plane */
     public int translateButton = Buttons.RIGHT;
     /** The units to translate the camera when moved the full width or height of the screen. */
-    public float translateUnits = 10f;
+    public float baseTranslateUnits = 10f;
+    /** Translate units with distance scaling applied */
+    public float actualTranslateUnits = 10f;
     /** The button for translating the camera along the direction axis */
     public int forwardButton = Buttons.MIDDLE;
     /** The key which must be pressed to activate rotate, translate and forward or 0 to always activate. */
@@ -82,12 +84,12 @@ public class AtlasCameraController extends InputAdapter {
     private final Vector3 tmpV1 = new Vector3();
     private final Vector3 tmpV2 = new Vector3();
     private float zoomOld = 1f; // old zoom value (start)
-    private float zoomTarget = 1f; // new zoom value (end)
+    public float zoomTarget = 1f; // new zoom value (end)
     private float zoomProgress = 1f; // progress between 0.0 and 1.0
     public float zoomSpeed = 10f; // speed that the interpolation runs at
     public float lastAmount = 0f;
     private boolean isZooming = false;
-    private Interpolation interpolator = Interpolation.smooth2;
+    private final Interpolation interpolator = Interpolation.smooth2;
 
     public AtlasCameraController (final Camera camera) {
         super();
@@ -100,48 +102,57 @@ public class AtlasCameraController extends InputAdapter {
             if (rotateRightPressed) camera.rotate(camera.up, -delta * rotateAngle);
             if (rotateLeftPressed) camera.rotate(camera.up, delta * rotateAngle);
             if (forwardPressed) {
-                camera.translate(tmpV1.set(camera.direction).scl(delta * translateUnits));
+                camera.translate(tmpV1.set(camera.direction).scl(delta * baseTranslateUnits));
                 if (forwardTarget) target.add(tmpV1);
             }
             if (backwardPressed) {
-                camera.translate(tmpV1.set(camera.direction).scl(-delta * translateUnits));
+                camera.translate(tmpV1.set(camera.direction).scl(-delta * baseTranslateUnits));
                 if (forwardTarget) target.add(tmpV1);
             }
             if (autoUpdate) camera.update();
         }
 
-        if (isZooming) {
-            if (zoomProgress < 1.0f) {
-                // apply interpolation
-                float amount = interpolator.apply(zoomOld, zoomTarget, zoomProgress);
-
-                // translate camera
-                float deltaTranslate = amount - lastAmount;
-                camera.translate(tmpV1.set(camera.direction).scl(deltaTranslate));
-                Logger.debug("Zooming: abs {} delta {}", amount, deltaTranslate);
-                lastAmount = amount;
-
-                if (autoUpdate) camera.update();
-                // update progress (0.0 to 1.0, zoomSpeed controls how fast)
-                zoomProgress += zoomSpeed * delta;
-            } else {
-                Logger.debug("Done zooming");
-                isZooming = false;
-                zoomOld = zoomTarget;
-                zoomProgress = 0f;
-            }
-        }
+//        if (isZooming) {
+//            if (zoomProgress < 1.0f) {
+//                // apply interpolation
+//                float amount = interpolator.apply(zoomOld, zoomTarget, zoomProgress);
+//
+//                // translate camera
+//                float deltaTranslate = amount - lastAmount;
+//                camera.translate(tmpV1.set(camera.direction).scl(deltaTranslate));
+//                Logger.debug("Zooming: abs {} delta {}", amount, deltaTranslate);
+//                lastAmount = amount;
+//
+//                if (autoUpdate) camera.update();
+//                // update progress (0.0 to 1.0, zoomSpeed controls how fast)
+//                zoomProgress += zoomSpeed * delta;
+//            } else {
+//                Logger.debug("Done zooming");
+//                isZooming = false;
+//                zoomOld = zoomTarget;
+//                zoomProgress = 0f;
+//            }
+//        }
     }
 
     @Override
     public boolean scrolled (float amountX, float amountY) {
-        zoomTarget += amountY * scrollFactor * translateUnits;
-        if (!isZooming) zoomProgress = 0f;
-        isZooming = true;
-        Logger.debug("Zoom from {} to {}", zoomOld, zoomTarget);
-        return true;
+//        zoomTarget += amountY * scrollFactor * actualTranslateUnits;
+//        actualTranslateUnits = (-zoomTarget / 15f) * baseTranslateUnits;
+//        if (!isZooming) zoomProgress = 0f;
+//        isZooming = true;
+//        Logger.debug("Zoom from {} to {}", zoomOld, zoomTarget);
+//        return true;
 
-        //return zoom(amountY * scrollFactor * translateUnits);
+        // FIXME this code is fucking horrendous, @Henry plz help me
+
+        float zoomIncrement = amountY * scrollFactor * actualTranslateUnits;
+        zoomTarget += zoomIncrement;
+        actualTranslateUnits = (-zoomTarget / 20f) * baseTranslateUnits;
+        if (actualTranslateUnits == 0.0f) actualTranslateUnits = 10.0f;
+        return zoom(zoomIncrement);
+
+//        return zoom(amountY * scrollFactor * actualTranslateUnits);
     }
 
     public boolean zoom (float amount) {
@@ -193,11 +204,11 @@ public class AtlasCameraController extends InputAdapter {
             camera.rotateAround(target, tmpV1.nor(), deltaY * rotateAngle);
             camera.rotateAround(target, Vector3.Y, deltaX * -rotateAngle);
         } else if (button == translateButton) {
-            camera.translate(tmpV1.set(camera.direction).crs(camera.up).nor().scl(-deltaX * translateUnits));
-            camera.translate(tmpV2.set(camera.up).scl(-deltaY * translateUnits));
+            camera.translate(tmpV1.set(camera.direction).crs(camera.up).nor().scl(-deltaX * actualTranslateUnits));
+            camera.translate(tmpV2.set(camera.up).scl(-deltaY * actualTranslateUnits));
             if (translateTarget) target.add(tmpV1).add(tmpV2);
         } else if (button == forwardButton) {
-            camera.translate(tmpV1.set(camera.direction).scl(deltaY * translateUnits));
+            camera.translate(tmpV1.set(camera.direction).scl(deltaY * actualTranslateUnits));
             if (forwardTarget) target.add(tmpV1);
         }
         if (autoUpdate) camera.update();
