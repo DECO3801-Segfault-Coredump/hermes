@@ -8,6 +8,7 @@ import com.badlogic.gdx.math.Matrix4
 import com.badlogic.gdx.math.Vector3
 import com.badlogic.gdx.math.collision.BoundingBox
 import com.decosegfault.atlas.util.AtlasUtils
+import com.decosegfault.hermes.VehicleType
 import net.mgsx.gltf.scene3d.scene.SceneAsset
 
 /**
@@ -17,7 +18,7 @@ import net.mgsx.gltf.scene3d.scene.SceneAsset
  * @param modelHigh high poly 3D model
  * @param modelLow low poly 3D model
  */
-data class AtlasVehicle(val modelHigh: SceneAsset, val modelLow: SceneAsset) {
+data class AtlasVehicle(val modelHigh: SceneAsset, val modelLow: SceneAsset, val vehicleType: VehicleType) {
     private val transform = Matrix4()
     /** original bbox for the model itself */
     private val bboxOrig = BoundingBox()
@@ -51,7 +52,7 @@ data class AtlasVehicle(val modelHigh: SceneAsset, val modelLow: SceneAsset) {
      * @param trans new transform: x, y, theta (degrees)
      */
     fun updateTransform(trans: Vector3) {
-        transform.setToTranslation(trans.x, 0f, trans.z)
+        transform.setToTranslation(trans.x, 0f, trans.y)
         // we zeroed out the matrix in transform(), so we can just rotate it now
         // we **don't** call setToRotation, because then this would delete our transform values
         transform.rotate(Vector3.Y, trans.z)
@@ -59,7 +60,7 @@ data class AtlasVehicle(val modelHigh: SceneAsset, val modelLow: SceneAsset) {
     }
 
     fun addTransform(trans: Vector3) {
-        transform.translate(trans.x, 0f, trans.z)
+        transform.translate(trans.x, 0f, trans.y)
         transform.rotate(Vector3.Z, trans.z)
         update()
     }
@@ -86,14 +87,14 @@ data class AtlasVehicle(val modelHigh: SceneAsset, val modelLow: SceneAsset) {
         // first do distance thresholding since it's cheap
         // distance thresholding we compute as distance to the dist from the camera to the closest point
         // on the bounding box
-        val closestPoint = AtlasUtils.closestPoint(cam.position, bbox)
+        val closestPoint = AtlasUtils.bboxClosestPoint(cam.position, bbox)
         val dist = cam.position.dst(closestPoint)
         if (dist >= graphics.vehicleDrawDist) {
             didCull = true
             return null
         }
 
-        // now do the more expensive frustum culling
+        // now we can do the more expensive frustum culling
         if (!cam.frustum.boundsInFrustum(bbox)) {
             didCull = true
             return null

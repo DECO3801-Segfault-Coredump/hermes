@@ -13,7 +13,6 @@ import com.badlogic.gdx.graphics.g3d.utils.DefaultShaderProvider;
 import com.badlogic.gdx.graphics.g3d.utils.DepthShaderProvider;
 import com.badlogic.gdx.graphics.g3d.utils.RenderableSorter;
 import com.badlogic.gdx.graphics.g3d.utils.ShaderProvider;
-import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Disposable;
 import net.mgsx.gltf.scene3d.attributes.PBRMatrixAttribute;
@@ -31,16 +30,22 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
+ * This is the scene manager for Atlas, which is a fixed and re-implemented version of the default
+ * SceneManager in gdx-gltf.
+ * <p>
  * Matt's note: the original implementation of this class in the gdx-gltf repo is horrendous, I just fixed the
- * most glaring issues and made it compatible with Atlas. You'd need a full rewrite of gdx-gltf to fix
- * everything.
+ * most glaring issues and made it compatible with Atlas.
+ * <p>
+ * Original source:
+ * <a href="https://github.com/mgsx-dev/gdx-gltf/blob/master/gltf/src/net/mgsx/gltf/scene3d/scene/SceneManager.java">
+ * net.mgsx.gltf.scene3d.scene.SceneManager
+ * </a>
  *
  * @author mgsx
  * @author Matt Young (modifications for Atlas)
  */
 public class AtlasSceneManager implements Disposable {
-
-    protected final EnvironmentCache computedEnvironement = new EnvironmentCache();
+    protected final EnvironmentCache computedEnvironment = new EnvironmentCache();
     private final RenderableSorter renderableSorter;
     private final PointLightsAttribute pointLights = new PointLightsAttribute();
     private final SpotLightsAttribute spotLights = new SpotLightsAttribute();
@@ -49,7 +54,6 @@ public class AtlasSceneManager implements Disposable {
      */
     public Environment environment = new Environment();
     public Camera camera;
-    private List<AtlasVehicle> vehicles = new ArrayList<>();
     private final Array<RenderableProvider> renderableProviders = new Array<>();
     private ModelBatch batch;
     private ModelBatch depthBatch;
@@ -57,6 +61,10 @@ public class AtlasSceneManager implements Disposable {
     private TransmissionSource transmissionSource;
     private MirrorSource mirrorSource;
     private CascadeShadowMap cascadeShadowMap;
+
+    // the following are Atlas additions:
+
+    /** Atlas graphics preset */
     private GraphicsPreset graphics;
 
     /** Vehicles that were not rendered */
@@ -66,6 +74,7 @@ public class AtlasSceneManager implements Disposable {
     /** Vehicles that were fully rendered */
     private int renderedVehicles = 0;
 
+    // TODO add the ability to change which ShaderProvider based on GraphicsPreset
 
     public AtlasSceneManager(GraphicsPreset graphics) {
         this(24);
@@ -174,13 +183,13 @@ public class AtlasSceneManager implements Disposable {
     }
 
     /**
-     * Updates skybox and vehicle render list
+     * Updates skybox and vehicle render list. Will check with {@link AtlasVehicle#getRenderModel(Camera, GraphicsPreset)}
+     * to perform frustum culling and distance thresholding.
      */
     public void update(float delta, List<AtlasVehicle> vehicles) {
-        // compute which vehicles to render (this does frustum culling and distance thresholding)
         renderableProviders.clear();
         for (AtlasVehicle vehicle : vehicles) {
-            ModelInstance model = vehicle.getRenderModel(camera, graphics);
+            var model = vehicle.getRenderModel(camera, graphics);
             if (model == null) {
                 // we were asked not to render this vehicle
                 culledVehicles++;
@@ -213,25 +222,23 @@ public class AtlasSceneManager implements Disposable {
         return culledVehicles + renderedVehicles + lowLodVehicles;
     }
 
-    public float getCullRate() {
+    private int getRate(int metric) {
         if (getTotalVehicles() <= 0) {
-            return 0f;
+            return 0;
         }
-        return Math.round(((float) culledVehicles / getTotalVehicles()) * 100f);
+        return Math.round(((float) metric / getTotalVehicles()) * 100f);
     }
 
-    public float getLowLodRate() {
-        if (getTotalVehicles() <= 0) {
-            return 0f;
-        }
-        return Math.round(((float) lowLodVehicles / getTotalVehicles()) * 100f);
+    public int getCullRate() {
+        return getRate(culledVehicles);
     }
 
-    public float getFullRenderRate() {
-        if (getTotalVehicles() <= 0) {
-            return 0f;
-        }
-        return Math.round(((float) renderedVehicles / getTotalVehicles()) * 100f);
+    public int getLowLodRate() {
+        return getRate(lowLodVehicles);
+    }
+
+    public int getFullRenderRate() {
+        return getRate(renderedVehicles);
     }
 
     /**
@@ -250,19 +257,19 @@ public class AtlasSceneManager implements Disposable {
     protected void updateEnvironment() {
         updateSkyboxRotation();
 
-        computedEnvironement.setCache(environment);
+        computedEnvironment.setCache(environment);
         pointLights.lights.clear();
         spotLights.lights.clear();
         if (environment != null) {
             for (Attribute a : environment) {
                 if (a instanceof PointLightsAttribute) {
                     pointLights.lights.addAll(((PointLightsAttribute) a).lights);
-                    computedEnvironement.replaceCache(pointLights);
+                    computedEnvironment.replaceCache(pointLights);
                 } else if (a instanceof SpotLightsAttribute) {
                     spotLights.lights.addAll(((SpotLightsAttribute) a).lights);
-                    computedEnvironement.replaceCache(spotLights);
+                    computedEnvironment.replaceCache(spotLights);
                 } else {
-                    computedEnvironement.set(a);
+                    computedEnvironment.set(a);
                 }
             }
         }
@@ -313,7 +320,7 @@ public class AtlasSceneManager implements Disposable {
 
     public void renderMirror() {
         if (mirrorSource != null) {
-            mirrorSource.begin(camera, computedEnvironement, skyBox);
+            mirrorSource.begin(camera, computedEnvironment, skyBox);
             renderColors();
             mirrorSource.end();
         }
@@ -325,7 +332,7 @@ public class AtlasSceneManager implements Disposable {
             transmissionSource.render(renderableProviders, environment);
             if (skyBox != null) transmissionSource.render(skyBox);
             transmissionSource.end();
-            computedEnvironement.set(transmissionSource.attribute);
+            computedEnvironment.set(transmissionSource.attribute);
         }
     }
 
@@ -344,7 +351,7 @@ public class AtlasSceneManager implements Disposable {
         } else {
             environment.shadowMap = null;
         }
-        computedEnvironement.shadowMap = environment.shadowMap;
+        computedEnvironment.shadowMap = environment.shadowMap;
 
         if (cascadeShadowMap != null) {
             for (DirectionalShadowLight light : cascadeShadowMap.lights) {
@@ -352,7 +359,7 @@ public class AtlasSceneManager implements Disposable {
                 renderDepth(light.getCamera());
                 light.end();
             }
-            computedEnvironement.set(cascadeShadowMap.attribute);
+            computedEnvironment.set(cascadeShadowMap.attribute);
         }
     }
 
@@ -379,7 +386,7 @@ public class AtlasSceneManager implements Disposable {
      */
     public void renderColors() {
         batch.begin(camera);
-        batch.render(renderableProviders, computedEnvironement);
+        batch.render(renderableProviders, computedEnvironment);
         if (skyBox != null) batch.render(skyBox);
         batch.end();
     }
@@ -425,7 +432,7 @@ public class AtlasSceneManager implements Disposable {
     }
 
     public int getActiveLightsCount() {
-        return EnvironmentUtil.getLightCount(computedEnvironement);
+        return EnvironmentUtil.getLightCount(computedEnvironment);
     }
 
     public int getTotalLightsCount() {

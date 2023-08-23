@@ -3,12 +3,11 @@ package com.decosegfault.atlas.render
 /**
  * Graphics preset for the render. **All distances are in metres.**
  *
- * @author Matt Young
- *
  * @param vehicleDrawDist Above this distance, vehicles are not rendered
  * @param vehicleLodDist Above this distance, low poly LoDs are used; below, high poly LoDs are used
  * @param tileDrawDist Above this distance, map tiles are not rendered
- * @param anisotropic Number of texture anisotropic filtering samples
+ * @param anisotropic Number of texture anisotropic filtering samples *
+ * @author Matt Young
  */
 data class GraphicsPreset(
     val name: String,

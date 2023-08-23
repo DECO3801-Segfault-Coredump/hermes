@@ -24,7 +24,7 @@ to run the renderer.
 **Frontend authors:**
 - Connor Vilaysack and Marcus Rehbock wrote the data analytics frontend which is available [here](TODO)
 
-## Building
+## Setting up the toolchain
 First, you need to install the dependencies for Hermes and Atlas, which are:
 
 - JDK 17 or later
@@ -39,12 +39,15 @@ First, you need to install the dependencies for Hermes and Atlas, which are:
   - Windows, Mac: Use [JetBrains Toolbox](https://www.jetbrains.com/toolbox-app/)
   - Linux: Use JB Toolbox through your package manager if available, otherwise from the website above
 
-Now, you can open the project in IntelliJ. You should also go to Settings (CTRL+ALT+S) 
+**Important:** You now need to set up the OpenStreetMap Docker and import the Brisbane data. 
+Please read [docs/atlas_map_pipeline.md](docs/atlas_map_pipeline.md)
+
+## Editing
+Now, you can open the project in IntelliJ. You should also go to Settings (CTRL+ALT+S)
 -> Build, Execution & Deployment -> Build Tools -> Gradle, and change "Build and run using" _from_ Gradle to
 IntelliJ IDEA.
 
-## Editing
-Before writing code, please read `docs/guidelines.md` for some very loose code style guidelines. Please
+Before writing code, please read [docs/guidelines.md](docs/guidelines.md) for some very loose code style guidelines. Please
 remember to add `@author <Your Name>` to each class you write or append your name to the list of authors.
 
 ## Running

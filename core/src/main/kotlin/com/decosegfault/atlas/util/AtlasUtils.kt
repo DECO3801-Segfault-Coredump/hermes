@@ -5,7 +5,7 @@ import com.badlogic.gdx.math.collision.BoundingBox
 
 object AtlasUtils {
     // https://gdbooks.gitbooks.io/3dcollisions/content/Chapter1/closest_point_aabb.html
-    fun closestPoint(point: Vector3, bounds: BoundingBox): Vector3 {
+    fun bboxClosestPoint(point: Vector3, bounds: BoundingBox): Vector3 {
         return Vector3(
             point.x.coerceIn(bounds.min.x, bounds.max.x),
             point.y.coerceIn(bounds.min.y, bounds.max.y),

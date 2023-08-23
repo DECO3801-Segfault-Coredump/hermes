@@ -3,14 +3,14 @@ package com.decosegfault.atlas.screens
 import com.badlogic.gdx.*
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3ApplicationConfiguration
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Graphics
-import com.badlogic.gdx.graphics.Color
-import com.badlogic.gdx.graphics.PerspectiveCamera
-import com.badlogic.gdx.graphics.Texture
+import com.badlogic.gdx.graphics.*
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import com.badlogic.gdx.graphics.profiling.GLProfiler
 import com.badlogic.gdx.math.MathUtils
+import com.badlogic.gdx.math.RandomXS128
 import com.badlogic.gdx.math.Vector3
 import com.badlogic.gdx.scenes.scene2d.Stage
+import com.badlogic.gdx.scenes.scene2d.ui.Image
 import com.badlogic.gdx.scenes.scene2d.ui.Label
 import com.badlogic.gdx.scenes.scene2d.ui.Skin
 import com.badlogic.gdx.scenes.scene2d.ui.Table
@@ -19,6 +19,7 @@ import com.badlogic.gdx.utils.viewport.FitViewport
 import com.decosegfault.atlas.map.LRUTileCache
 import com.decosegfault.atlas.render.*
 import com.decosegfault.atlas.util.Assets.ASSETS
+import com.decosegfault.hermes.VehicleType
 import ktx.app.clearScreen
 import ktx.preferences.get
 import net.mgsx.gltf.scene3d.attributes.PBRCubemapAttribute
@@ -30,7 +31,7 @@ import net.mgsx.gltf.scene3d.utils.IBLBuilder
 import net.mgsx.gltf.scene3d.utils.MaterialConverter
 import org.tinylog.kotlin.Logger
 import kotlin.math.roundToInt
-
+import kotlin.random.Random
 
 /**
  * Implements the main screen for rendering the simulation
@@ -73,7 +74,18 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
             region.texture.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear)
         }
 
+        // generate black texture for background
+        // https://stackoverflow.com/a/38881685/5007892
+        val pixmap = Pixmap(1, 1, Pixmap.Format.RGB888)
+        pixmap.setColor(Color.BLACK)
+        pixmap.fill()
+        val black = Texture(pixmap)
+        pixmap.dispose()
+
         debugLabel = Label("", skin, "window")
+        val style = Label.LabelStyle(debugLabel.style)
+        style.background = Image(black).drawable
+        debugLabel.style = style
         debugLabel.pack()
 
         // debug UI
@@ -156,12 +168,9 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
             val modelName = if (MathUtils.randomBoolean()) "train" else "bus"
             val modelLow = ASSETS["atlas/${modelName}_low.glb", SceneAsset::class.java]
             val modelHigh = ASSETS["atlas/${modelName}_high.glb", SceneAsset::class.java]
-            val vehicle = AtlasVehicle(modelHigh, modelLow)
-            // x, y, theta degrees
-            val pos = Vector3(MathUtils.random(-10f, 10f), MathUtils.random(-10f, 10f), MathUtils.random(0f, 360f))
-            vehicle.updateTransform(pos)
+            val vehicle = AtlasVehicle(modelHigh, modelLow, if (modelName == "train") VehicleType.TRAIN else VehicleType.BUS)
+            vehicle.updateTransform(Vector3.Zero)
             vehicles.add(vehicle)
-            Logger.debug("Added $modelName at $pos")
         }
     }
 
@@ -213,7 +222,9 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
             debugCounter = 0f
             for (vehicle in vehicles) {
                 // x, y, theta degrees
-                val pos = Vector3(MathUtils.random(-5f, 5f), MathUtils.random(-5f, 5f), MathUtils.random(0f, 360f))
+                val x = Random.nextDouble(-50.0, 50.0).toFloat()
+                val y = Random.nextDouble(-50.0, 50.0).toFloat()
+                val pos = Vector3(x, y, 0f)
                 vehicle.updateTransform(pos)
             }
         }
@@ -227,8 +238,9 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
         // render debug UI
         if (isDebugDraw) {
             val mem = ((Gdx.app.javaHeap + Gdx.app.nativeHeap) / 1e6).roundToInt()
+            val deltaMs = (delta * 1000.0f).roundToInt()
             debugLabel.setText(
-            """FPS: ${Gdx.graphics.framesPerSecond}    Memory: $mem MB    Draw calls: ${profiler.drawCalls}
+            """FPS: ${Gdx.graphics.framesPerSecond} (${deltaMs} ms)    Memory: $mem MB    Draw calls: ${profiler.drawCalls}
             |${tileCache.getStats()}
             |Vehicles    culled: ${sceneManager.cullRate}%    low LoD: ${sceneManager.lowLodRate}%    full: ${sceneManager.fullRenderRate}%    total: ${sceneManager.totalVehicles}
             |Graphics preset: ${graphics.name}
@@ -237,8 +249,6 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
         } else {
             debugLabel.setText("FPS: ${Gdx.graphics.framesPerSecond}    Draw calls: ${profiler.drawCalls}")
         }
-        stage.act()
-        stage.draw()
 
         if (isDebugDraw) {
             shapeRender.projectionMatrix = cam.combined
@@ -252,6 +262,9 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
 //            shapeRender.point(camController.target.x, camController.target.y, camController.target.z)
 //            shapeRender.end()
         }
+
+        stage.act()
+        stage.draw()
 
         profiler.reset()
         sceneManager.resetStats()

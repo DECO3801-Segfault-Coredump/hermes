@@ -1,0 +1,69 @@
+
+whatdadogdoin.png
+size: 1924, 1822
+format: RGBA8888
+filter: Nearest, Nearest
+repeat: none
+frame_0_delay-0.03s
+  rotate: false
+  xy: 0, 1216
+  size: 640, 606
+  orig: 640, 606
+  offset: 0, 0
+  index: -1
+frame_1_delay-0.04s
+  rotate: false
+  xy: 0, 0
+  size: 640, 606
+  orig: 640, 606
+  offset: 0, 0
+  index: -1
+frame_2_delay-0.03s
+  rotate: false
+  xy: 642, 608
+  size: 640, 606
+  orig: 640, 606
+  offset: 0, 0
+  index: -1
+frame_3_delay-0.03s
+  rotate: false
+  xy: 642, 1216
+  size: 640, 606
+  orig: 640, 606
+  offset: 0, 0
+  index: -1
+frame_4_delay-0.04s
+  rotate: false
+  xy: 642, 0
+  size: 640, 606
+  orig: 640, 606
+  offset: 0, 0
+  index: -1
+frame_5_delay-0.03s
+  rotate: false
+  xy: 1284, 0
+  size: 640, 606
+  orig: 640, 606
+  offset: 0, 0
+  index: -1
+frame_6_delay-0.03s
+  rotate: false
+  xy: 0, 608
+  size: 640, 606
+  orig: 640, 606
+  offset: 0, 0
+  index: -1
+frame_7_delay-0.04s
+  rotate: false
+  xy: 1284, 1216
+  size: 640, 606
+  orig: 640, 606
+  offset: 0, 0
+  index: -1
+frame_8_delay-0.04s
+  rotate: false
+  xy: 1284, 608
+  size: 640, 606
+  orig: 640, 606
+  offset: 0, 0
+  index: -1

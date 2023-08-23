@@ -15,6 +15,7 @@ import net.mgsx.gltf.scene3d.scene.SceneAsset
  *
  * This was borrowed from my (Matt) previous work:
  * [https://github.com/UQRacing/gazilla/blob/master/core/src/main/kotlin/com/uqracing/gazilla/client/utils/Assets.kt]
+ * @author Matt Young
  */
 object Assets {
     private val allowedExtensions = listOf("glb", "atlas", "png", "jpg", "fnt")

@@ -44,13 +44,13 @@ class LoadingScreen(private val game: Game) : ScreenAdapter() {
     override fun show() {
         skin = Skin(Gdx.files.internal("ui/uiskin.json"))
         stage = Stage(ScreenViewport())
-        bkLoader = TextureAtlas(Gdx.files.internal("sprite/bkloader.atlas"))
+        bkLoader = TextureAtlas(Gdx.files.internal("sprite/whatdadogdoin.atlas"))
 
         label = Label(currentStage.text, skin, "window")
         label.pack()
 
         loader = ImageAnimation()
-        loader.setAnimation(Animation(0.1f, bkLoader.regions))
+        loader.setAnimation(Animation(0.01f, bkLoader.regions))
         loader.setOrigin(64.0f, 64.0f)
         loader.pack()
 

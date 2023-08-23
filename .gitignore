@@ -150,4 +150,4 @@ out/
 lwjgl3/out
 core/out
 headless/out
-
+*.log
