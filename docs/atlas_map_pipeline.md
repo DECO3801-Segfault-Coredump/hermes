@@ -1,5 +1,6 @@
 # Atlas OSM Map Pipeline
 - Matt Young.
+- Henry Batt.
 
 ## Introduction
 This document contains the full pipeline for extracting map data from OpenStreetMap and importing it into
@@ -22,7 +23,7 @@ Use the instructions here: https://switch2osm.org/serving-tiles/using-a-docker-c
 2. Create tile cache volume: `docker volume create osm-tiles`
 3. Import data: `docker run -v /home/matt/workspace/deco3801/assets/mapdata/brisbane.osm.pbf:/data/region.osm.pbf -v osm-data:/data/database/ overv/openstreetmap-tile-server import`
    (you'll need to change paths for wherever you saved "brisbane.osm.pbf")
-4. Serve tiles: `docker run -p 8080:80 -p 5432:5432 -e THREADS=16 -v osm-data:/data/database -v osm-tiles:/data/tiles -d overv/openstreetmap-tile-server run`
+4. Serve tiles: `docker run --name atlas-tileserver -p 8080:80 -p 5432:5432 -e THREADS=16 -v osm-data:/data/database -v osm-tiles:/data/tiles -d overv/openstreetmap-tile-server run`
 5. Access the tile server locally at `http://localhost:8080/` and zoom in on Brisbane
 
 ## Pre-rendering tiles

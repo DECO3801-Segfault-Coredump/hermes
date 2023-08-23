@@ -12,13 +12,21 @@ import java.util.concurrent.TimeUnit
  * This file manages the Docker tile server
  *
  * @author Matt Young
+ * @author Henry Batt
  */
 object TileServerManager {
     /** URL of the tile server */
     private const val TILESERVER_URL = "http://localhost:8080/tile/{z}/{x}/{y}.png"
 
+    /** Command to run the OSM docker container */
+    private val DOCKER_RUN_CMD = "docker run --name atlas-tileserver -p 8080:80 -p 5432:5432 -e THREADS=16 -v osm-data:/data/database -v osm-tiles:/data/tiles -d overv/openstreetmap-tile-server run".split(" ")
+
     /** Command to start the OSM docker container */
-    private val DOCKER_START_CMD = "docker run -p 8080:80 -p 5432:5432 -e THREADS=16 -v osm-data:/data/database -v osm-tiles:/data/tiles -d overv/openstreetmap-tile-server run".split(" ")
+    private val DOCKER_START_CMD = "docker start atlas-tileserver".split(" ")
+
+    /** Command to stop the OSM docker container */
+    private val DOCKER_STOP_CMD = "docker stop atlas-tileserver".split(" ")
+
 
     /** Name of the OSM tile server container */
     private const val CONTAINER_NAME = "overv/openstreetmap-tile-server"
