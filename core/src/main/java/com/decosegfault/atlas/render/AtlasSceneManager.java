@@ -9,6 +9,7 @@ import com.badlogic.gdx.graphics.g3d.attributes.SpotLightsAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.graphics.g3d.environment.PointLight;
 import com.badlogic.gdx.graphics.g3d.environment.SpotLight;
+import com.badlogic.gdx.graphics.g3d.utils.DefaultShaderProvider;
 import com.badlogic.gdx.graphics.g3d.utils.DepthShaderProvider;
 import com.badlogic.gdx.graphics.g3d.utils.RenderableSorter;
 import com.badlogic.gdx.graphics.g3d.utils.ShaderProvider;
@@ -24,6 +25,7 @@ import net.mgsx.gltf.scene3d.shaders.PBRCommon;
 import net.mgsx.gltf.scene3d.shaders.PBRShaderProvider;
 import net.mgsx.gltf.scene3d.utils.EnvironmentCache;
 import net.mgsx.gltf.scene3d.utils.EnvironmentUtil;
+import org.tinylog.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -68,6 +70,13 @@ public class AtlasSceneManager implements Disposable {
     public AtlasSceneManager(GraphicsPreset graphics) {
         this(24);
         this.graphics = graphics;
+        if (graphics.getName().equals("Genuine Potato")) {
+            Logger.info("Using non-PBR shader for Genuine Potato graphics");
+            setDepthShaderProvider(new DepthShaderProvider());
+            setShaderProvider(new DefaultShaderProvider());
+        } else {
+            Logger.info("Using PBR shader for " + graphics.getName() + " graphics");
+        }
     }
 
     private AtlasSceneManager(int maxBones) {

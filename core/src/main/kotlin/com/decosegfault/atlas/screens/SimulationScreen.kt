@@ -27,6 +27,7 @@ import net.mgsx.gltf.scene3d.lights.DirectionalLightEx
 import net.mgsx.gltf.scene3d.scene.SceneAsset
 import net.mgsx.gltf.scene3d.scene.SceneSkybox
 import net.mgsx.gltf.scene3d.utils.IBLBuilder
+import net.mgsx.gltf.scene3d.utils.MaterialConverter
 import org.tinylog.kotlin.Logger
 import kotlin.math.roundToInt
 
@@ -137,6 +138,14 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
             for (texture in model.textures) {
                 texture.setAnisotropicFilter(graphics.anisotropic)
             }
+        }
+
+        // if we are in Genuine Potato mode, convert PBR assets to non-PBR
+        if (graphics.name == "Genuine Potato") {
+            for (model in models) {
+                MaterialConverter.makeCompatible(model.scene.model.materials)
+            }
+            Logger.info("Converted PBR materials to non-PBR for Genuine Potato graphics mode")
         }
     }
 
