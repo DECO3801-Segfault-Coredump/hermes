@@ -4,8 +4,10 @@ import com.badlogic.gdx.Game
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.Input
 import com.badlogic.gdx.ScreenAdapter
+import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.graphics.g2d.Animation
 import com.badlogic.gdx.graphics.g2d.TextureAtlas
+import com.badlogic.gdx.graphics.g2d.TextureRegion
 import com.badlogic.gdx.scenes.scene2d.Stage
 import com.badlogic.gdx.scenes.scene2d.ui.Label
 import com.badlogic.gdx.scenes.scene2d.ui.Skin
@@ -33,29 +35,30 @@ class LoadingScreen(private val game: Game) : ScreenAdapter() {
 
         DONE("Done.")
     }
-
     private lateinit var skin: Skin
     private lateinit var stage: Stage
     private lateinit var label: Label
     private var currentStage = LoadingStage.STARTING_TILESERVER
-    private lateinit var bkLoader: TextureAtlas
+    private lateinit var loadingGif: TextureAtlas
     private lateinit var loader: ImageAnimation
+    private lateinit var noTileServer: Texture
+    private var time = 0f
 
     override fun show() {
         skin = Skin(Gdx.files.internal("ui/uiskin.json"))
         stage = Stage(ScreenViewport())
-        bkLoader = TextureAtlas(Gdx.files.internal("sprite/whatdadogdoin.atlas"))
+        loadingGif = TextureAtlas(Gdx.files.internal("sprite/whatdadogdoin.atlas"))
+        noTileServer = Texture(Gdx.files.internal("sprite/notileserver.png"))
 
         label = Label(currentStage.text, skin, "window")
         label.pack()
 
         loader = ImageAnimation()
-        loader.setAnimation(Animation(0.01f, bkLoader.regions))
-        loader.setOrigin(64.0f, 64.0f)
+        loader.setAnimation(Animation(0.01f, loadingGif.regions))
         loader.pack()
 
         val container = Table()
-        container.add(loader).width(160.0f).height(120.0f)
+        container.add(loader).width(200.0f).height(160.0f)
         container.row().pad(10.0f)
         container.add(label)
         container.setFillParent(true)
@@ -94,6 +97,16 @@ class LoadingScreen(private val game: Game) : ScreenAdapter() {
         if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
             Gdx.app.exit()
         }
+
+        // if the tile server probably failed to start
+        if ((currentStage == LoadingStage.STARTING_TILESERVER
+            || currentStage == LoadingStage.CHECKING_CONNECTIVITY)
+            && time >= 10f) {
+            val region = TextureRegion(noTileServer)
+            val animation = Animation(100f, region)
+            loader.setAnimation(animation)
+        }
+        time += delta
 
         if (currentStage == LoadingStage.LOADING_3D_ASSETS) {
             if (Assets.ASSETS.update()) {
@@ -134,6 +147,7 @@ class LoadingScreen(private val game: Game) : ScreenAdapter() {
     override fun dispose() {
         skin.dispose()
         stage.dispose()
-        bkLoader.dispose()
+        loadingGif.dispose()
+        noTileServer.dispose()
     }
 }

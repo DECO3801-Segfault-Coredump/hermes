@@ -33,6 +33,8 @@ The extract I used for Brisbane is: https://app.protomaps.com/downloads/osm/ed67
 
 Based on instructions here: https://switch2osm.org/serving-tiles/using-a-docker-container/
 
+Thanks to Henry for fixing the old Docker command infinitely allocating new containers :skull:
+
 ## (Optional, but recommended) Pre-rendering tiles
 The map can be pretty slow on the first run. We can pre-render the tiles to save time. **Note, this is necessary for good UX**
 
