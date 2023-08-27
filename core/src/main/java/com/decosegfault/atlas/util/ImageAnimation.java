@@ -5,6 +5,12 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 
+/**
+ * libgdx scene2d image with animation capability
+ *
+ * @author mgsx
+ * @see <a href="https://gist.github.com/mgsx-dev/9042ed0b755960fd221b849481a3cca6">GitHub Gist</a>
+ */
 public class ImageAnimation extends Image {
     private Animation<TextureRegion> animation;
     private float time;

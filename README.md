@@ -76,6 +76,9 @@ The following copyright applies to them:
 
 **Attribution**
 
+- Translink GTFS data by Translink
+    - CC Attribution
+    - https://translink.com.au/about-translink/open-data
 - OpenStreetMap by OpenStreetMap contributors
     - Open Data Commons Open Database License
     - https://www.openstreetmap.org/copyright
@@ -86,6 +89,6 @@ The following copyright applies to them:
 - EMU train model by Jotrain
     - CC Attribution-NonCommercial
     - https://sketchfab.com/3d-models/queensland-rail-emu-low-poly-47f3a898ef624ec59bc29b0a3f6c23c1
-- Ferry model
-    - TODO
-    - TODO
+- Tow Boat (ferry model) by BoatUS Foundation
+    - CC Attribution
+    - https://sketchfab.com/3d-models/tow-boat-86939cf48b914951aa3c6ed2bc8bb446

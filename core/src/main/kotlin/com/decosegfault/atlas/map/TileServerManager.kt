@@ -19,7 +19,7 @@ object TileServerManager {
     private const val TILESERVER_URL = "http://localhost:8080/tile/{z}/{x}/{y}.png"
 
     /** Command to run the OSM docker container */
-    private val DOCKER_RUN_CMD = "docker run --name atlas-tileserver -p 8080:80 -p 5432:5432 -e THREADS=16 -v osm-data:/data/database -v osm-tiles:/data/tiles -d overv/openstreetmap-tile-server run".split(" ")
+    private val DOCKER_RUN_CMD = "docker run --name atlas-tileserver -p 8080:80 -p 5432:5432 -e THREADS=$(nproc) -v osm-data:/data/database -v osm-tiles:/data/tiles -d overv/openstreetmap-tile-server run".split(" ")
 
     /** Command to start the OSM docker container */
     private val DOCKER_START_CMD = "docker start atlas-tileserver".split(" ")
