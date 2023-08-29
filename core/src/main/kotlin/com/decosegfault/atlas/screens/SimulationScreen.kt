@@ -29,6 +29,7 @@ import net.mgsx.gltf.scene3d.scene.SceneAsset
 import net.mgsx.gltf.scene3d.scene.SceneSkybox
 import net.mgsx.gltf.scene3d.utils.IBLBuilder
 import net.mgsx.gltf.scene3d.utils.MaterialConverter
+import org.lwjgl.glfw.GLFW
 import org.tinylog.kotlin.Logger
 import kotlin.math.roundToInt
 import kotlin.random.Random
@@ -159,13 +160,16 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
             }
             Logger.info("Converted PBR materials to non-PBR for Genuine Potato graphics mode")
         }
+
+        val v = Gdx.graphics.glVersion
+        Logger.info("GL version: ${v.majorVersion}.${v.minorVersion}.${v.releaseVersion} vendor: ${v.vendorString} renderer: ${v.rendererString}")
     }
 
     private fun constructTestScene() {
         Logger.debug("Construct test scene")
         vehicles.clear()
         for (i in 0..200) {
-            val modelName = if (MathUtils.randomBoolean()) "train" else "bus"
+            val modelName = listOf("bus", "train", "ferry").random()
             val modelLow = ASSETS["atlas/${modelName}_low.glb", SceneAsset::class.java]
             val modelHigh = ASSETS["atlas/${modelName}_high.glb", SceneAsset::class.java]
             val vehicle = AtlasVehicle(modelHigh, modelLow, if (modelName == "train") VehicleType.TRAIN else VehicleType.BUS)
@@ -178,10 +182,8 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
         Logger.info("Creating AtlasScreen")
         profiler.enable()
 
-        val prefs = Gdx.app.getPreferences("decosegfault_atlas")
-        val presetName = prefs["graphicsPreset", "It Runs Crysis"]
-        Logger.info("Using graphics preset: $presetName")
-        graphics = GraphicsPresets.forName(presetName)
+        graphics = GraphicsPresets.getSavedGraphicsPreset()
+        Logger.info("Using graphics preset: ${graphics.name}")
 
         createTextUI()
         initialise3D()

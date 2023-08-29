@@ -34,7 +34,7 @@ object Assets {
         assets.load("ui/uiskin.json", Skin::class.java)
 
         // load vehicle 3D models
-        val vehicles = listOf("bus", "train") // TODO ferry
+        val vehicles = listOf("bus", "train", "ferry")
         for (vehicle in vehicles) {
             assets.load("atlas/${vehicle}_low.glb", SceneAsset::class.java)
             assets.load("atlas/${vehicle}_high.glb", SceneAsset::class.java)

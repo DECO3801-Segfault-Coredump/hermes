@@ -1,7 +1,12 @@
 package com.decosegfault.atlas.render
 
+import org.tinylog.kotlin.Logger
+import java.io.IOException
+import java.nio.file.Paths
+import kotlin.io.path.readText
+
 /**
- * Graphics presets for the renderer
+ * Graphics presets for Atlas
  *
  * @author Matt Young
  */
@@ -19,6 +24,7 @@ object GraphicsPresets {
         vehicleLodDist=Float.MIN_VALUE, // always draw low LoDs lol
         tileDrawDist=75.0f,
         anisotropic=1.0f,
+        msaa=0,
     )
 
     private val standard = GraphicsPreset(
@@ -28,15 +34,17 @@ object GraphicsPresets {
         vehicleLodDist=70.0f,
         tileDrawDist=130.0f,
         anisotropic=16.0f,
+        msaa=4,
     )
 
     private val itRunsCrysis = GraphicsPreset(
         name="It Runs Crysis",
         description="High settings for powerful gaming PCs or workstations",
-        vehicleDrawDist=400.0f,
+        vehicleDrawDist=500.0f,
         vehicleLodDist=100.0f,
         tileDrawDist=200.0f,
         anisotropic=16.0f,
+        msaa=8,
     )
 
     private val nasaSupercomputer = GraphicsPreset(
@@ -46,15 +54,33 @@ object GraphicsPresets {
         vehicleLodDist=Float.MAX_VALUE, // always draw high LoDs
         tileDrawDist=Float.MAX_VALUE, // always draw every tile
         anisotropic=64.0f, // this is insane lmao
+        msaa=32, // wtf
     )
 
     private val presets = listOf(genuinePotato, standard, itRunsCrysis, nasaSupercomputer)
 
-    fun forName(name: String): GraphicsPreset {
-        return presets.first { it.name == name }
+    fun forName(name: String): GraphicsPreset? {
+        return presets.firstOrNull { it.name == name }
     }
 
-    fun getNames(): List<String> {
-        return presets.map { it.name }
+    fun getPresets(): List<GraphicsPreset> {
+        return presets
+    }
+
+    fun getSavedGraphicsPreset(): GraphicsPreset {
+        val path = Paths.get(System.getProperty("user.home"), "Documents", "DECOSegfault", "graphics.txt")
+        Logger.debug("Loading graphics preset from: $path")
+        var name: String
+        try {
+            name = path.readText().trim()
+            Logger.debug("Using saved preset: $name")
+        } catch (e: IOException) {
+            Logger.debug("Using default preset, saved does not exist")
+            name = "Standard"
+        }
+        return forName(name) ?: run {
+            Logger.error("Invalid graphics preset $name!!! Using standard!")
+            return standard
+        }
     }
 }
