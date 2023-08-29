@@ -32,6 +32,8 @@ import org.tinylog.Logger;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.decosegfault.hermes.HermesSim;
+
 /**
  * This is the scene manager for Atlas, which is a fixed and re-implemented version of the default
  * SceneManager in gdx-gltf.
@@ -208,6 +210,7 @@ public class AtlasSceneManager implements Disposable {
      * to perform frustum culling and distance thresholding.
      */
     public void update(float delta, List<AtlasVehicle> vehicles) {
+        HermesSim.tick();
         renderableProviders.clear();
         renderedAtlasVehicles.clear();
 
