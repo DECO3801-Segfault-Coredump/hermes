@@ -210,7 +210,6 @@ public class AtlasSceneManager implements Disposable {
      * to perform frustum culling and distance thresholding.
      */
     public void update(float delta, List<AtlasVehicle> vehicles) {
-        HermesSim.tick();
         renderableProviders.clear();
         renderedAtlasVehicles.clear();
 
