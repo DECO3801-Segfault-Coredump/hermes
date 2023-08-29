@@ -28,8 +28,8 @@ dependencies {
 
   api 'org.tinylog:tinylog-api-kotlin:2.6.1'
   api 'org.tinylog:tinylog-impl:2.6.2'
-  implementation 'com.github.OneBusAway:onebusaway-gtfs-modules:onebusaway-gtfs-modules-1.2.6'
-  implementation 'org.slf4j:slf4j-log4j12:1.7.29'
+  api 'com.github.OneBusAway:onebusaway-gtfs-modules:onebusaway-gtfs-modules-1.2.6'
+  api 'org.slf4j:slf4j-log4j12:1.7.29'
   api "com.github.mgsx-dev.gdx-gltf:gltf:7d70839067ead66ec6107bc1be8c060c7c0fc7aa"
   api "com.github.ben-manes.caffeine:caffeine:3.1.8"
 //  api "com.esotericsoftware.yamlbeans:yamlbeans:1.15"

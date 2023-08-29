@@ -4,6 +4,7 @@
 
 package com.decosegfault.hermes;
 
+import com.badlogic.gdx.Gdx;
 import org.tinylog.Logger;
 
 import org.onebusaway.csv_entities.EntityHandler;
@@ -24,9 +25,8 @@ public class HermesSim {
 
     public static void read()  {
         GtfsReader reader = new GtfsReader();
-        File gtfs = new File("hermes/stops.txt");
         try {
-            reader.setInputLocation(gtfs);
+            reader.setInputLocation(Gdx.files.internal("hermes/gtfs.zip").file());
         } catch (IOException noFile) {
             throw new IllegalArgumentException(noFile);
         }
@@ -65,7 +65,7 @@ public class HermesSim {
         public void handleEntity(Object bean) {
             if (bean instanceof Stop) {
                 Stop stop = (Stop) bean;
-//                Logger.info("stop: " + stop.getName());
+                Logger.info("stop: " + stop.getName());
             }
         }
     }
