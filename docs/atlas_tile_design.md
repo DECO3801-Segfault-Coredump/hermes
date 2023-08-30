@@ -11,7 +11,14 @@ will attempt to automatically start the tile server. It will then verify the til
 If the tile server crashes, Atlas should throw an error dialogue and probably quit the game.
 
 ## Constructing the grid
-TODO
+- Imagine the ground is an infinite plane
+- We can determine the area of this plane that is visible on screen
+- Using the camera frustum, we can cast rays through the four corners and see where they intersect
+the ground plane
+- This will define the visible view rectangle on the ground
+- At certain low view angles, this would create extremely long regions of the map to be rendered,
+but we can fix this by still doing distance thresholding
+  - Either truncate the rectangle or cap ray length
 
 ## Fetching and caching tiles
 Once the grid is constructed, Atlas will fetch tiles from the tile server using HTTP. To avoid blocking the
@@ -33,10 +40,6 @@ Otherwise, we will re-download it from the tile server.
 
 The cache will either use Guava's CacheBuilder or Caffeine: https://github.com/ben-manes/caffeine (probably
 Caffeine due to its support of async loading, which makes sense for HTTP)
-
-TODO: tile server should save generated PNGs to a permanent docker volume
-
-TODO we should ideally pre-generate various zoom levels as well
 
 ## Scene optimisation
 Tiles whose centroid is a configurable distance away from the camera will not be added to the render list.
