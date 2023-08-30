@@ -67,6 +67,9 @@ public class AtlasSceneManager implements Disposable {
     /** Atlas graphics preset */
     private GraphicsPreset graphics;
 
+    /** Cache used to reduce draw calls */
+    private ModelCache cache;
+
     /** Vehicles that were not rendered */
     private int culledVehicles = 0;
     /** Vehicles that used low LoD */
@@ -74,11 +77,10 @@ public class AtlasSceneManager implements Disposable {
     /** Vehicles that were fully rendered */
     private int renderedVehicles = 0;
 
-    // TODO add the ability to change which ShaderProvider based on GraphicsPreset
-
     public AtlasSceneManager(GraphicsPreset graphics) {
         this(24);
         this.graphics = graphics;
+        this.cache = new ModelCache();
         if (graphics.getName().equals("Genuine Potato")) {
             Logger.info("Using non-PBR shader for Genuine Potato graphics");
             setDepthShaderProvider(new DepthShaderProvider());
@@ -210,6 +212,16 @@ public class AtlasSceneManager implements Disposable {
             updateEnvironment();
             if (skyBox != null) skyBox.update(camera, delta);
         }
+
+        // add renderables to cache, the cache will be primed for drawing on the next call
+        // FIXME(Matt): this is SLOW, like 4 FPS slow - we can't be calling this every frame
+        // FIXME(Matt): perhaps each AtlasVehicle has a ModelCache? or each vehicle _type_ has a cache?
+        // FIXME(Matt): we could also try that quadtree model caching approach, seems like a good idea
+//        cache.begin();
+//        for (RenderableProvider provider : renderableProviders) {
+//            cache.add(provider);
+//        }
+//        cache.end();
     }
 
     public void resetStats() {
@@ -222,6 +234,11 @@ public class AtlasSceneManager implements Disposable {
         return culledVehicles + renderedVehicles + lowLodVehicles;
     }
 
+    /**
+     * Returns the rate for the given metric
+     * @param metric which metric to query
+     * @return the percentage of total vehicles this metric occupies
+     */
     private int getRate(int metric) {
         if (getTotalVehicles() <= 0) {
             return 0;
@@ -311,7 +328,7 @@ public class AtlasSceneManager implements Disposable {
 
         renderShadows();
 
-        renderMirror();
+        //renderMirror(); // Matt: shouldn't be necessary in Atlas
 
         renderTransmission();
 
@@ -444,6 +461,7 @@ public class AtlasSceneManager implements Disposable {
     public void dispose() {
         batch.dispose();
         depthBatch.dispose();
+        cache.dispose();
         if (transmissionSource != null) transmissionSource.dispose();
         if (mirrorSource != null) mirrorSource.dispose();
         if (cascadeShadowMap != null) cascadeShadowMap.dispose();

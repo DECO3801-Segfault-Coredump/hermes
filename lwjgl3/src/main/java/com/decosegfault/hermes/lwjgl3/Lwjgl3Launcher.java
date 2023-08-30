@@ -9,7 +9,12 @@ import org.tinylog.Logger;
 
 import java.io.File;
 
-/** Launches the desktop (LWJGL3) application. */
+/**
+ * Launches the desktop (LWJGL3) application.
+ * @author czyzby & kotcrab (gdx-setup)
+ * @author Tommy Ettinger (gdx-liftoff)
+ * @author Matt Young (Atlas)
+ */
 public class Lwjgl3Launcher {
     public static void main(String[] args) {
         if (StartupHelper.startNewJvmIfRequired()) return; // This handles macOS support and helps on Windows.
@@ -35,11 +40,8 @@ public class Lwjgl3Launcher {
         Lwjgl3ApplicationConfiguration configuration = new Lwjgl3ApplicationConfiguration();
         configuration.setTitle("Hermes + Atlas (DECO3801)");
         configuration.useVsync(false);
-        //// Limits FPS to the refresh rate of the currently active monitor.
-//        configuration.setForegroundFPS(Lwjgl3ApplicationConfiguration.getDisplayMode().refreshRate);
-        //// If you remove the above line and set Vsync to false, you can get unlimited FPS, which can be
-        //// useful for testing performance, but can also be very stressful to some hardware.
-        //// You may also need to configure GPU drivers to fully disable Vsync; this can cause screen tearing.
+        // force the use of OpenGL 3.2 - if this causes the game to go nuclear, tag @Matt
+        configuration.setOpenGLEmulation(Lwjgl3ApplicationConfiguration.GLEmulation.GL32, 3, 2);
         configuration.setWindowedMode(1600, 900);
         // "samples" controls MSAA samples
         configuration.setBackBufferConfig(8, 8, 8, 8, 16, 8, preset.getMsaa());

@@ -6,8 +6,6 @@ import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Graphics
 import com.badlogic.gdx.graphics.*
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import com.badlogic.gdx.graphics.profiling.GLProfiler
-import com.badlogic.gdx.math.MathUtils
-import com.badlogic.gdx.math.RandomXS128
 import com.badlogic.gdx.math.Vector3
 import com.badlogic.gdx.scenes.scene2d.Stage
 import com.badlogic.gdx.scenes.scene2d.ui.Image
@@ -18,19 +16,19 @@ import com.badlogic.gdx.utils.viewport.ExtendViewport
 import com.badlogic.gdx.utils.viewport.FitViewport
 import com.decosegfault.atlas.map.LRUTileCache
 import com.decosegfault.atlas.render.*
+import com.decosegfault.atlas.util.Assets
 import com.decosegfault.atlas.util.Assets.ASSETS
 import com.decosegfault.hermes.VehicleType
 import ktx.app.clearScreen
-import ktx.preferences.get
 import net.mgsx.gltf.scene3d.attributes.PBRCubemapAttribute
 import net.mgsx.gltf.scene3d.attributes.PBRTextureAttribute
 import net.mgsx.gltf.scene3d.lights.DirectionalLightEx
 import net.mgsx.gltf.scene3d.scene.SceneAsset
 import net.mgsx.gltf.scene3d.scene.SceneSkybox
 import net.mgsx.gltf.scene3d.utils.IBLBuilder
-import net.mgsx.gltf.scene3d.utils.MaterialConverter
-import org.lwjgl.glfw.GLFW
 import org.tinylog.kotlin.Logger
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 import kotlin.math.roundToInt
 import kotlin.random.Random
 
@@ -41,8 +39,11 @@ import kotlin.random.Random
  */
 class SimulationScreen(private val game: Game) : ScreenAdapter() {
     private val profiler = GLProfiler(Gdx.graphics as Lwjgl3Graphics)
+    /** Instance of LRU tile cache used to fetch tiles from server */
     private val tileCache = LRUTileCache()
+    /** UI stage */
     private lateinit var stage: Stage
+    /** Debug text */
     private lateinit var debugLabel: Label
     private val mux = InputMultiplexer()
     private val cam = PerspectiveCamera().apply {
@@ -55,14 +56,18 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
         baseTranslateUnits = 40f
         scrollFactor = -0.1f
     }
+    /** Viewport for main 3D camera */
     private val cameraViewport = ExtendViewport(1920f, 1080f, cam)
     private lateinit var sceneManager: AtlasSceneManager
     private lateinit var sun: DirectionalLightEx
-    private lateinit var graphics: GraphicsPreset
+    private val graphics = GraphicsPresets.getSavedGraphicsPreset()
     private lateinit var shapeRender: ShapeRenderer
     private val vehicles = mutableListOf<AtlasVehicle>()
     private var debugCounter = 0.0f
+    private var shouldVehiclesMove = true
     private var isDebugDraw = true
+    /** Executor to schedule Hermes tick asynchronously in its own thread */
+    private val hermesExecutor = Executors.newSingleThreadScheduledExecutor()
 
     private fun createTextUI() {
         stage = Stage(FitViewport(1920f, 1080f))
@@ -100,15 +105,15 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
         // add a label saying "(c) OpenStreetMap contributors" in the bottom right corner to comply with
         // the OpenStreetMap licence
         // ref: https://www.openstreetmap.org/copyright
-        val container2 = Table()
-        container2.pad(10f)
-        container2.add(Label("(c) OpenStreetMap contributors", skin, "window"))
-        container2.setFillParent(true)
-        container2.bottom().right()
-        container2.pack()
+        val osmContainer = Table()
+        osmContainer.pad(10f)
+        osmContainer.add(Label("(c) OpenStreetMap contributors", skin, "window"))
+        osmContainer.setFillParent(true)
+        osmContainer.bottom().right()
+        osmContainer.pack()
 
         stage.addActor(container)
-        stage.addActor(container2)
+        stage.addActor(osmContainer)
 
         shapeRender = ShapeRenderer()
     }
@@ -143,29 +148,15 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
         // setup skybox
         sceneManager.skyBox = SceneSkybox(environmentCubemap)
 
-        // force anisotropic filtering for all assets
-        val models = com.badlogic.gdx.utils.Array<SceneAsset>()
-        ASSETS.getAll(SceneAsset::class.java, models)
-        Logger.info("Updating ${models.size} models to have ${graphics.anisotropic}x anisotropic filtering")
-        for (model in models) {
-            for (texture in model.textures) {
-                texture.setAnisotropicFilter(graphics.anisotropic)
-            }
-        }
+        // apply graphics settings
+        Assets.applyGraphicsPreset(graphics)
 
-        // if we are in Genuine Potato mode, convert PBR assets to non-PBR
-        if (graphics.name == "Genuine Potato") {
-            for (model in models) {
-                MaterialConverter.makeCompatible(model.scene.model.materials)
-            }
-            Logger.info("Converted PBR materials to non-PBR for Genuine Potato graphics mode")
-        }
-
+        // print OpenGL debug info for later diagnostics if/when the game crashes on someone's computer
         val v = Gdx.graphics.glVersion
         Logger.info("GL version: ${v.majorVersion}.${v.minorVersion}.${v.releaseVersion} vendor: ${v.vendorString} renderer: ${v.rendererString}")
     }
 
-    private fun constructTestScene() {
+    private fun constructBenchmarkScene() {
         Logger.debug("Construct test scene")
         vehicles.clear()
         for (i in 0..200) {
@@ -178,16 +169,25 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
         }
     }
 
+    private fun initialiseHermes() {
+        // Hermes.init()
+
+        // tell Hermes to tick every 100 ms, in its own thread asynchronously, so we don't block the renderer
+        hermesExecutor.scheduleAtFixedRate({
+            // HermesSim.tick()
+        }, 0L, 100L, TimeUnit.MILLISECONDS)
+    }
+
     override fun show() {
         Logger.info("Creating AtlasScreen")
         profiler.enable()
 
-        graphics = GraphicsPresets.getSavedGraphicsPreset()
         Logger.info("Using graphics preset: ${graphics.name}")
 
         createTextUI()
         initialise3D()
-        constructTestScene()
+        constructBenchmarkScene()
+        initialiseHermes()
 
         mux.addProcessor(camController)
         mux.addProcessor(stage)
@@ -216,11 +216,15 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
                 Logger.debug("Enter fullscreen from window mode")
                 Gdx.graphics.setFullscreenMode(Lwjgl3ApplicationConfiguration.getDisplayMode())
             }
+        } else if (Gdx.input.isKeyJustPressed(Input.Keys.LEFT_BRACKET)) {
+            // vehicle movement in benchmark
+            Logger.debug("Toggling vehicle movement")
+            shouldVehiclesMove = !shouldVehiclesMove
         }
 
-        // update scene
+        // update benchmark
         debugCounter += delta
-        if (debugCounter >= 0.5f) {
+        if (debugCounter >= 0.5f && shouldVehiclesMove) {
             debugCounter = 0f
             for (vehicle in vehicles) {
                 // x, y, theta degrees
@@ -252,6 +256,7 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
             debugLabel.setText("FPS: ${Gdx.graphics.framesPerSecond}    Draw calls: ${profiler.drawCalls}")
         }
 
+        // draw bounding boxes for vehicles
         if (isDebugDraw) {
             shapeRender.projectionMatrix = cam.combined
             shapeRender.begin(ShapeRenderer.ShapeType.Line)
@@ -287,6 +292,8 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
         tileCache.dispose()
         profiler.disable()
         shapeRender.dispose()
+        Logger.debug("Shutting down Hermes executor")
+        hermesExecutor.shutdownNow()
         // we should no longer need assets since we quit the game
         ASSETS.dispose()
     }

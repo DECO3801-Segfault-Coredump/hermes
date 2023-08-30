@@ -2,11 +2,15 @@ package com.decosegfault.atlas.render
 
 import com.badlogic.gdx.graphics.Camera
 import com.badlogic.gdx.graphics.Color
+import com.badlogic.gdx.graphics.g3d.ModelCache
+import com.badlogic.gdx.graphics.g3d.ModelCache.TightMeshPool
 import com.badlogic.gdx.graphics.g3d.ModelInstance
+import com.badlogic.gdx.graphics.g3d.RenderableProvider
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import com.badlogic.gdx.math.Matrix4
 import com.badlogic.gdx.math.Vector3
 import com.badlogic.gdx.math.collision.BoundingBox
+import com.badlogic.gdx.utils.Disposable
 import com.decosegfault.atlas.util.AtlasUtils
 import com.decosegfault.hermes.VehicleType
 import net.mgsx.gltf.scene3d.scene.SceneAsset
@@ -18,34 +22,53 @@ import net.mgsx.gltf.scene3d.scene.SceneAsset
  * @param modelHigh high poly 3D model
  * @param modelLow low poly 3D model
  */
-data class AtlasVehicle(val modelHigh: SceneAsset, val modelLow: SceneAsset, val vehicleType: VehicleType) {
+data class AtlasVehicle(val modelHigh: SceneAsset, val modelLow: SceneAsset, val vehicleType: VehicleType): Disposable {
+    /** actual transform of the vehicle shared between model instances */
     private val transform = Matrix4()
     /** original bbox for the model itself */
     private val bboxOrig = BoundingBox()
     /** transformed bbox for current model */
     private val bbox = BoundingBox()
+    /** true if the vehicle was culled in the last render pass */
     var didCull = false
+    /** true if the vehicle used low LoD model in the last render pass */
     var didUseLowLod = false
 
     private val modelInstanceHigh = ModelInstance(modelHigh.scene.model)
     private val modelInstanceLow = ModelInstance(modelLow.scene.model)
 
+//    private val cacheHigh = ModelCache(ModelCache.Sorter(), TightMeshPool())
+//    private val cacheLow = ModelCache(ModelCache.Sorter(), TightMeshPool())
+
     init {
         // only calculate bbox once, then multiply it with transform (see update())
         modelInstanceHigh.calculateBoundingBox(bboxOrig)
+
+//        updateCaches()
     }
+
+//    private fun updateCaches() {
+//        // insert high and low LoDs into the model cache
+//        cacheHigh.begin()
+//        cacheHigh.add(modelInstanceHigh)
+//        cacheHigh.end()
+//
+//        cacheLow.begin()
+//        cacheLow.add(modelInstanceLow)
+//        cacheLow.end()
+//    }
 
     /** Updates LoD transforms according to the shared [transform] */
     private fun update() {
         // translate models
         modelInstanceHigh.transform.set(transform)
         modelInstanceLow.transform.set(transform)
-//        modelInstanceHigh.calculateTransforms()
-//        modelInstanceLow.calculateTransforms()
 
         // update bounding box transform: https://stackoverflow.com/a/20933342/5007892
         bbox.set(bboxOrig)
         bbox.mul(transform)
+
+//        updateCaches()
     }
 
     /**
@@ -53,8 +76,8 @@ data class AtlasVehicle(val modelHigh: SceneAsset, val modelLow: SceneAsset, val
      */
     fun updateTransform(trans: Vector3) {
         transform.setToTranslation(trans.x, 0f, trans.y)
-        // we zeroed out the matrix in transform(), so we can just rotate it now
-        // we **don't** call setToRotation, because then this would delete our transform values
+        // note that setToTranslation **zeroes out** the matrix, so we can safely just rotate it now
+        // we **don't** call setToRotation, because this would then zero out the matrix again
         transform.rotate(Vector3.Y, trans.z)
         update()
     }
@@ -80,7 +103,7 @@ data class AtlasVehicle(val modelHigh: SceneAsset, val modelLow: SceneAsset, val
     }
 
     /** @return The model to render, or null if we should not render this vehicle */
-    fun getRenderModel(cam: Camera, graphics: GraphicsPreset): ModelInstance? {
+    fun getRenderModel(cam: Camera, graphics: GraphicsPreset): RenderableProvider? {
         didCull = false
         didUseLowLod = false
 
@@ -107,5 +130,10 @@ data class AtlasVehicle(val modelHigh: SceneAsset, val modelLow: SceneAsset, val
         } else {
             modelInstanceHigh
         }
+    }
+
+    override fun dispose() {
+//        cacheHigh.dispose()
+//        cacheLow.dispose()
     }
 }
