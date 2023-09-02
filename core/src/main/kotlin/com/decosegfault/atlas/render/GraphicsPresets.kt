@@ -25,6 +25,7 @@ object GraphicsPresets {
         tileDrawDist=75.0f,
         anisotropic=1.0f,
         msaa=0,
+        shadows=false,
     )
 
     private val standard = GraphicsPreset(
@@ -35,6 +36,7 @@ object GraphicsPresets {
         tileDrawDist=130.0f,
         anisotropic=16.0f,
         msaa=4,
+        shadows=true,
     )
 
     private val itRunsCrysis = GraphicsPreset(
@@ -45,6 +47,7 @@ object GraphicsPresets {
         tileDrawDist=200.0f,
         anisotropic=16.0f,
         msaa=8,
+        shadows=true,
     )
 
     private val nasaSupercomputer = GraphicsPreset(
@@ -55,6 +58,7 @@ object GraphicsPresets {
         tileDrawDist=Float.MAX_VALUE, // always draw every tile
         anisotropic=64.0f, // this is insane lmao
         msaa=32, // wtf
+        shadows=true,
     )
 
     private val presets = listOf(genuinePotato, standard, itRunsCrysis, nasaSupercomputer)

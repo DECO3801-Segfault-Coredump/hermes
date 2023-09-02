@@ -13,6 +13,7 @@ import com.badlogic.gdx.graphics.g3d.utils.DefaultShaderProvider;
 import com.badlogic.gdx.graphics.g3d.utils.DepthShaderProvider;
 import com.badlogic.gdx.graphics.g3d.utils.RenderableSorter;
 import com.badlogic.gdx.graphics.g3d.utils.ShaderProvider;
+import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Disposable;
 import net.mgsx.gltf.scene3d.attributes.PBRMatrixAttribute;
@@ -67,9 +68,6 @@ public class AtlasSceneManager implements Disposable {
     /** Atlas graphics preset */
     private GraphicsPreset graphics;
 
-    /** Cache used to reduce draw calls */
-    private ModelCache cache;
-
     /** Vehicles that were not rendered */
     private int culledVehicles = 0;
     /** Vehicles that used low LoD */
@@ -77,10 +75,12 @@ public class AtlasSceneManager implements Disposable {
     /** Vehicles that were fully rendered */
     private int renderedVehicles = 0;
 
+    /** List of AtlasVehicles that actually got rendered */
+    private List<AtlasVehicle> renderedAtlasVehicles = new ArrayList<>();
+
     public AtlasSceneManager(GraphicsPreset graphics) {
         this(24);
         this.graphics = graphics;
-        this.cache = new ModelCache();
         if (graphics.getName().equals("Genuine Potato")) {
             Logger.info("Using non-PBR shader for Genuine Potato graphics");
             setDepthShaderProvider(new DepthShaderProvider());
@@ -190,6 +190,8 @@ public class AtlasSceneManager implements Disposable {
      */
     public void update(float delta, List<AtlasVehicle> vehicles) {
         renderableProviders.clear();
+        renderedAtlasVehicles.clear();
+
         for (AtlasVehicle vehicle : vehicles) {
             var model = vehicle.getRenderModel(camera, graphics);
             if (model == null) {
@@ -199,6 +201,7 @@ public class AtlasSceneManager implements Disposable {
             }
             // we were asked to render this vehicle
             renderableProviders.add(model);
+            renderedAtlasVehicles.add(vehicle);
 
             // check if we used low LoD
             if (vehicle.getDidUseLowLod()) {
@@ -212,16 +215,20 @@ public class AtlasSceneManager implements Disposable {
             updateEnvironment();
             if (skyBox != null) skyBox.update(camera, delta);
         }
+    }
 
-        // add renderables to cache, the cache will be primed for drawing on the next call
-        // FIXME(Matt): this is SLOW, like 4 FPS slow - we can't be calling this every frame
-        // FIXME(Matt): perhaps each AtlasVehicle has a ModelCache? or each vehicle _type_ has a cache?
-        // FIXME(Matt): we could also try that quadtree model caching approach, seems like a good idea
-//        cache.begin();
-//        for (RenderableProvider provider : renderableProviders) {
-//            cache.add(provider);
-//        }
-//        cache.end();
+    /**
+     * Computes the first AtlasVehicle this Ray hits, or null if no vehicles. Useful for selecting vehicles using
+     * a screen pick ray. Only queries the actual list of rendered vehicles on the last call to update(), so
+     * you must call this **only** after calling update().
+     */
+    public AtlasVehicle intersectRayVehicle(Ray ray) {
+        for (AtlasVehicle vehicle : renderedAtlasVehicles) {
+            if (vehicle.intersectRay(ray)) {
+                return vehicle;
+            }
+        }
+        return null;
     }
 
     public void resetStats() {
@@ -461,7 +468,6 @@ public class AtlasSceneManager implements Disposable {
     public void dispose() {
         batch.dispose();
         depthBatch.dispose();
-        cache.dispose();
         if (transmissionSource != null) transmissionSource.dispose();
         if (mirrorSource != null) mirrorSource.dispose();
         if (cascadeShadowMap != null) cascadeShadowMap.dispose();

@@ -7,7 +7,8 @@ package com.decosegfault.atlas.render
  * @param vehicleLodDist Above this distance, low poly LoDs are used; below, high poly LoDs are used
  * @param tileDrawDist Above this distance, map tiles are not rendered
  * @param anisotropic Number of texture anisotropic filtering samples
- * @param msaa MSAA samples (currently not implemented)
+ * @param msaa MSAA samples
+ * @param shadows true/false should shadows be rendered
  * @author Matt Young
  */
 data class GraphicsPreset(
@@ -21,4 +22,6 @@ data class GraphicsPreset(
     val anisotropic: Float,
 
     var msaa: Int,
+
+    var shadows: Boolean,
 )

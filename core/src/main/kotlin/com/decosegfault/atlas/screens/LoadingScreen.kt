@@ -74,7 +74,7 @@ class LoadingScreen(private val game: Game) : ScreenAdapter() {
             currentStage = LoadingStage.CHECKING_CONNECTIVITY
 
             // Wait for tile server
-            Logger.debug("Checking tile server connectivity")
+            Logger.info("Checking tile server connectivity")
             while (!TileServerManager.pollTileServer()) {
                 Thread.sleep(1000)
             }

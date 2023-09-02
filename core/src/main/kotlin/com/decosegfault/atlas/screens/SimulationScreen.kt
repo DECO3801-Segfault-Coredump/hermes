@@ -15,6 +15,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.Table
 import com.badlogic.gdx.utils.viewport.ExtendViewport
 import com.badlogic.gdx.utils.viewport.FitViewport
 import com.decosegfault.atlas.map.LRUTileCache
+import com.decosegfault.atlas.map.MapRenderer
 import com.decosegfault.atlas.render.*
 import com.decosegfault.atlas.util.Assets
 import com.decosegfault.atlas.util.Assets.ASSETS
@@ -23,6 +24,7 @@ import ktx.app.clearScreen
 import net.mgsx.gltf.scene3d.attributes.PBRCubemapAttribute
 import net.mgsx.gltf.scene3d.attributes.PBRTextureAttribute
 import net.mgsx.gltf.scene3d.lights.DirectionalLightEx
+import net.mgsx.gltf.scene3d.lights.DirectionalShadowLight
 import net.mgsx.gltf.scene3d.scene.SceneAsset
 import net.mgsx.gltf.scene3d.scene.SceneSkybox
 import net.mgsx.gltf.scene3d.utils.IBLBuilder
@@ -38,11 +40,16 @@ import kotlin.random.Random
  * @author Matt Young
  */
 class SimulationScreen(private val game: Game) : ScreenAdapter() {
+    private val graphics = GraphicsPresets.getSavedGraphicsPreset()
+
     private val profiler = GLProfiler(Gdx.graphics as Lwjgl3Graphics)
+
     /** Instance of LRU tile cache used to fetch tiles from server */
     private val tileCache = LRUTileCache()
+
     /** UI stage */
-    private lateinit var stage: Stage
+    private val stage = Stage(FitViewport(1920f, 1080f))
+
     /** Debug text */
     private lateinit var debugLabel: Label
     private val mux = InputMultiplexer()
@@ -56,21 +63,34 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
         baseTranslateUnits = 40f
         scrollFactor = -0.1f
     }
+
     /** Viewport for main 3D camera */
     private val cameraViewport = ExtendViewport(1920f, 1080f, cam)
     private lateinit var sceneManager: AtlasSceneManager
-    private lateinit var sun: DirectionalLightEx
-    private val graphics = GraphicsPresets.getSavedGraphicsPreset()
-    private lateinit var shapeRender: ShapeRenderer
+
+    /** The sun light */
+    private val sun = if (graphics.shadows) DirectionalShadowLight() else DirectionalLightEx()
+
+    /** Debug shape renderer */
+    private val shapeRender = ShapeRenderer()
+
+    /** Vehicles for benchmark, in future this will be from Hermes */
     private val vehicles = mutableListOf<AtlasVehicle>()
+
+    /** Counter for when to move vehicles */
     private var debugCounter = 0.0f
+
+    /** True if vehicles should move in benchmark */
     private var shouldVehiclesMove = true
+
+    /** True if debug drawing enabled */
     private var isDebugDraw = true
+
     /** Executor to schedule Hermes tick asynchronously in its own thread */
     private val hermesExecutor = Executors.newSingleThreadScheduledExecutor()
+    private val mapRenderer = MapRenderer(cam, graphics)
 
     private fun createTextUI() {
-        stage = Stage(FitViewport(1920f, 1080f))
         val skin = ASSETS["ui/uiskin.json", Skin::class.java]
 
         // hack to use linear scaling instead of nearest neighbour for text
@@ -114,8 +134,6 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
 
         stage.addActor(container)
         stage.addActor(osmContainer)
-
-        shapeRender = ShapeRenderer()
     }
 
     // based on:
@@ -126,7 +144,6 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
         sceneManager = AtlasSceneManager(graphics)
         sceneManager.setCamera(cam)
 
-        sun = DirectionalLightEx()
         sun.direction.set(1f, -3f, 1f).nor()
         sun.color.set(Color.WHITE)
         sceneManager.environment.add(sun)
@@ -238,6 +255,7 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
         // render 3D
         camController.update()
         cam.update()
+        mapRenderer.update()
         sceneManager.update(delta, vehicles)
         sceneManager.render()
 
@@ -263,6 +281,7 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
             for (vehicle in vehicles) {
                 vehicle.debug(shapeRender)
             }
+            mapRenderer.debug(shapeRender)
             shapeRender.end()
 
 //            shapeRender.begin(ShapeRenderer.ShapeType.Filled)

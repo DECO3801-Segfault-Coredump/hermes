@@ -7,9 +7,11 @@ import com.badlogic.gdx.graphics.g3d.ModelCache.TightMeshPool
 import com.badlogic.gdx.graphics.g3d.ModelInstance
 import com.badlogic.gdx.graphics.g3d.RenderableProvider
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
+import com.badlogic.gdx.math.Intersector
 import com.badlogic.gdx.math.Matrix4
 import com.badlogic.gdx.math.Vector3
 import com.badlogic.gdx.math.collision.BoundingBox
+import com.badlogic.gdx.math.collision.Ray
 import com.badlogic.gdx.utils.Disposable
 import com.decosegfault.atlas.util.AtlasUtils
 import com.decosegfault.hermes.VehicleType
@@ -22,7 +24,7 @@ import net.mgsx.gltf.scene3d.scene.SceneAsset
  * @param modelHigh high poly 3D model
  * @param modelLow low poly 3D model
  */
-data class AtlasVehicle(val modelHigh: SceneAsset, val modelLow: SceneAsset, val vehicleType: VehicleType): Disposable {
+class AtlasVehicle(private val modelHigh: SceneAsset, private val modelLow: SceneAsset, val vehicleType: VehicleType) {
     /** actual transform of the vehicle shared between model instances */
     private val transform = Matrix4()
     /** original bbox for the model itself */
@@ -37,26 +39,10 @@ data class AtlasVehicle(val modelHigh: SceneAsset, val modelLow: SceneAsset, val
     private val modelInstanceHigh = ModelInstance(modelHigh.scene.model)
     private val modelInstanceLow = ModelInstance(modelLow.scene.model)
 
-//    private val cacheHigh = ModelCache(ModelCache.Sorter(), TightMeshPool())
-//    private val cacheLow = ModelCache(ModelCache.Sorter(), TightMeshPool())
-
     init {
         // only calculate bbox once, then multiply it with transform (see update())
         modelInstanceHigh.calculateBoundingBox(bboxOrig)
-
-//        updateCaches()
     }
-
-//    private fun updateCaches() {
-//        // insert high and low LoDs into the model cache
-//        cacheHigh.begin()
-//        cacheHigh.add(modelInstanceHigh)
-//        cacheHigh.end()
-//
-//        cacheLow.begin()
-//        cacheLow.add(modelInstanceLow)
-//        cacheLow.end()
-//    }
 
     /** Updates LoD transforms according to the shared [transform] */
     private fun update() {
@@ -67,8 +53,6 @@ data class AtlasVehicle(val modelHigh: SceneAsset, val modelLow: SceneAsset, val
         // update bounding box transform: https://stackoverflow.com/a/20933342/5007892
         bbox.set(bboxOrig)
         bbox.mul(transform)
-
-//        updateCaches()
     }
 
     /**
@@ -132,8 +116,7 @@ data class AtlasVehicle(val modelHigh: SceneAsset, val modelLow: SceneAsset, val
         }
     }
 
-    override fun dispose() {
-//        cacheHigh.dispose()
-//        cacheLow.dispose()
+    fun intersectRay(ray: Ray): Boolean {
+        return Intersector.intersectRayBoundsFast(ray, bbox)
     }
 }
