@@ -32,6 +32,7 @@ class LoadingScreen(private val game: Game) : ScreenAdapter() {
         STARTING_TILESERVER("Starting tile server..."),
         CHECKING_CONNECTIVITY("Checking tile server connectivity..."),
         LOADING_3D_ASSETS("Loading 3D assets..."),
+        STARTING_HERMES("Starting Hermes..."),
 
         DONE("Done.")
     }
@@ -88,6 +89,15 @@ class LoadingScreen(private val game: Game) : ScreenAdapter() {
         }
     }
 
+    /** Launches a thread which starts Hermes */
+    private fun startHermes() {
+        thread(isDaemon = true) {
+            // temporary
+            Thread.sleep(1000)
+            currentStage = LoadingStage.DONE
+        }
+    }
+
     override fun render(delta: Float) {
         clearScreen(0f, 0f, 0f, 1f)
         label.setText(currentStage.text)
@@ -111,7 +121,8 @@ class LoadingScreen(private val game: Game) : ScreenAdapter() {
         if (currentStage == LoadingStage.LOADING_3D_ASSETS) {
             if (Assets.ASSETS.update()) {
                 Logger.info("Done loading assets")
-                currentStage = LoadingStage.DONE
+                startHermes()
+                currentStage = LoadingStage.STARTING_HERMES
             } else {
                 // not yet done
                 val completion = (Assets.ASSETS.progress * 100.0).roundToInt()
@@ -120,20 +131,6 @@ class LoadingScreen(private val game: Game) : ScreenAdapter() {
         } else if (currentStage == LoadingStage.DONE) {
             game.screen = SimulationScreen(game)
         }
-
-//        if (ASSETS.update()) {
-//            // finished loading assets
-//            Logger.debug("Finished loading assets")
-//            label.setText("Initialising renderer...")
-//            // make sure the text gets updated
-//            stage.act(delta)
-//            stage.draw()
-//            game.screen = SimulationScreen()
-//        } else {
-//            // not yet done
-//            val completion = (ASSETS.progress * 100.0).roundToInt()
-//            label.setText("Loading assets ($completion%)")
-//        }
     }
 
     override fun resize(width: Int, height: Int) {

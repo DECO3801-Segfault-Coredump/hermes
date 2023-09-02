@@ -7,7 +7,9 @@ import com.decosegfault.atlas.render.GraphicsPreset;
 import com.decosegfault.atlas.render.GraphicsPresets;
 import org.tinylog.Logger;
 
+import javax.swing.*;
 import java.io.File;
+import java.util.List;
 
 /**
  * Launches the desktop (LWJGL3) application.
@@ -26,7 +28,38 @@ public class Lwjgl3Launcher {
             Logger.error(throwable);
         });
 
+        if (System.getProperty("debug") == null) {
+            displayConfigPrompts();
+        } else {
+            Logger.info("Skipping displaying config prompts in debug mode");
+        }
+
         createApplication();
+    }
+
+    /** Display prompts asking for user config settings */
+    private static void displayConfigPrompts() {
+        Logger.info("Displaying prompts");
+        JFrame frame = new JFrame();
+        frame.setAlwaysOnTop(true);
+
+        // first ask for graphics setting
+        Object[] presets = GraphicsPresets.INSTANCE.getPresets().stream().map(GraphicsPreset::getName).toArray();
+        Object graphicsResult = JOptionPane.showInputDialog(frame,
+        "Select Atlas graphics preset:",
+        "DECO3801 Atlas Config", JOptionPane.QUESTION_MESSAGE, null, presets, presets[1]);
+        // TODO default graphics preset should be one saved to graphics.txt
+
+        // next ask for simulation mode
+        Object[] simModes = new String[]{"Historical", "Live", "Simulated"};
+        Object simResult = JOptionPane.showInputDialog(frame,
+        "Select Hermes simulation mode:",
+        "DECO3801 Hermes Config", JOptionPane.QUESTION_MESSAGE, null, simModes, simModes[1]);
+
+        frame.dispose();
+
+        // write sim result and graphics result to file
+        if (graphicsResult != null) GraphicsPresets.INSTANCE.writePreset((String) graphicsResult);
     }
 
     private static Lwjgl3Application createApplication() {

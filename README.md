@@ -66,6 +66,10 @@ I haven't got around to doing this yet. If it does become necessary ping @matt.
 - G: Show/hide debug info
 - ]: Purge LRUTileCache
 
+To toggle debug mode: Go to Run -> Edit configurations, go to Lwjgl3Launcher, click "Modify options", then
+check "Add VM options". In the field labeled "VM options", paste: `-Ddebug=true` (this is adding a system
+property called "debug")
+
 ## Licence
 Unfortunately (or fortunately, depending on who you ask), the University of Queensland owns all the IP to
 this project, so you'll have to talk to them.

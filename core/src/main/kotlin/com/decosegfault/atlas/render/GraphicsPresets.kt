@@ -4,6 +4,7 @@ import org.tinylog.kotlin.Logger
 import java.io.IOException
 import java.nio.file.Paths
 import kotlin.io.path.readText
+import kotlin.io.path.writeText
 
 /**
  * Graphics presets for Atlas
@@ -36,7 +37,7 @@ object GraphicsPresets {
         tileDrawDist=130.0f,
         anisotropic=16.0f,
         msaa=4,
-        shadows=true,
+        shadows=false,
     )
 
     private val itRunsCrysis = GraphicsPreset(
@@ -47,7 +48,7 @@ object GraphicsPresets {
         tileDrawDist=200.0f,
         anisotropic=16.0f,
         msaa=8,
-        shadows=true,
+        shadows=false,
     )
 
     private val nasaSupercomputer = GraphicsPreset(
@@ -57,7 +58,7 @@ object GraphicsPresets {
         vehicleLodDist=Float.MAX_VALUE, // always draw high LoDs
         tileDrawDist=Float.MAX_VALUE, // always draw every tile
         anisotropic=64.0f, // this is insane lmao
-        msaa=32, // wtf
+        msaa=64, // wtf
         shadows=true,
     )
 
@@ -71,20 +72,30 @@ object GraphicsPresets {
         return presets
     }
 
+    fun getDefaultPreset(): GraphicsPreset {
+        return standard
+    }
+
     fun getSavedGraphicsPreset(): GraphicsPreset {
         val path = Paths.get(System.getProperty("user.home"), "Documents", "DECOSegfault", "graphics.txt")
-        Logger.debug("Loading graphics preset from: $path")
+        Logger.info("Loading graphics preset from: $path")
         var name: String
         try {
             name = path.readText().trim()
-            Logger.debug("Using saved preset: $name")
+            Logger.info("Using saved preset: $name")
         } catch (e: IOException) {
-            Logger.debug("Using default preset, saved does not exist")
+            Logger.info("Using default preset, saved does not exist")
             name = "Standard"
         }
         return forName(name) ?: run {
             Logger.error("Invalid graphics preset $name!!! Using standard!")
             return standard
         }
+    }
+
+    fun writePreset(name: String) {
+        val path = Paths.get(System.getProperty("user.home"), "Documents", "DECOSegfault", "graphics.txt")
+        Logger.info("Writing preset $name to path: $path")
+        path.writeText(name)
     }
 }

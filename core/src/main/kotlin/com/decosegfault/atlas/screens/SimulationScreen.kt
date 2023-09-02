@@ -15,7 +15,6 @@ import com.badlogic.gdx.scenes.scene2d.ui.Table
 import com.badlogic.gdx.utils.viewport.ExtendViewport
 import com.badlogic.gdx.utils.viewport.FitViewport
 import com.decosegfault.atlas.map.LRUTileCache
-import com.decosegfault.atlas.map.MapRenderer
 import com.decosegfault.atlas.render.*
 import com.decosegfault.atlas.util.Assets
 import com.decosegfault.atlas.util.Assets.ASSETS
@@ -84,11 +83,10 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
     private var shouldVehiclesMove = true
 
     /** True if debug drawing enabled */
-    private var isDebugDraw = true
+    private var isDebugDraw = System.getProperty("debug") != null
 
     /** Executor to schedule Hermes tick asynchronously in its own thread */
     private val hermesExecutor = Executors.newSingleThreadScheduledExecutor()
-    private val mapRenderer = MapRenderer(cam, graphics)
 
     private fun createTextUI() {
         val skin = ASSETS["ui/uiskin.json", Skin::class.java]
@@ -255,7 +253,6 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
         // render 3D
         camController.update()
         cam.update()
-        mapRenderer.update()
         sceneManager.update(delta, vehicles)
         sceneManager.render()
 
@@ -281,7 +278,6 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
             for (vehicle in vehicles) {
                 vehicle.debug(shapeRender)
             }
-            mapRenderer.debug(shapeRender)
             shapeRender.end()
 
 //            shapeRender.begin(ShapeRenderer.ShapeType.Filled)
