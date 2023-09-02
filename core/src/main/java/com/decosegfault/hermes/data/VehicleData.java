@@ -1,4 +1,4 @@
-package com.decosegfault.hermes;
+package com.decosegfault.hermes.data;
 
 import com.badlogic.gdx.math.Vector3;
 import java.util.ArrayList;

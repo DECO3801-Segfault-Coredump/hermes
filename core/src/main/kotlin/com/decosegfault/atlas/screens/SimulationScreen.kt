@@ -18,7 +18,7 @@ import com.decosegfault.atlas.map.LRUTileCache
 import com.decosegfault.atlas.render.*
 import com.decosegfault.atlas.util.Assets
 import com.decosegfault.atlas.util.Assets.ASSETS
-import com.decosegfault.hermes.VehicleType
+import com.decosegfault.hermes.types.VehicleType
 import ktx.app.clearScreen
 import net.mgsx.gltf.scene3d.attributes.PBRCubemapAttribute
 import net.mgsx.gltf.scene3d.attributes.PBRTextureAttribute
