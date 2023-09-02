@@ -4,6 +4,8 @@ import com.badlogic.gdx.*
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3ApplicationConfiguration
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Graphics
 import com.badlogic.gdx.graphics.*
+import com.badlogic.gdx.graphics.g3d.decals.CameraGroupStrategy
+import com.badlogic.gdx.graphics.g3d.decals.DecalBatch
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import com.badlogic.gdx.graphics.profiling.GLProfiler
 import com.badlogic.gdx.math.Vector3
@@ -159,6 +161,12 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
 
         // setup skybox
         sceneManager.skyBox = SceneSkybox(environmentCubemap)
+
+        // setup ground plane tile manager
+        sceneManager.setAtlasTileManager(AtlasTileManager())
+
+        // setup decal batch for rendering
+        sceneManager.decalBatch = DecalBatch(CameraGroupStrategy(cam))
 
         // apply graphics settings
         Assets.applyGraphicsPreset(graphics)

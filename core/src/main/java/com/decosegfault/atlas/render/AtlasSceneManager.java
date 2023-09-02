@@ -491,7 +491,7 @@ public class AtlasSceneManager implements Disposable {
      *
      * @param atlasTileManager  Tile manager instance to use.
      */
-    public void setTileManager(AtlasTileManager atlasTileManager) {
+    public void setAtlasTileManager(AtlasTileManager atlasTileManager) {
         this.atlasTileManager = atlasTileManager;
     }
 
