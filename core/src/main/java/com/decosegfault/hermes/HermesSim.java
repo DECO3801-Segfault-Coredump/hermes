@@ -1,13 +1,21 @@
 package com.decosegfault.hermes;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import com.badlogic.gdx.Gdx;
 import com.decosegfault.hermes.types.SimType;
-import org.onebusaway.gtfs.model.Trip;
+import org.onebusaway.gtfs.impl.GtfsDaoImpl;
+import org.onebusaway.gtfs.model.*;
 import org.tinylog.Logger;
 
 import org.onebusaway.csv_entities.EntityHandler;
-import org.onebusaway.gtfs.model.Route;
 import org.onebusaway.gtfs.serialization.GtfsReader;
+import com.decosegfault.hermes.data.RouteData;
+import com.decosegfault.hermes.data.TripData;
+import com.decosegfault.hermes.types.SimType;
+import org.onebusaway.gtfs.model.Route;
+import org.onebusaway.gtfs.model.Trip;
 
 import java.io.IOException;
 
@@ -41,6 +49,7 @@ public class HermesSim {
         RouteHandler.simType = simType;
         read(); //placeholder
         RouteHandler.logRoutes();
+        RouteHandler.logTrips();
         Logger.info("GTFS Data Loaded");
     }
 
@@ -56,14 +65,14 @@ public class HermesSim {
          * You can register an entity handler that listens for new objects as they
          * are read
          */
-        reader.addEntityHandler(new GtfsEntityHandler());
+//        reader.addEntityHandler(new GtfsEntityHandler());
 
         /**
          * Or you can use the internal entity store, which has references to all the
          * loaded entities
          */
-//        GtfsDaoImpl store = new GtfsDaoImpl();
-//        reader.setEntityStore(store);
+        GtfsDaoImpl store = new GtfsDaoImpl();
+        reader.setEntityStore(store);
 
         try {
             reader.run();
@@ -72,21 +81,32 @@ public class HermesSim {
         }
 
         // Access entities through the store
-//        Map<AgencyAndId, Route> routesById = store.getEntitiesByIdForEntityType(
-//            AgencyAndId.class, Route.class);
+        Map<AgencyAndId, Route> routesById = store.getEntitiesByIdForEntityType(
+            AgencyAndId.class, Route.class);
 
-    }
+        Map<AgencyAndId, Trip> tripsById = store.getEntitiesByIdForEntityType(
+                AgencyAndId.class, Trip.class);
 
-    private static class GtfsEntityHandler implements EntityHandler {
-
-        public void handleEntity(Object bean) {
-            if (bean instanceof Route) {
-                RouteHandler.AddRoute((Route) bean);
-            }
-            if (bean instanceof Trip) {
-                RouteHandler.AddTrip((Trip) bean);
-            }
+        for (Route element : routesById.values()) {
+            RouteHandler.addRoute(element);
         }
+
+        for (Trip element : tripsById.values()) {
+            RouteHandler.addTrip(element);
+        }
+
     }
+
+//    private static class GtfsEntityHandler implements EntityHandler {
+//
+//        public void handleEntity(Object bean) {
+//            if (bean instanceof Route) {
+//                RouteHandler.addRoute((Route) bean);
+//            }
+//            if (bean instanceof Trip) {
+//                RouteHandler.addTrip((Trip) bean);
+//            }
+//        }
+//    }
 }
 
