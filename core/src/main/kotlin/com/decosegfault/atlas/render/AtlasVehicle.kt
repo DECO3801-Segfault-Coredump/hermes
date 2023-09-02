@@ -2,8 +2,6 @@ package com.decosegfault.atlas.render
 
 import com.badlogic.gdx.graphics.Camera
 import com.badlogic.gdx.graphics.Color
-import com.badlogic.gdx.graphics.g3d.ModelCache
-import com.badlogic.gdx.graphics.g3d.ModelCache.TightMeshPool
 import com.badlogic.gdx.graphics.g3d.ModelInstance
 import com.badlogic.gdx.graphics.g3d.RenderableProvider
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
@@ -14,7 +12,7 @@ import com.badlogic.gdx.math.collision.BoundingBox
 import com.badlogic.gdx.math.collision.Ray
 import com.badlogic.gdx.utils.Disposable
 import com.decosegfault.atlas.util.AtlasUtils
-import com.decosegfault.hermes.VehicleType
+import com.decosegfault.hermes.types.VehicleType
 import net.mgsx.gltf.scene3d.scene.SceneAsset
 
 /**

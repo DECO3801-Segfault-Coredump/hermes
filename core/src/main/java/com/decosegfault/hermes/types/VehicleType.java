@@ -1,4 +1,4 @@
-package com.decosegfault.hermes;
+package com.decosegfault.hermes.types;
 
 /**
 * @author Lachlan Ellis
