@@ -12,10 +12,12 @@ import com.decosegfault.atlas.util.AtlasUtils
 /**
  * A square planar tile with recursive sub-tiles, and image decal for texturing.
  *
- * @author Henry
+ * @author Henry Batt
  * @param x     X-coordinate of tile centre
  * @param z     Z-coordinate of the tile centre
  * @param size  The size of the square tile
+ *
+ * The basic framework and culling behaviour is based upon AtlasVehicle by Matt Young
  */
 data class Tile(val x: Float, val z: Float, val size: Float) : Disposable {
 
