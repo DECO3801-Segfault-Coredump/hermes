@@ -8,10 +8,11 @@ import com.badlogic.gdx.utils.Disposable
 import com.github.benmanes.caffeine.cache.AsyncLoadingCache
 import com.github.benmanes.caffeine.cache.Cache
 import com.github.benmanes.caffeine.cache.Caffeine
-import com.github.benmanes.caffeine.cache.LoadingCache
 import ktx.assets.disposeSafely
 import org.tinylog.kotlin.Logger
-import java.util.concurrent.Executors
+import java.util.concurrent.SynchronousQueue
+import java.util.concurrent.ThreadPoolExecutor
+import java.util.concurrent.TimeUnit
 import kotlin.math.roundToInt
 
 /**
@@ -20,7 +21,10 @@ import kotlin.math.roundToInt
  *
  * @author Matt Young
  */
-class LRUTileCache : Disposable {
+object LRUTileCache : Disposable {
+    /** Maximum number of tiles in VRAM, size will be approx 100 KiB * this */
+    private const val MAX_TILES_RAM = 2048L
+
     /**
      * Mapping between (x, y, zoom) and the tile texture.
      *
@@ -46,8 +50,20 @@ class LRUTileCache : Disposable {
         }
         .recordStats()
         .build()
+
+    /** Limit thread pool size to 2x the number of processors to prevent memory issues */
+    private val threadPoolSize = Runtime.getRuntime().availableProcessors() * 2
+
     /** Executor used for HTTP requests */
-    private val executor = Executors.newCachedThreadPool()
+    private val executor = ThreadPoolExecutor(
+        0, threadPoolSize,
+        60L, TimeUnit.SECONDS,
+        SynchronousQueue(),
+    )
+
+    init {
+        Logger.info("LRUTileCache using $threadPoolSize threads and $MAX_TILES_RAM tiles max")
+    }
 
     /**
      * Asynchronously retrieves a tile from the tile server. If the tile isn't in the cache, it will be
@@ -88,11 +104,6 @@ class LRUTileCache : Disposable {
         return "Tile LRU    hit: ${(cache.stats().hitRate() * 100.0).roundToInt()}%    " +
          "size: ${cache.estimatedSize()}     evictions: ${cache.stats().evictionCount()}    " +
           "fetch: ${cache.stats().averageLoadPenalty() / 1e6} ms"
-    }
-
-    companion object {
-        /** Maximum number of tiles in VRAM, size will be approx 100 KiB * this */
-        private const val MAX_TILES_RAM = 1024L
     }
 
     override fun dispose() {

@@ -30,7 +30,8 @@ dependencies {
   api 'org.tinylog:tinylog-impl:2.6.2'
   api "com.github.mgsx-dev.gdx-gltf:gltf:7d70839067ead66ec6107bc1be8c060c7c0fc7aa"
   api "com.github.ben-manes.caffeine:caffeine:3.1.8"
-//  api "com.esotericsoftware.yamlbeans:yamlbeans:1.15"
+  api 'io.github.sebasbaumh:postgis-java-ng:23.2.0'
+  api 'org.postgresql:postgresql:42.6.0'
 
   // this is just for the GL profiler
   api "com.badlogicgames.gdx:gdx-backend-lwjgl3:$gdxVersion"

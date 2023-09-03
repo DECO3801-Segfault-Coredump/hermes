@@ -43,9 +43,6 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
 
     private val profiler = GLProfiler(Gdx.graphics as Lwjgl3Graphics)
 
-    /** Instance of LRU tile cache used to fetch tiles from server */
-    private val tileCache = LRUTileCache()
-
     /** UI stage */
     private val stage = Stage(FitViewport(1920f, 1080f))
 
@@ -221,7 +218,7 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
             isDebugDraw = !isDebugDraw
         } else if (Gdx.input.isKeyJustPressed(Input.Keys.RIGHT_BRACKET)) {
             // clears tile LRU cache
-            tileCache.purge()
+            LRUTileCache.purge()
         } else if (Gdx.input.isKeyJustPressed(Input.Keys.ENTER)) {
             // toggle fullscreen
             if (Gdx.graphics.isFullscreen) {
@@ -262,7 +259,7 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
             val deltaMs = (delta * 1000.0f).roundToInt()
             debugLabel.setText(
             """FPS: ${Gdx.graphics.framesPerSecond} (${deltaMs} ms)    Memory: $mem MB    Draw calls: ${profiler.drawCalls}
-            |${tileCache.getStats()}
+            |${LRUTileCache.getStats()}
             |Vehicles    culled: ${sceneManager.cullRate}%    low LoD: ${sceneManager.lowLodRate}%    full: ${sceneManager.fullRenderRate}%    total: ${sceneManager.totalVehicles}
             |Graphics preset: ${graphics.name}
             |translate: ${camController.actualTranslateUnits}    zoom target: ${camController.zoomTarget}
@@ -304,7 +301,7 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
 
     override fun dispose() {
         stage.dispose()
-        tileCache.dispose()
+        LRUTileCache.dispose()
         profiler.disable()
         shapeRender.dispose()
         Logger.debug("Shutting down Hermes executor")
