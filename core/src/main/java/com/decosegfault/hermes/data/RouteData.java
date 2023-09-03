@@ -2,6 +2,8 @@ package com.decosegfault.hermes.data;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 import com.decosegfault.hermes.types.VehicleType;
 
@@ -13,7 +15,7 @@ public class RouteData {
     public String routeID;
     public String routeName;
     List<StopData> stopList = new ArrayList<StopData>();
-    public List<TripData> tripList = new ArrayList<TripData>();
+
     public RouteData(int type) {
         switch (type) {
             case 2 -> routeType = VehicleType.TRAIN;
