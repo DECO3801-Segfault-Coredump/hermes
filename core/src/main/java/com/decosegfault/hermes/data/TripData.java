@@ -3,7 +3,7 @@ package com.decosegfault.hermes.data;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.Vector3;
 import com.decosegfault.hermes.types.VehicleType;
 
 /**
@@ -13,7 +13,7 @@ public class TripData {
     VehicleType routeType;
     public String routeID;
     public String routeName;
-    List<Vector2> routeMap =  new ArrayList<Vector2>();
+    public List<Vector3> routeMap =  new ArrayList<Vector3>();
     VehicleData vehicle;
     List<StopData> stopList = new ArrayList<StopData>();
     int startTime;

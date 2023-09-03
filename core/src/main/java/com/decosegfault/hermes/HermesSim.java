@@ -48,8 +48,10 @@ public class HermesSim {
     public static void load(SimType simType) {
         RouteHandler.simType = simType;
         read(); //placeholder
+        RouteHandler.sortShapes();
         RouteHandler.logRoutes();
         RouteHandler.logTrips();
+        RouteHandler.logShapes();
         Logger.info("GTFS Data Loaded");
     }
 
@@ -87,12 +89,19 @@ public class HermesSim {
         Map<AgencyAndId, Trip> tripsById = store.getEntitiesByIdForEntityType(
                 AgencyAndId.class, Trip.class);
 
+        Map<AgencyAndId, ShapePoint> shapesById = store.getEntitiesByIdForEntityType(
+            AgencyAndId.class, ShapePoint.class);
+
         for (Route element : routesById.values()) {
             RouteHandler.addRoute(element);
         }
 
         for (Trip element : tripsById.values()) {
             RouteHandler.addTrip(element);
+        }
+
+        for (ShapePoint element : shapesById.values()) {
+            RouteHandler.addShape(element);
         }
 
     }
