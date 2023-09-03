@@ -22,7 +22,7 @@ import kotlin.concurrent.thread
 import kotlin.math.roundToInt
 
 /**
- * Loading screen for the application. This class is based on my (Matt)'s previous work:
+ * Loading screen for the application. This class is partially based on my (Matt)'s previous work:
  * https://github.com/UQRacing/gazilla/blob/master/core/src/main/kotlin/com/uqracing/gazilla/client/screens/LoadingScreen.kt
  *
  * @author Matt Young
@@ -93,6 +93,7 @@ class LoadingScreen(private val game: Game) : ScreenAdapter() {
     private fun startHermes() {
         thread(isDaemon = true) {
             // temporary
+            Logger.info("Starting Hermes")
             Thread.sleep(1000)
             currentStage = LoadingStage.DONE
         }

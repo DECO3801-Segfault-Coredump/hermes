@@ -3,8 +3,7 @@ package com.decosegfault.atlas.render
 import org.tinylog.kotlin.Logger
 import java.io.IOException
 import java.nio.file.Paths
-import kotlin.io.path.readText
-import kotlin.io.path.writeText
+import kotlin.io.path.*
 
 /**
  * Graphics presets for Atlas
@@ -95,6 +94,10 @@ object GraphicsPresets {
 
     fun writePreset(name: String) {
         val path = Paths.get(System.getProperty("user.home"), "Documents", "DECOSegfault", "graphics.txt")
+        if (!path.exists()) {
+            Logger.debug("Creating graphics.txt file")
+            path.createFile()
+        }
         Logger.info("Writing preset $name to path: $path")
         path.writeText(name)
     }
