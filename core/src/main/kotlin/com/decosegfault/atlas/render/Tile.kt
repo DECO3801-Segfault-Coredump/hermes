@@ -1,9 +1,11 @@
 package com.decosegfault.atlas.render
 
 import com.badlogic.gdx.graphics.Camera
+import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.graphics.g2d.TextureRegion
 import com.badlogic.gdx.graphics.g3d.decals.Decal
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import com.badlogic.gdx.math.Vector3
 import com.badlogic.gdx.math.collision.BoundingBox
 import com.badlogic.gdx.utils.Disposable
@@ -43,8 +45,8 @@ data class Tile(val x: Float, val z: Float, val size: Float) : Disposable {
 
     init {
         val shift = size / 2
-        val minX = x - shift
-        val minZ = z - shift
+        val minX = x
+        val minZ = z
         bbox = BoundingBox(Vector3(minX, 0f, minZ), Vector3(minX + size, 0f, minZ + size))
         texturePath = "tiles/scallop128.png"
         texture = TextureRegion(Texture(texturePath))
@@ -130,20 +132,20 @@ data class Tile(val x: Float, val z: Float, val size: Float) : Disposable {
         didCull = false
         didUseSubTiles = false
 
+        // Check iff can be culled
+        val closestPoint = AtlasUtils.bboxClosestPoint(cam.position, bbox)
+        val dist = cam.position.dst(closestPoint)
+        if (dist >= graphics.tileDrawDist) {
+            didCull = true
+            return allTiles
+        }
+        if (!cam.frustum.boundsInFrustum(bbox)) {
+            didCull = true
+            return allTiles
+        }
+
         // We are at correct resolution check now
         if (size <= scale) {
-
-            // Check iff can be culled
-            val closestPoint = AtlasUtils.bboxClosestPoint(cam.position, bbox)
-            val dist = cam.position.dst(closestPoint)
-            if (dist >= graphics.tileDrawDist) {
-                didCull = true
-                return allTiles
-            }
-            if (!cam.frustum.boundsInFrustum(bbox)) {
-                didCull = true
-                return allTiles
-            }
             allTiles.add(this)
         }
 
@@ -165,5 +167,11 @@ data class Tile(val x: Float, val z: Float, val size: Float) : Disposable {
             tile.dispose()
         }
         subTiles.clear()
+    }
+
+    fun debug(render: ShapeRenderer) {
+        if (didCull) return
+        render.color = if (didUseSubTiles) Color.GREEN else Color.RED
+        render.box(bbox.min.x, bbox.min.y, bbox.max.z, bbox.width, bbox.height, bbox.depth)
     }
 }

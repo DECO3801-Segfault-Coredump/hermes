@@ -87,6 +87,8 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
     /** Executor to schedule Hermes tick asynchronously in its own thread */
     private val hermesExecutor = Executors.newSingleThreadScheduledExecutor()
 
+    private val atlasTileManager = AtlasTileManager()
+
     private fun createTextUI() {
         val skin = ASSETS["ui/uiskin.json", Skin::class.java]
 
@@ -163,7 +165,7 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
         sceneManager.skyBox = SceneSkybox(environmentCubemap)
 
         // setup ground plane tile manager
-        sceneManager.setAtlasTileManager(AtlasTileManager())
+        sceneManager.setAtlasTileManager(atlasTileManager)
 
         // setup decal batch for rendering
         sceneManager.decalBatch = DecalBatch(CameraGroupStrategy(cam))
@@ -269,6 +271,7 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
             """FPS: ${Gdx.graphics.framesPerSecond} (${deltaMs} ms)    Memory: $mem MB    Draw calls: ${profiler.drawCalls}
             |${LRUTileCache.getStats()}
             |Vehicles    culled: ${sceneManager.cullRate}%    low LoD: ${sceneManager.lowLodRate}%    full: ${sceneManager.fullRenderRate}%    total: ${sceneManager.totalVehicles}
+            |TileManager displayed: ${atlasTileManager.numRetrievedTiles}
             |Graphics preset: ${graphics.name}
             |translate: ${camController.actualTranslateUnits}    zoom target: ${camController.zoomTarget}
             """.trimMargin())
@@ -283,6 +286,11 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
             for (vehicle in vehicles) {
                 vehicle.debug(shapeRender)
             }
+
+            for (tile in atlasTileManager.getTilesCulled(cam, graphics)) {
+                tile.debug(shapeRender)
+            }
+
             shapeRender.end()
 
 //            shapeRender.begin(ShapeRenderer.ShapeType.Filled)

@@ -45,7 +45,7 @@ object GraphicsPresets {
         description="High settings for powerful gaming PCs or workstations",
         vehicleDrawDist=500.0f,
         vehicleLodDist=100.0f,
-        tileDrawDist=200.0f,
+        tileDrawDist=600.0f,
         anisotropic=16.0f,
         msaa=8,
         shadows=false,

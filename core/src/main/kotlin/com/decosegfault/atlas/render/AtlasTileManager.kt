@@ -21,7 +21,9 @@ class AtlasTileManager {
     private var MIN_SIZE = 16f
 
     /** Maximum distance to be from tile, for resolution scaling. */
-    private var MAX_DIST = 128
+    private var MAX_DIST = 256
+
+    var numRetrievedTiles = 0
 
     init {
         for (i in -512 until 512 step MAX_SIZE.toInt()) {
@@ -63,6 +65,7 @@ class AtlasTileManager {
                 tiles.add(subTile)
             }
         }
+        numRetrievedTiles = tiles.size
         return tiles
     }
 
@@ -81,6 +84,7 @@ class AtlasTileManager {
                 tiles.add(subTile)
             }
         }
+        numRetrievedTiles = tiles.size
         return tiles
     }
 
@@ -99,6 +103,7 @@ class AtlasTileManager {
                 tiles.add(subTile)
             }
         }
+        numRetrievedTiles = tiles.size
         return tiles
     }
 
@@ -117,6 +122,7 @@ class AtlasTileManager {
                 tiles.add(subTile)
             }
         }
+        numRetrievedTiles = tiles.size
         return tiles
     }
 }
