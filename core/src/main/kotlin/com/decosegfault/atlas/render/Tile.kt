@@ -3,13 +3,16 @@ package com.decosegfault.atlas.render
 import com.badlogic.gdx.graphics.Camera
 import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.Texture
+import com.badlogic.gdx.graphics.Texture.TextureFilter
 import com.badlogic.gdx.graphics.g2d.TextureRegion
 import com.badlogic.gdx.graphics.g3d.decals.Decal
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import com.badlogic.gdx.math.Vector3
 import com.badlogic.gdx.math.collision.BoundingBox
 import com.badlogic.gdx.utils.Disposable
+import com.decosegfault.atlas.map.LRUTileCache
 import com.decosegfault.atlas.util.AtlasUtils
+import kotlin.random.Random
 
 /**
  * A square planar tile with recursive sub-tiles, and image decal for texturing.
@@ -33,12 +36,10 @@ data class Tile(val x: Float, val z: Float, val size: Float) : Disposable {
     var didUseSubTiles = false
 
     /** Decal display of tile */
-    private var decal : Decal
+    private var decal : Decal? = null
 
     /** The texture region to load onto tile */
-    private var texture : TextureRegion
-
-    private var texturePath : String
+    private var texture : TextureRegion? = null
 
     /** Breakdown of tile in 2x2 sub-tiles */
     private var subTiles = mutableListOf<Tile>()
@@ -48,11 +49,17 @@ data class Tile(val x: Float, val z: Float, val size: Float) : Disposable {
         val minX = x
         val minZ = z
         bbox = BoundingBox(Vector3(minX, 0f, minZ), Vector3(minX + size, 0f, minZ + size))
-        texturePath = "tiles/scallop128.png"
-        texture = TextureRegion(Texture(texturePath))
-        decal = Decal.newDecal(size, size, texture)
-        decal.setPosition(x + shift, 0f, z + shift)
-        decal.setRotationX(270f)
+
+        LRUTileCache.retrieve(Vector3(
+            970034f + (x / 64f),
+            607650f + (z / 64f),
+            19f + (size / 64f)
+            )) {
+                texture = TextureRegion(it)
+                decal = Decal.newDecal(size, size, texture)
+                decal!!.setPosition(x + shift, 0f, z + shift)
+                decal!!.setRotationX(270f)
+            }
     }
 
     /**
@@ -87,7 +94,7 @@ data class Tile(val x: Float, val z: Float, val size: Float) : Disposable {
 
 
     /** Return the decal that represents this tile */
-    fun getDecal(): Decal {
+    fun getDecal(): Decal? {
         return decal
     }
 

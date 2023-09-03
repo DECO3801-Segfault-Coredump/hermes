@@ -29,6 +29,7 @@ import net.mgsx.gltf.scene3d.utils.EnvironmentCache;
 import net.mgsx.gltf.scene3d.utils.EnvironmentUtil;
 import org.tinylog.Logger;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -78,7 +79,7 @@ public class AtlasSceneManager implements Disposable {
     private int renderedVehicles = 0;
 
     /** List of AtlasVehicles that actually got rendered */
-    private List<AtlasVehicle> renderedAtlasVehicles = new ArrayList<>();
+    private final List<AtlasVehicle> renderedAtlasVehicles = new ArrayList<>();
 
     /** Ground plane tiling collection and batch drawer */
     private final Array<Decal> tileDecals = new Array<>();
@@ -232,9 +233,9 @@ public class AtlasSceneManager implements Disposable {
         // Load ground plane tiles for rendering
         tileDecals.clear();
         List<Tile> gamer = atlasTileManager.getTilesCulled( camera, graphics);
-        for (Tile tile: gamer){
+        for (Tile tile : gamer) {
             var decal = tile.getDecal();
-            tileDecals.add(decal);
+            if (decal != null) tileDecals.add(decal);
         }
 
         if (camera != null) {

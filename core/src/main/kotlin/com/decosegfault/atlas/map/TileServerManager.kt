@@ -27,7 +27,6 @@ object TileServerManager {
     /** Command to stop the OSM docker container */
     private val DOCKER_STOP_CMD = "docker stop atlas-tileserver".split(" ")
 
-
     /** Name of the OSM tile server container */
     private const val CONTAINER_NAME = "overv/openstreetmap-tile-server"
 

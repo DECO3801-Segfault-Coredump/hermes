@@ -3,16 +3,20 @@ package com.decosegfault.atlas.map
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.graphics.Pixmap
 import com.badlogic.gdx.graphics.Texture
+import com.badlogic.gdx.graphics.Texture.TextureFilter
 import com.badlogic.gdx.math.Vector3
+import com.badlogic.gdx.math.WindowedMean
 import com.badlogic.gdx.utils.Disposable
 import com.github.benmanes.caffeine.cache.AsyncLoadingCache
 import com.github.benmanes.caffeine.cache.Cache
 import com.github.benmanes.caffeine.cache.Caffeine
 import ktx.assets.disposeSafely
 import org.tinylog.kotlin.Logger
+import java.util.concurrent.Executors
 import java.util.concurrent.SynchronousQueue
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
+import kotlin.concurrent.thread
 import kotlin.math.roundToInt
 
 /**
@@ -55,14 +59,19 @@ object LRUTileCache : Disposable {
     private val threadPoolSize = Runtime.getRuntime().availableProcessors() * 2
 
     /** Executor used for HTTP requests */
-    private val executor = ThreadPoolExecutor(
-        0, threadPoolSize,
-        60L, TimeUnit.SECONDS,
-        SynchronousQueue(),
-    )
+    private val executor = Executors.newFixedThreadPool(threadPoolSize)
+
+    private val fetchTimes = WindowedMean(50)
+
+    private lateinit var defaultTexture: Texture
 
     init {
         Logger.info("LRUTileCache using $threadPoolSize threads and $MAX_TILES_RAM tiles max")
+    }
+
+    fun init() {
+        Logger.info("Initialise LRUTileCache")
+        defaultTexture = Texture(Gdx.files.internal("sprite/notileserver.png"))
     }
 
     /**
@@ -71,21 +80,30 @@ object LRUTileCache : Disposable {
      * @return tile texture if it was possible to load, otherwise null
      */
     fun retrieve(pos: Vector3, onRetrieved: (Texture) -> Unit) {
+        val begin = System.nanoTime()
         val maybeTexture = tileCache.getIfPresent(pos)
         if (maybeTexture != null) {
+            Logger.debug("Tile was already in cache")
             // tile was already in cache
             onRetrieved(maybeTexture)
             return
         }
         executor.submit {
             // download the tile async on the executor thread
-            val pixmap = TileServerManager.fetchTileAsPixmap(pos) ?: return@submit
+            val pixmap = TileServerManager.fetchTileAsPixmap(pos) ?: run {
+                onRetrieved(defaultTexture)
+                return@submit
+            }
             // now that we have the pixmap, we need to context switch into the render thread in order to
             // upload the texture
             Gdx.app.postRunnable {
                 val texture = Texture(pixmap)
+                texture.setFilter(TextureFilter.Linear, TextureFilter.Linear)
                 pixmap.dispose()
                 tileCache.put(pos, texture)
+                val end = (System.nanoTime() - begin) / 1e6f
+                fetchTimes.addValue(end)
+
                 onRetrieved(texture)
             }
         }
@@ -103,7 +121,7 @@ object LRUTileCache : Disposable {
         val cache = tileCache
         return "Tile LRU    hit: ${(cache.stats().hitRate() * 100.0).roundToInt()}%    " +
          "size: ${cache.estimatedSize()}     evictions: ${cache.stats().evictionCount()}    " +
-          "fetch: ${cache.stats().averageLoadPenalty() / 1e6} ms"
+          "fetch: ${fetchTimes.mean} ms"
     }
 
     override fun dispose() {

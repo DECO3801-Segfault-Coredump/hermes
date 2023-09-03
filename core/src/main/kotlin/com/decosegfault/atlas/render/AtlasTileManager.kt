@@ -18,10 +18,10 @@ class AtlasTileManager {
     private var MAX_SIZE = 128f
 
     /** Smallest possible resolution for a tile. */
-    private var MIN_SIZE = 16f
+    private var MIN_SIZE = 64f
 
     /** Maximum distance to be from tile, for resolution scaling. */
-    private var MAX_DIST = 256
+    private var MAX_DIST = 128
 
     var numRetrievedTiles = 0
 

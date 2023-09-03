@@ -126,7 +126,9 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
         // ref: https://www.openstreetmap.org/copyright
         val osmContainer = Table()
         osmContainer.pad(10f)
-        osmContainer.add(Label("(c) OpenStreetMap contributors", skin, "window"))
+        val osmLabel = Label("(c) OpenStreetMap contributors", skin, "window")
+        osmLabel.style = style
+        osmContainer.add(osmLabel)
         osmContainer.setFillParent(true)
         osmContainer.bottom().right()
         osmContainer.pack()
