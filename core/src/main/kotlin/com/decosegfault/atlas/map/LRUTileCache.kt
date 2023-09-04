@@ -83,7 +83,7 @@ object LRUTileCache : Disposable {
         val begin = System.nanoTime()
         val maybeTexture = tileCache.getIfPresent(pos)
         if (maybeTexture != null) {
-            Logger.debug("Tile was already in cache")
+//            Logger.debug("Tile was already in cache")
             // tile was already in cache
             onRetrieved(maybeTexture)
             return

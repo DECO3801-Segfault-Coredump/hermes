@@ -10,6 +10,7 @@ import com.badlogic.gdx.math.collision.BoundingBox
 import com.badlogic.gdx.utils.Disposable
 import com.decosegfault.atlas.map.LRUTileCache
 import com.decosegfault.atlas.util.AtlasUtils
+import kotlin.math.pow
 
 /**
  * A square planar tile with recursive sub-tiles, and image decal for texturing.
@@ -37,6 +38,10 @@ data class Tile(val x: Float, val z: Float, val size: Float, val tileLookup : Ve
 
     /** Breakdown of tile in 2x2 sub-tiles */
     private var subTiles = mutableListOf<Tile>()
+
+    private var MAX_DIST = 1024
+
+    private var MIN_SIZE = 128
 
     init {
         val minX = x
@@ -82,6 +87,8 @@ data class Tile(val x: Float, val z: Float, val size: Float, val tileLookup : Ve
         if (decal == null) {
             generateDecal()
         }
+//        generateDecal()
+        updateTexture()
 
         return decal
     }
@@ -95,6 +102,12 @@ data class Tile(val x: Float, val z: Float, val size: Float, val tileLookup : Ve
             decal = Decal.newDecal(size, size, TextureRegion(it))
             decal!!.setPosition(x + shift, 0f, z + shift)
             decal!!.setRotationX(270f)
+        }
+    }
+
+    private fun updateTexture() {
+        LRUTileCache.retrieve(tileLookup) {
+            decal?.textureRegion?.texture = it
         }
     }
 
@@ -148,12 +161,16 @@ data class Tile(val x: Float, val z: Float, val size: Float, val tileLookup : Ve
         val dist = cam.position.dst(closestPoint)
         if (dist >= graphics.tileDrawDist || !cam.frustum.boundsInFrustum(bbox)) {
             didCull = true
-            this.dispose()
+            subTiles.clear()
             return allTiles
         }
 
+        val distance = 2.0.pow((dist / MAX_DIST).toInt()).toFloat()
+        val size = MIN_SIZE * distance
+
         // We are at correct resolution, draw this tile. Base Case
         if (this.size <= size) {
+            //
             allTiles.add(this)
         }
 

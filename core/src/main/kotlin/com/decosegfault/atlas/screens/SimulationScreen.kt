@@ -54,7 +54,7 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
     private val cam = PerspectiveCamera().apply {
         fieldOfView = 75f
         near = 0.1f
-        far = 900f
+        far = 5000f
     }
     private val camController = AtlasCameraController(cam).apply {
         translateButton = Input.Buttons.RIGHT

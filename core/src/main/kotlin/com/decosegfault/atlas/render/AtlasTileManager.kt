@@ -30,7 +30,7 @@ class AtlasTileManager {
     private var MIN_SIZE = MIN_TILE * 2.0.pow(23 - MAX_ZOOM).toFloat()
 
     /** Maximum distance to be from tile, for resolution scaling. */
-    private var MAX_DIST = 128
+    private var MAX_DIST = 1024
 
     /** Latitude and Longitude of NW most tile in lookup. */
     private val BRISBANE_LAT = -26.80936358805377

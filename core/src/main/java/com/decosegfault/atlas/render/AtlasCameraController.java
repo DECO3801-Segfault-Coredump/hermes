@@ -102,7 +102,7 @@ public class AtlasCameraController extends InputAdapter {
             if (rotateRightPressed) camera.rotate(camera.up, -delta * rotateAngle);
             if (rotateLeftPressed) camera.rotate(camera.up, delta * rotateAngle);
             if (forwardPressed) {
-                camera.translate(tmpV1.set(camera.direction).scl(delta * baseTranslateUnits));
+                camera.translate(tmpV1.set(camera.direction).scl(50*delta * baseTranslateUnits));
                 if (forwardTarget) target.add(tmpV1);
             }
             if (backwardPressed) {
