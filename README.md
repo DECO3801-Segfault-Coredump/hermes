@@ -64,7 +64,7 @@ I haven't got around to doing this yet. If it does become necessary ping @matt.
 
 - ESCAPE: Quit
 - G: Show/hide debug info
-- ]: Purge LRUTileCache
+- ]: Purge GCTileCache
 
 To toggle debug mode: Go to Run -> Edit configurations, go to Lwjgl3Launcher, click "Modify options", then
 check "Add VM options". In the field labeled "VM options", paste: `-Ddebug=true` (this is adding a system

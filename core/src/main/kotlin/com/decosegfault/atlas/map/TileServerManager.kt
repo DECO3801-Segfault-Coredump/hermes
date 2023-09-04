@@ -80,7 +80,7 @@ object TileServerManager {
                 .replace("{x}", pos.x.toInt().toString())
                 .replace("{y}", pos.y.toInt().toString())
                 .replace("{z}", pos.z.toInt().toString()))
-        Logger.debug("Fetching tile: $url")
+        Logger.trace("Fetching tile: $url")
 
         var conn: InputStream? = null
         return try {

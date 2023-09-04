@@ -4,12 +4,10 @@ import com.badlogic.gdx.*
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3ApplicationConfiguration
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Graphics
 import com.badlogic.gdx.graphics.*
-import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute
 import com.badlogic.gdx.graphics.g3d.decals.CameraGroupStrategy
 import com.badlogic.gdx.graphics.g3d.decals.DecalBatch
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import com.badlogic.gdx.graphics.profiling.GLProfiler
-import com.badlogic.gdx.math.Quaternion
 import com.badlogic.gdx.math.Vector3
 import com.badlogic.gdx.scenes.scene2d.Stage
 import com.badlogic.gdx.scenes.scene2d.ui.Image
@@ -18,13 +16,12 @@ import com.badlogic.gdx.scenes.scene2d.ui.Skin
 import com.badlogic.gdx.scenes.scene2d.ui.Table
 import com.badlogic.gdx.utils.viewport.ExtendViewport
 import com.badlogic.gdx.utils.viewport.FitViewport
-import com.decosegfault.atlas.map.LRUTileCache
+import com.decosegfault.atlas.map.GCTileCache
 import com.decosegfault.atlas.render.*
 import com.decosegfault.atlas.util.Assets
 import com.decosegfault.atlas.util.Assets.ASSETS
 import com.decosegfault.hermes.VehicleType
 import ktx.app.clearScreen
-import net.mgsx.gltf.scene3d.attributes.FogAttribute
 import net.mgsx.gltf.scene3d.attributes.PBRCubemapAttribute
 import net.mgsx.gltf.scene3d.attributes.PBRTextureAttribute
 import net.mgsx.gltf.scene3d.lights.DirectionalLightEx
@@ -35,7 +32,6 @@ import net.mgsx.gltf.scene3d.utils.IBLBuilder
 import org.tinylog.kotlin.Logger
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
-import kotlin.math.max
 import kotlin.math.roundToInt
 import kotlin.random.Random
 
@@ -248,7 +244,7 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
             isDebugDraw = !isDebugDraw
         } else if (Gdx.input.isKeyJustPressed(Input.Keys.RIGHT_BRACKET)) {
             // clears tile LRU cache
-            LRUTileCache.purge()
+            GCTileCache.purge()
         } else if (Gdx.input.isKeyJustPressed(Input.Keys.ENTER)) {
             // toggle fullscreen
             if (Gdx.graphics.isFullscreen) {
@@ -303,7 +299,7 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
             val deltaMs = (delta * 1000.0f).roundToInt()
             debugLabel.setText(
             """FPS: ${Gdx.graphics.framesPerSecond} (${deltaMs} ms)    Memory: $mem MB    Draw calls: ${profiler.drawCalls}
-            |${LRUTileCache.getStats()}
+            |${GCTileCache.getStats()}
             |Vehicles    culled: ${sceneManager.cullRate}%    low LoD: ${sceneManager.lowLodRate}%    full: ${sceneManager.fullRenderRate}%    total: ${sceneManager.totalVehicles}
             |TileManager displayed: ${atlasTileManager.numRetrievedTiles}
             |Graphics preset: ${graphics.name}
@@ -351,7 +347,7 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
 
     override fun dispose() {
         stage.dispose()
-        LRUTileCache.dispose()
+        GCTileCache.dispose()
         profiler.disable()
         shapeRender.dispose()
         Logger.debug("Shutting down Hermes executor")

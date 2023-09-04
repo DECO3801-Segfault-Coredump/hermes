@@ -8,7 +8,7 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import com.badlogic.gdx.math.Vector3
 import com.badlogic.gdx.math.collision.BoundingBox
 import com.badlogic.gdx.utils.Disposable
-import com.decosegfault.atlas.map.LRUTileCache
+import com.decosegfault.atlas.map.GCTileCache
 import com.decosegfault.atlas.util.AtlasUtils
 import kotlin.math.pow
 
@@ -88,17 +88,17 @@ data class Tile(val x: Float, val z: Float, val size: Float, val tileLookup : Ve
             generateDecal()
         }
 //        generateDecal()
-        updateTexture()
+//        updateTexture()
 
         return decal
     }
 
     /**
-     * Generate the decal by grabbing texture from LRUTileCache.
+     * Generate the decal by grabbing texture from GCTileCache.
      */
     private fun generateDecal() {
         val shift = size / 2
-        LRUTileCache.retrieve(tileLookup) {
+        GCTileCache.retrieve(tileLookup) {
             decal = Decal.newDecal(size, size, TextureRegion(it))
             decal!!.setPosition(x + shift, 0f, z + shift)
             decal!!.setRotationX(270f)
@@ -106,7 +106,7 @@ data class Tile(val x: Float, val z: Float, val size: Float, val tileLookup : Ve
     }
 
     private fun updateTexture() {
-        LRUTileCache.retrieve(tileLookup) {
+        GCTileCache.retrieve(tileLookup) {
             decal?.textureRegion?.texture = it
         }
     }
@@ -161,6 +161,7 @@ data class Tile(val x: Float, val z: Float, val size: Float, val tileLookup : Ve
         val dist = cam.position.dst(closestPoint)
         if (dist >= graphics.tileDrawDist || !cam.frustum.boundsInFrustum(bbox)) {
             didCull = true
+            decal = null
             subTiles.clear()
             return allTiles
         }
@@ -170,7 +171,8 @@ data class Tile(val x: Float, val z: Float, val size: Float, val tileLookup : Ve
 
         // We are at correct resolution, draw this tile. Base Case
         if (this.size <= size) {
-            //
+            // tell the GCTileCache that we are in use
+            GCTileCache.markUsed(tileLookup)
             allTiles.add(this)
         }
 
