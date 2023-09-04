@@ -4,10 +4,12 @@ import com.badlogic.gdx.*
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3ApplicationConfiguration
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Graphics
 import com.badlogic.gdx.graphics.*
+import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute
 import com.badlogic.gdx.graphics.g3d.decals.CameraGroupStrategy
 import com.badlogic.gdx.graphics.g3d.decals.DecalBatch
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import com.badlogic.gdx.graphics.profiling.GLProfiler
+import com.badlogic.gdx.math.Quaternion
 import com.badlogic.gdx.math.Vector3
 import com.badlogic.gdx.scenes.scene2d.Stage
 import com.badlogic.gdx.scenes.scene2d.ui.Image
@@ -22,6 +24,7 @@ import com.decosegfault.atlas.util.Assets
 import com.decosegfault.atlas.util.Assets.ASSETS
 import com.decosegfault.hermes.VehicleType
 import ktx.app.clearScreen
+import net.mgsx.gltf.scene3d.attributes.FogAttribute
 import net.mgsx.gltf.scene3d.attributes.PBRCubemapAttribute
 import net.mgsx.gltf.scene3d.attributes.PBRTextureAttribute
 import net.mgsx.gltf.scene3d.lights.DirectionalLightEx
@@ -32,6 +35,7 @@ import net.mgsx.gltf.scene3d.utils.IBLBuilder
 import org.tinylog.kotlin.Logger
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
+import kotlin.math.max
 import kotlin.math.roundToInt
 import kotlin.random.Random
 
@@ -51,16 +55,30 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
     /** Debug text */
     private lateinit var debugLabel: Label
     private val mux = InputMultiplexer()
+
     private val cam = PerspectiveCamera().apply {
         fieldOfView = 75f
         near = 0.1f
         far = 900f
     }
+
+    /** a camera used to test culling */
+    private val debugCam = PerspectiveCamera().apply {
+        fieldOfView = 75f
+        near = 0.1f
+        far = 900f
+        position.set(-71.186066f,56.803688f,97.34365f)
+        direction.set(0.4725332f,-0.3691399f,-0.80027723f)
+        update()
+    }
+
     private val camController = AtlasCameraController(cam).apply {
         translateButton = Input.Buttons.RIGHT
         baseTranslateUnits = 40f
         scrollFactor = -0.1f
     }
+
+    private var isUsingDebugCam = false
 
     /** Viewport for main 3D camera */
     private val cameraViewport = ExtendViewport(1920f, 1080f, cam)
@@ -244,6 +262,11 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
             // vehicle movement in benchmark
             Logger.debug("Toggling vehicle movement")
             shouldVehiclesMove = !shouldVehiclesMove
+        } else if (Gdx.input.isKeyJustPressed(Input.Keys.P)) {
+            // debug camera pose and frustum culling
+            //Logger.debug("Camera pose:\npos: ${cam.position}\ndirection: ${cam.direction}")
+            Logger.debug("Toggling usingDebugCam")
+            isUsingDebugCam = !isUsingDebugCam
         }
 
         // update benchmark
@@ -261,7 +284,16 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
 
         // render 3D
         camController.update()
-        cam.update()
+        if (isUsingDebugCam) {
+            // move camera to debug spot
+            cam.position.set(debugCam.position)
+            cam.direction.set(debugCam.direction)
+            cam.up.set(debugCam.up)
+            // use old frustum so we get culling
+            cam.update(false)
+        } else {
+            cam.update()
+        }
         sceneManager.update(delta, vehicles)
         sceneManager.render()
 
