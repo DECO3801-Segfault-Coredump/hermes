@@ -148,8 +148,7 @@ data class Tile(val x: Float, val z: Float, val size: Float, val tileLookup : Ve
         val dist = cam.position.dst(closestPoint)
         if (dist >= graphics.tileDrawDist || !cam.frustum.boundsInFrustum(bbox)) {
             didCull = true
-            decal = null
-            subTiles.clear()
+            this.dispose()
             return allTiles
         }
 
@@ -182,6 +181,7 @@ data class Tile(val x: Float, val z: Float, val size: Float, val tileLookup : Ve
         for (tile in subTiles) {
             tile.dispose()
         }
+        decal = null
         subTiles.clear()
     }
 
