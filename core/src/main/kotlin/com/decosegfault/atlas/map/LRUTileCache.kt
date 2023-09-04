@@ -49,7 +49,7 @@ object LRUTileCache : Disposable {
         .maximumSize(MAX_TILES_RAM)
         .removalListener { key: Vector3?, value: Texture?, cause ->
             val tileStr = "(${key?.x?.toInt()},${key?.y?.toInt()},${key?.z?.toInt()})"
-            Logger.debug("Tile $tileStr being removed by $cause (evicted ${cause.wasEvicted()})")
+            Logger.debug("Tile $tileStr being removed by $cause")
             Gdx.app.postRunnable { value.disposeSafely() }
         }
         .recordStats()
@@ -91,6 +91,7 @@ object LRUTileCache : Disposable {
         executor.submit {
             // download the tile async on the executor thread
             val pixmap = TileServerManager.fetchTileAsPixmap(pos) ?: run {
+                // failed to download texture
                 onRetrieved(defaultTexture)
                 return@submit
             }
@@ -121,12 +122,13 @@ object LRUTileCache : Disposable {
         val cache = tileCache
         return "Tile LRU    hit: ${(cache.stats().hitRate() * 100.0).roundToInt()}%    " +
          "size: ${cache.estimatedSize()}     evictions: ${cache.stats().evictionCount()}    " +
-          "fetch: ${fetchTimes.mean} ms"
+          "fetch: ${fetchTimes.mean.roundToInt()} ms"
     }
 
     override fun dispose() {
         Logger.debug("Shutdown LRUTileCache")
         purge()
         executor.shutdownNow()
+        defaultTexture.disposeSafely()
     }
 }
