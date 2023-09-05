@@ -14,28 +14,28 @@
  * limitations under the License.
  ******************************************************************************/
 
-package com.decosegfault.atlas.render;
+package com.decosegfault.atlas.util;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.Input.Buttons;
 import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.graphics.Camera;
-import com.badlogic.gdx.math.Interpolation;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector3;
-import org.tinylog.Logger;
 
 /**
- * Camera controller for Atlas. Based on
+ * Camera controller for Atlas, meant to resemble Google Maps. Based on
  * <a href="https://github.com/libgdx/libgdx/blob/master/gdx/src/com/badlogic/gdx/graphics/g3d/utils/CameraInputController.java">libGDX code</a>
  * <p>
  * Features to be added for Atlas: smooth zoom, zoom distance changes translation speed, min/max angles
  *
+ * STATUS: ABANDONED because it sucks. FIXME REMOVE THIS FILE.
+ *
  * @author libGDX authors
  * @author Matt Young
  */
-public class AtlasCameraController extends InputAdapter {
+public class OldAtlasCamController extends InputAdapter {
     /** The button for rotating the camera. */
     public int rotateButton = Buttons.LEFT;
     /** The angle to rotate when moved the full width or height of the screen. */
@@ -44,8 +44,6 @@ public class AtlasCameraController extends InputAdapter {
     public int translateButton = Buttons.RIGHT;
     /** The units to translate the camera when moved the full width or height of the screen. */
     public float baseTranslateUnits = 10f;
-    /** Translate units with distance scaling applied */
-    public float actualTranslateUnits = 10f;
     /** The button for translating the camera along the direction axis */
     public int forwardButton = Buttons.MIDDLE;
     /** The key which must be pressed to activate rotate, translate and forward or 0 to always activate. */
@@ -70,10 +68,10 @@ public class AtlasCameraController extends InputAdapter {
     protected boolean forwardPressed;
     public int backwardKey = Keys.S;
     protected boolean backwardPressed;
-    public int rotateRightKey = Keys.A;
-    protected boolean rotateRightPressed;
-    public int rotateLeftKey = Keys.D;
-    protected boolean rotateLeftPressed;
+    public int strafeRightKey = Keys.D;
+    protected boolean strafeRightPressed;
+    public int strafeLeftKey = Keys.A;
+    protected boolean strafeLeftPressed;
     protected boolean controlsInverted;
     /** The camera. */
     public Camera camera;
@@ -83,26 +81,28 @@ public class AtlasCameraController extends InputAdapter {
     private float startX, startY;
     private final Vector3 tmpV1 = new Vector3();
     private final Vector3 tmpV2 = new Vector3();
-    private float zoomOld = 1f; // old zoom value (start)
     public float zoomTarget = 1f; // new zoom value (end)
-    private float zoomProgress = 1f; // progress between 0.0 and 1.0
-    public float zoomSpeed = 10f; // speed that the interpolation runs at
-    public float lastAmount = 0f;
-    private boolean isZooming = false;
-    private final Interpolation interpolator = Interpolation.smooth2;
 
-    public AtlasCameraController (final Camera camera) {
+    public OldAtlasCamController(final Camera camera) {
         super();
         this.camera = camera;
     }
 
     public void update () {
         final float delta = Gdx.graphics.getDeltaTime();
-        if (rotateRightPressed || rotateLeftPressed || forwardPressed || backwardPressed) {
-            if (rotateRightPressed) camera.rotate(camera.up, -delta * rotateAngle);
-            if (rotateLeftPressed) camera.rotate(camera.up, delta * rotateAngle);
+
+        final float scaleFactor = Gdx.input.isKeyPressed(Keys.SHIFT_LEFT) ? 4f : 1f;
+        baseTranslateUnits = camera.position.y * scaleFactor;
+
+        if (strafeRightPressed || strafeLeftPressed || forwardPressed || backwardPressed) {
+            // https://gamedev.stackexchange.com/q/26622
+            Vector3 right = camera.direction.cpy().crs(camera.up).nor();
+
+            if (strafeRightPressed) camera.position.add(right.scl(baseTranslateUnits * delta));
+            if (strafeLeftPressed) camera.position.add(right.scl(-baseTranslateUnits * delta));
+
             if (forwardPressed) {
-                camera.translate(tmpV1.set(camera.direction).scl(50*delta * baseTranslateUnits));
+                camera.translate(tmpV1.set(camera.direction).scl(delta * baseTranslateUnits));
                 if (forwardTarget) target.add(tmpV1);
             }
             if (backwardPressed) {
@@ -111,28 +111,6 @@ public class AtlasCameraController extends InputAdapter {
             }
             if (autoUpdate) camera.update();
         }
-
-//        if (isZooming) {
-//            if (zoomProgress < 1.0f) {
-//                // apply interpolation
-//                float amount = interpolator.apply(zoomOld, zoomTarget, zoomProgress);
-//
-//                // translate camera
-//                float deltaTranslate = amount - lastAmount;
-//                camera.translate(tmpV1.set(camera.direction).scl(deltaTranslate));
-//                Logger.debug("Zooming: abs {} delta {}", amount, deltaTranslate);
-//                lastAmount = amount;
-//
-//                if (autoUpdate) camera.update();
-//                // update progress (0.0 to 1.0, zoomSpeed controls how fast)
-//                zoomProgress += zoomSpeed * delta;
-//            } else {
-//                Logger.debug("Done zooming");
-//                isZooming = false;
-//                zoomOld = zoomTarget;
-//                zoomProgress = 0f;
-//            }
-//        }
     }
 
     @Override
@@ -146,13 +124,14 @@ public class AtlasCameraController extends InputAdapter {
 
         // FIXME this code is fucking horrendous, @Henry plz help me
 
-        float zoomIncrement = amountY * scrollFactor * actualTranslateUnits;
-        zoomTarget += zoomIncrement;
-        actualTranslateUnits = (-zoomTarget / 20f) * baseTranslateUnits;
-        if (actualTranslateUnits == 0.0f) actualTranslateUnits = 10.0f;
-        return zoom(zoomIncrement);
+//        float zoomIncrement = amountY * scrollFactor * actualTranslateUnits;
+//        zoomTarget += zoomIncrement;
+//        actualTranslateUnits = (-zoomTarget / 20f) * baseTranslateUnits;
+//        if (actualTranslateUnits == 0.0f) actualTranslateUnits = 10.0f;
+//        return zoom(zoomIncrement);
 
 //        return zoom(amountY * scrollFactor * actualTranslateUnits);
+        return true;
     }
 
     public boolean zoom (float amount) {
@@ -204,11 +183,11 @@ public class AtlasCameraController extends InputAdapter {
             camera.rotateAround(target, tmpV1.nor(), deltaY * rotateAngle);
             camera.rotateAround(target, Vector3.Y, deltaX * -rotateAngle);
         } else if (button == translateButton) {
-            camera.translate(tmpV1.set(camera.direction).crs(camera.up).nor().scl(-deltaX * actualTranslateUnits));
-            camera.translate(tmpV2.set(camera.up).scl(-deltaY * actualTranslateUnits));
+            camera.translate(tmpV1.set(camera.direction).crs(camera.up).nor().scl(-deltaX * baseTranslateUnits));
+            camera.translate(tmpV2.set(camera.up).scl(-deltaY * baseTranslateUnits));
             if (translateTarget) target.add(tmpV1).add(tmpV2);
         } else if (button == forwardButton) {
-            camera.translate(tmpV1.set(camera.direction).scl(deltaY * actualTranslateUnits));
+            camera.translate(tmpV1.set(camera.direction).scl(deltaY * baseTranslateUnits));
             if (forwardTarget) target.add(tmpV1);
         }
         if (autoUpdate) camera.update();
@@ -233,9 +212,9 @@ public class AtlasCameraController extends InputAdapter {
             forwardPressed = true;
         else if (keycode == backwardKey)
             backwardPressed = true;
-        else if (keycode == rotateRightKey)
-            rotateRightPressed = true;
-        else if (keycode == rotateLeftKey) rotateLeftPressed = true;
+        else if (keycode == strafeRightKey)
+            strafeRightPressed = true;
+        else if (keycode == strafeLeftKey) strafeLeftPressed = true;
         return false;
     }
 
@@ -249,9 +228,9 @@ public class AtlasCameraController extends InputAdapter {
             forwardPressed = false;
         else if (keycode == backwardKey)
             backwardPressed = false;
-        else if (keycode == rotateRightKey)
-            rotateRightPressed = false;
-        else if (keycode == rotateLeftKey) rotateLeftPressed = false;
+        else if (keycode == strafeRightKey)
+            strafeRightPressed = false;
+        else if (keycode == strafeLeftKey) strafeLeftPressed = false;
         return false;
     }
 }

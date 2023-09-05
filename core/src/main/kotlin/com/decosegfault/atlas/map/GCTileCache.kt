@@ -128,9 +128,12 @@ object GCTileCache : Disposable {
 
             Logger.info("Evicted $evicted items this GC, reached fill rate of ${fillRate * 100}%")
 
-            tilesInUse.clear()
             gcs++
         }
+    }
+
+    fun nextFrame() {
+        tilesInUse.clear()
     }
 
     /** Tells the cache that the tile is in use and should not be GC'd */
@@ -161,8 +164,11 @@ object GCTileCache : Disposable {
 
     /** @return cache hit rate stats for displaying */
     fun getStats(): String {
-        val hitRate = ((hits / (hits + misses).toDouble()) * 100.0).roundToInt()
-        return "Tile LRU    hit: $hitRate%    " +
+        var hitRate = ((hits / (hits + misses).toDouble()) * 100.0)
+        if (hitRate.isNaN()) {
+            hitRate = 0.0
+        }
+        return "Tile GC    hit: ${hitRate.roundToInt()}%    " +
          "size: ${tileCache.size}     GCs: $gcs    " +
           "fetch: ${fetchTimes.mean.roundToInt()} ms"
     }

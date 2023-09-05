@@ -1,5 +1,6 @@
 package com.decosegfault.atlas.util
 
+import com.badlogic.gdx.math.Quaternion
 import com.badlogic.gdx.math.Rectangle
 import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.math.Vector3
@@ -22,5 +23,32 @@ object AtlasUtils {
     fun clampToRect3D(point: Vector3, rect: Rectangle) {
         point.x = point.x.coerceIn(rect.x, rect.x + rect.width)
         point.z = point.z.coerceIn(rect.y, rect.y + rect.height)
+    }
+
+    // https://github.com/mrdoob/three.js/blob/dev/src/math/Vector3.js#L252
+    fun Vector3.applyQuaternion(q: Quaternion): Vector3 {
+        val x = this.x
+        val y = this.y
+        val z = this.z
+
+        val qx = q.x
+        val qy = q.y
+        val qz = q.z
+        val qw = q.w
+
+        // calculate quat * vector
+
+        val ix = qw * x + qy * z - qz * y;
+        val iy = qw * y + qz * x - qx * z;
+        val iz = qw * z + qx * y - qy * x;
+        val iw = - qx * x - qy * y - qz * z;
+
+        // calculate result * inverse quat
+
+        this.x = ix * qw + iw * - qx + iy * - qz - iz * - qy;
+        this.y = iy * qw + iw * - qy + iz * - qx - ix * - qz;
+        this.z = iz * qw + iw * - qz + ix * - qy - iy * - qx;
+
+        return this;
     }
 }

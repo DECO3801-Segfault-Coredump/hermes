@@ -20,6 +20,8 @@ import com.decosegfault.atlas.map.GCTileCache
 import com.decosegfault.atlas.render.*
 import com.decosegfault.atlas.util.Assets
 import com.decosegfault.atlas.util.Assets.ASSETS
+import com.decosegfault.atlas.util.FirstPersonCamController
+import com.decosegfault.atlas.util.StreetsGLCamController
 import com.decosegfault.hermes.VehicleType
 import ktx.app.clearScreen
 import net.mgsx.gltf.scene3d.attributes.PBRCubemapAttribute
@@ -32,6 +34,7 @@ import net.mgsx.gltf.scene3d.utils.IBLBuilder
 import org.tinylog.kotlin.Logger
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
+import kotlin.math.max
 import kotlin.math.roundToInt
 import kotlin.random.Random
 
@@ -55,7 +58,10 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
     private val cam = PerspectiveCamera().apply {
         fieldOfView = 75f
         near = 0.1f
-        far = 5000f
+        far = max(graphics.tileDrawDist, graphics.vehicleDrawDist) + 500f
+//        rotate(Vector3.X, -90f)
+        translate(0f, 300f, 0f)
+        update()
     }
 
     /** a camera used to test culling */
@@ -68,11 +74,22 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
         update()
     }
 
-    private val camController = AtlasCameraController(cam).apply {
-        translateButton = Input.Buttons.RIGHT
-        baseTranslateUnits = 40f
-        scrollFactor = -0.1f
-    }
+    private val camController = FirstPersonCamController(cam)
+
+//    private val camController = StreetsGLCamController(cam).apply {
+//        distance = 200f
+//    }
+
+//    private val camController = OldAtlasCameraController(cam)
+//        .apply {
+//        translateButton = Input.Buttons.RIGHT
+//        baseTranslateUnits = 40f
+//        scrollFactor = -0.1f
+//    }
+
+//    private val camController = AtlasFPCameraController(cam).apply {
+//
+//    }
 
     private var isUsingDebugCam = false
 
@@ -279,7 +296,7 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
         }
 
         // render 3D
-        camController.update()
+        camController.update(delta)
         if (isUsingDebugCam) {
             // move camera to debug spot
             cam.position.set(debugCam.position)
@@ -292,6 +309,7 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
         }
         sceneManager.update(delta, vehicles)
         sceneManager.render()
+        GCTileCache.nextFrame()
 
         // render debug UI
         if (isDebugDraw) {
@@ -303,7 +321,7 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
             |Vehicles    culled: ${sceneManager.cullRate}%    low LoD: ${sceneManager.lowLodRate}%    full: ${sceneManager.fullRenderRate}%    total: ${sceneManager.totalVehicles}
             |TileManager displayed: ${atlasTileManager.numRetrievedTiles}
             |Graphics preset: ${graphics.name}
-            |translate: ${camController.actualTranslateUnits}    zoom target: ${camController.zoomTarget}
+            |pitch: ${camController.quat.pitch}, roll: ${camController.quat.roll}, yaw: ${camController.quat.yaw}
             """.trimMargin())
         } else {
             debugLabel.setText("FPS: ${Gdx.graphics.framesPerSecond}    Draw calls: ${profiler.drawCalls}")
