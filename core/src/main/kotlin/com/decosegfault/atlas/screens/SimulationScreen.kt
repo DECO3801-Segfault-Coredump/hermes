@@ -260,8 +260,8 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
             Logger.debug("Toggling debug")
             isDebugDraw = !isDebugDraw
         } else if (Gdx.input.isKeyJustPressed(Input.Keys.RIGHT_BRACKET)) {
-            // clears tile LRU cache
-            GCTileCache.purge()
+            // forces tile cache GC
+            GCTileCache.garbageCollect(true)
         } else if (Gdx.input.isKeyJustPressed(Input.Keys.ENTER)) {
             // toggle fullscreen
             if (Gdx.graphics.isFullscreen) {

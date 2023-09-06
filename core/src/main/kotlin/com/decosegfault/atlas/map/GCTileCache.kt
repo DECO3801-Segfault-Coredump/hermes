@@ -106,16 +106,20 @@ object GCTileCache : Disposable {
         misses++
     }
 
-    /** GC unused tiles */
-    private fun garbageCollect() {
+    /**
+     * Garbage collect unused tiles that are not currently mark as used (being rendered on screen)
+     * @param force If true, ignores [START_GC_THRESHOLD] and [END_GC_THRESHOLD] and forces collection
+     * of all onscreen tiles
+     */
+    fun garbageCollect(force: Boolean = false) {
         var fillRate = tileCache.size / MAX_TILES_RAM
 
-        if (fillRate >= START_GC_THRESHOLD) {
+        if (fillRate >= START_GC_THRESHOLD || force) {
             Logger.info("Garbage collecting, fill rate: ${fillRate * 100.0}%, used tiles: ${tilesInUse.size}")
             var evicted = 0
             val maybeCanEvict = tileCache.keys().toList().toMutableList()
 
-            while (fillRate >= END_GC_THRESHOLD && maybeCanEvict.isNotEmpty()) {
+            while ((fillRate >= END_GC_THRESHOLD || force) && maybeCanEvict.isNotEmpty()) {
                 // check if this tile can be GC'd
                 // remove it from the list of items to check
                 val tile = maybeCanEvict.removeAt(0)

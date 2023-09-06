@@ -1,6 +1,9 @@
 package com.decosegfault.atlas.render
 
+import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.graphics.Camera
+import com.badlogic.gdx.math.Intersector
+import com.badlogic.gdx.math.Plane
 import com.badlogic.gdx.math.Vector3
 import com.decosegfault.atlas.util.AtlasUtils
 import kotlin.math.*
@@ -42,6 +45,9 @@ class AtlasTileManager {
 
     /** Number of tiles retrieved in last getTiles/getTilesCulled call. */
     var numRetrievedTiles = 0
+
+    private val groundPlane = Plane(Vector3(0f, 1f, 0f), 0f)
+
 
     init {
         // Shift to centre tile plane on (0, 0, 0)
@@ -165,8 +171,8 @@ class AtlasTileManager {
     fun getTilesCulled(cam: Camera, graphics: GraphicsPreset): MutableList<Tile> {
         val tiles = mutableListOf<Tile>()
         for (tile in tileSurface) {
-            for (subTile in tile.getTilesCulled(calculateSize(cam, tile), cam, graphics)) {
-                tiles.add(subTile)
+                for (subTile in tile.getTilesCulled(calculateSize(cam, tile), cam, graphics)) {
+                    tiles.add(subTile)
             }
         }
         numRetrievedTiles = tiles.size
