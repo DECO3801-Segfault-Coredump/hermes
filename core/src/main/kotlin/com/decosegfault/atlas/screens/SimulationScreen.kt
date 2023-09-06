@@ -33,6 +33,7 @@ import net.mgsx.gltf.scene3d.scene.SceneSkybox
 import net.mgsx.gltf.scene3d.utils.IBLBuilder
 import org.tinylog.kotlin.Logger
 import java.util.*
+import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import kotlin.math.max
@@ -253,10 +254,20 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
     override fun render(delta: Float) {
         clearScreen(0.0f, 0.0f, 0.0f)
 
-        // process a block of the work queue
+        // first, handle work queue emergency situations to prevent your RAM from filling up
+        if (WORK_QUEUE.size >= WORK_QUEUE_ABSOLUTE_MAX) {
+            Logger.error("PANIC: Work queue emergency!! Shutting down NOW! Size: ${WORK_QUEUE.size}")
+            WORK_QUEUE.clear()
+            GCTileCache.dispose()
+            throw OutOfMemoryError("PANIC: Work queue emergency!")
+        }
+
+        // try and take up to WORK_PER_FRAME items from the work queue and run them
         var workIdx = 0
-        while (WORK_QUEUE.isNotEmpty() && workIdx < WORK_PER_FRAME) {
-            WORK_QUEUE.poll().run()
+        var item = WORK_QUEUE.poll()
+        while (item != null && workIdx < WORK_PER_FRAME) {
+            item.run()
+            item = WORK_QUEUE.poll()
             workIdx++
         }
 
@@ -327,7 +338,8 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
             """FPS: ${Gdx.graphics.framesPerSecond} (${deltaMs} ms)    Memory: $mem MB    Draw calls: ${profiler.drawCalls}
             |${GCTileCache.getStats()}
             |Vehicles    culled: ${sceneManager.cullRate}%    low LoD: ${sceneManager.lowLodRate}%    full: ${sceneManager.fullRenderRate}%    total: ${sceneManager.totalVehicles}
-            |TileManager displayed: ${atlasTileManager.numRetrievedTiles}
+            |Tiles displayed: ${atlasTileManager.numRetrievedTiles}
+            |Tile work queue    done: $workIdx    left: ${WORK_QUEUE.size}
             |Graphics preset: ${graphics.name}
             |pitch: ${camController.quat.pitch}, roll: ${camController.quat.roll}, yaw: ${camController.quat.yaw}
             """.trimMargin())
@@ -384,9 +396,12 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
 
     companion object {
         /** List of work items to process per frame, like `Gdx.app.postRunnable` */
-        val WORK_QUEUE = LinkedList<Runnable>()
+        val WORK_QUEUE = ConcurrentLinkedQueue<Runnable>()
 
         /** Number of items from [WORK_QUEUE] to process per frame */
-        const val WORK_PER_FRAME = 10
+        private const val WORK_PER_FRAME = 50
+
+        /** Absolute max number of items in the work queue to prevent RAM from filling up */
+        private const val WORK_QUEUE_ABSOLUTE_MAX = 16384
     }
 }

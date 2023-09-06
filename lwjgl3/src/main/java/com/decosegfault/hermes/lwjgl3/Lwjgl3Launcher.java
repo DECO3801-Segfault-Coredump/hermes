@@ -26,6 +26,7 @@ public class Lwjgl3Launcher {
         Thread.setDefaultUncaughtExceptionHandler((thread, throwable) -> {
             Logger.error("Uncaught exception in thread " + thread.getName() + ": " + throwable);
             Logger.error(throwable);
+            System.exit(1);
         });
 
         if (System.getProperty("debug") == null) {

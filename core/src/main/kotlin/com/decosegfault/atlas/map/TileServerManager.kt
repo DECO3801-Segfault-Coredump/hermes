@@ -88,7 +88,7 @@ object TileServerManager {
             val bytes = conn?.readAllBytes()
             bytes
         } catch (e: IOException) {
-            Logger.warn("Unable to contact tile server: $e")
+            Logger.warn("Unable to fetch tile $pos: $e")
             null
         } finally {
             conn?.close()

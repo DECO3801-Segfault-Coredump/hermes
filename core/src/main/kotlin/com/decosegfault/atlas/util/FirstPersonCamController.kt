@@ -21,7 +21,7 @@ class FirstPersonCamController(private val cam: PerspectiveCamera) : InputAdapte
     private val minPitch = -89f // deg
     private val maxPitch = 89f // deg
     private val pointerSpeed = 1.6f
-    private val speed = 100f // units per second
+    private val speed = 300f // units per second
     private val boostFactor = 4f
     private val minHeight = 5f
     private val maxHeight = 5000f

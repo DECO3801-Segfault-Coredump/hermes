@@ -17,8 +17,10 @@ import kotlin.math.roundToInt
 /**
  * A garbage-collected cache for tiles from the OSM tile server. The cache will start garbage collecting
  * unused tiles (tiles not currently on screen) once it reaches [START_GC_THRESHOLD] out of [MAX_TILES_RAM].
- * It will try and remove enough tiles to reach the end threshold [END_GC_THRESHOLD]. Note that [MAX_TILES_RAM]
- * if not a hard limit, and the cache can _theoretically_ go beyond this bound in extreme situations.
+ * It will try and remove enough tiles to reach the end threshold [END_GC_THRESHOLD].
+ *
+ * Note that [MAX_TILES_RAM] if not a hard limit, and the cache can _theoretically_ go beyond this bound in
+ * extreme situations.
  *
  * @author Matt Young
  */
@@ -45,6 +47,7 @@ object GCTileCache : Disposable {
      */
     private val tileCache = ConcurrentHashMap<Vector3, Texture>()
 
+    /** Tiles marked as currently in use on screen this frame */
     private val tilesInUse = mutableSetOf<Vector3>()
 
     /** Limit thread pool size to 2x the number of processors to prevent memory issues */
@@ -53,14 +56,10 @@ object GCTileCache : Disposable {
     /** Executor used for HTTP requests */
     private val executor = Executors.newFixedThreadPool(threadPoolSize)
 
-    private val fetchTimes = WindowedMean(50)
-
     private lateinit var defaultTexture: Texture
-
+    private val fetchTimes = WindowedMean(50)
     private var gcs = 0
-
     private var hits = 0
-
     private var misses = 0
 
     fun init() {
@@ -92,7 +91,7 @@ object GCTileCache : Disposable {
             }
             // now that we have the pixmap, we need to context switch into the render thread in order to
             // upload the texture
-            Gdx.app.postRunnable {
+            SimulationScreen.WORK_QUEUE.add {
                 val texture = Texture(pixmap)
                 texture.setFilter(TextureFilter.Linear, TextureFilter.Linear)
                 pixmap.dispose()
@@ -114,6 +113,7 @@ object GCTileCache : Disposable {
     fun garbageCollect(force: Boolean = false) {
         var fillRate = tileCache.size / MAX_TILES_RAM
 
+        // perform a GC if we're above START_GC_THRESHOLD% or we were forced to
         if (fillRate >= START_GC_THRESHOLD || force) {
             Logger.info("Garbage collecting, fill rate: ${fillRate * 100.0}%, used tiles: ${tilesInUse.size}")
             var evicted = 0
