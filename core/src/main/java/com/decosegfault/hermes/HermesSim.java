@@ -25,6 +25,8 @@ import java.io.IOException;
 
 public class HermesSim {
 
+    public static Map<VehicleData, AtlasVehicle> vehicleMap = new Hashmap<VehicleData, AtlasVehicle>();
+
     /** time of day will be in seconds, max 86400 (one day) before looping back to 0 */
     static int time;
 
@@ -49,10 +51,16 @@ public class HermesSim {
         RouteHandler.simType = simType;
         read(); //placeholder
         RouteHandler.sortShapes();
-        RouteHandler.logRoutes();
-        RouteHandler.logTrips();
-        RouteHandler.logShapes();
+        //RouteHandler.logRoutes();
+        //RouteHandler.logTrips();
+        //RouteHandler.logShapes();
+	for (TripData trip : tripsByShape.values()) {
+	    vehicleMap.put(trip.vehicle, null);
+        }
         Logger.info("GTFS Data Loaded");
+
+	// something like
+	//Atlas.generateVehicles()
     }
 
     public static void read()  {
