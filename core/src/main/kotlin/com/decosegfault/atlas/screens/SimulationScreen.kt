@@ -4,6 +4,8 @@ import com.badlogic.gdx.*
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3ApplicationConfiguration
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Graphics
 import com.badlogic.gdx.graphics.*
+import com.badlogic.gdx.graphics.g3d.decals.CameraGroupStrategy
+import com.badlogic.gdx.graphics.g3d.decals.DecalBatch
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import com.badlogic.gdx.graphics.profiling.GLProfiler
 import com.badlogic.gdx.math.Vector3
@@ -14,10 +16,12 @@ import com.badlogic.gdx.scenes.scene2d.ui.Skin
 import com.badlogic.gdx.scenes.scene2d.ui.Table
 import com.badlogic.gdx.utils.viewport.ExtendViewport
 import com.badlogic.gdx.utils.viewport.FitViewport
-import com.decosegfault.atlas.map.LRUTileCache
+import com.decosegfault.atlas.map.GCTileCache
 import com.decosegfault.atlas.render.*
 import com.decosegfault.atlas.util.Assets
 import com.decosegfault.atlas.util.Assets.ASSETS
+import com.decosegfault.atlas.util.FirstPersonCamController
+import com.decosegfault.atlas.util.StreetsGLCamController
 import com.decosegfault.hermes.VehicleType
 import ktx.app.clearScreen
 import net.mgsx.gltf.scene3d.attributes.PBRCubemapAttribute
@@ -28,8 +32,11 @@ import net.mgsx.gltf.scene3d.scene.SceneAsset
 import net.mgsx.gltf.scene3d.scene.SceneSkybox
 import net.mgsx.gltf.scene3d.utils.IBLBuilder
 import org.tinylog.kotlin.Logger
+import java.util.*
+import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
+import kotlin.math.max
 import kotlin.math.roundToInt
 import kotlin.random.Random
 
@@ -49,16 +56,44 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
     /** Debug text */
     private lateinit var debugLabel: Label
     private val mux = InputMultiplexer()
+
     private val cam = PerspectiveCamera().apply {
         fieldOfView = 75f
         near = 0.1f
+        far = max(graphics.tileDrawDist, graphics.vehicleDrawDist) + 500f
+//        rotate(Vector3.X, -90f)
+        translate(0f, 300f, 0f)
+        update()
+    }
+
+    /** a camera used to test culling */
+    private val debugCam = PerspectiveCamera().apply {
+        fieldOfView = 75f
+        near = 0.1f
         far = 900f
+        position.set(-71.186066f,56.803688f,97.34365f)
+        direction.set(0.4725332f,-0.3691399f,-0.80027723f)
+        update()
     }
-    private val camController = AtlasCameraController(cam).apply {
-        translateButton = Input.Buttons.RIGHT
-        baseTranslateUnits = 40f
-        scrollFactor = -0.1f
-    }
+
+    private val camController = FirstPersonCamController(cam)
+
+//    private val camController = StreetsGLCamController(cam).apply {
+//        distance = 200f
+//    }
+
+//    private val camController = OldAtlasCameraController(cam)
+//        .apply {
+//        translateButton = Input.Buttons.RIGHT
+//        baseTranslateUnits = 40f
+//        scrollFactor = -0.1f
+//    }
+
+//    private val camController = AtlasFPCameraController(cam).apply {
+//
+//    }
+
+    private var isUsingDebugCam = false
 
     /** Viewport for main 3D camera */
     private val cameraViewport = ExtendViewport(1920f, 1080f, cam)
@@ -84,6 +119,8 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
 
     /** Executor to schedule Hermes tick asynchronously in its own thread */
     private val hermesExecutor = Executors.newSingleThreadScheduledExecutor()
+
+    private val atlasTileManager = AtlasTileManager()
 
     private fun createTextUI() {
         val skin = ASSETS["ui/uiskin.json", Skin::class.java]
@@ -122,7 +159,9 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
         // ref: https://www.openstreetmap.org/copyright
         val osmContainer = Table()
         osmContainer.pad(10f)
-        osmContainer.add(Label("(c) OpenStreetMap contributors", skin, "window"))
+        val osmLabel = Label("(c) OpenStreetMap contributors", skin, "window")
+        osmLabel.style = style
+        osmContainer.add(osmLabel)
         osmContainer.setFillParent(true)
         osmContainer.bottom().right()
         osmContainer.pack()
@@ -159,6 +198,12 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
 
         // setup skybox
         sceneManager.skyBox = SceneSkybox(environmentCubemap)
+
+        // setup ground plane tile manager
+        sceneManager.setAtlasTileManager(atlasTileManager)
+
+        // setup decal batch for rendering
+        sceneManager.decalBatch = DecalBatch(CameraGroupStrategy(cam))
 
         // apply graphics settings
         Assets.applyGraphicsPreset(graphics)
@@ -209,6 +254,24 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
     override fun render(delta: Float) {
         clearScreen(0.0f, 0.0f, 0.0f)
 
+        // first, handle work queue emergency situations to prevent your RAM from filling up
+        if (WORK_QUEUE.size >= WORK_QUEUE_ABSOLUTE_MAX) {
+            Logger.error("PANIC: Work queue emergency!! Size: ${WORK_QUEUE.size}")
+            Logger.error("Stats: ${GCTileCache.getStats()}")
+            WORK_QUEUE.clear()
+            GCTileCache.dispose()
+            throw OutOfMemoryError("PANIC: Work queue emergency!")
+        }
+
+        // try and take up to WORK_PER_FRAME items from the work queue and run them
+        var workIdx = 0
+        var item = WORK_QUEUE.poll()
+        while (item != null && workIdx < WORK_PER_FRAME) {
+            item.run()
+            item = WORK_QUEUE.poll()
+            workIdx++
+        }
+
         if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
             // quit the game
             Gdx.app.exit()
@@ -217,8 +280,8 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
             Logger.debug("Toggling debug")
             isDebugDraw = !isDebugDraw
         } else if (Gdx.input.isKeyJustPressed(Input.Keys.RIGHT_BRACKET)) {
-            // clears tile LRU cache
-            LRUTileCache.purge()
+            // forces tile cache GC
+            GCTileCache.garbageCollect(true)
         } else if (Gdx.input.isKeyJustPressed(Input.Keys.ENTER)) {
             // toggle fullscreen
             if (Gdx.graphics.isFullscreen) {
@@ -232,6 +295,11 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
             // vehicle movement in benchmark
             Logger.debug("Toggling vehicle movement")
             shouldVehiclesMove = !shouldVehiclesMove
+        } else if (Gdx.input.isKeyJustPressed(Input.Keys.P)) {
+            // debug camera pose and frustum culling
+            //Logger.debug("Camera pose:\npos: ${cam.position}\ndirection: ${cam.direction}")
+            Logger.debug("Toggling usingDebugCam")
+            isUsingDebugCam = !isUsingDebugCam
         }
 
         // update benchmark
@@ -248,10 +316,20 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
         }
 
         // render 3D
-        camController.update()
-        cam.update()
+        camController.update(delta)
+        if (isUsingDebugCam) {
+            // move camera to debug spot
+            cam.position.set(debugCam.position)
+            cam.direction.set(debugCam.direction)
+            cam.up.set(debugCam.up)
+            // use old frustum so we get culling
+            cam.update(false)
+        } else {
+            cam.update()
+        }
         sceneManager.update(delta, vehicles)
         sceneManager.render()
+        GCTileCache.nextFrame()
 
         // render debug UI
         if (isDebugDraw) {
@@ -259,10 +337,12 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
             val deltaMs = (delta * 1000.0f).roundToInt()
             debugLabel.setText(
             """FPS: ${Gdx.graphics.framesPerSecond} (${deltaMs} ms)    Memory: $mem MB    Draw calls: ${profiler.drawCalls}
-            |${LRUTileCache.getStats()}
+            |${GCTileCache.getStats()}
             |Vehicles    culled: ${sceneManager.cullRate}%    low LoD: ${sceneManager.lowLodRate}%    full: ${sceneManager.fullRenderRate}%    total: ${sceneManager.totalVehicles}
+            |Tiles displayed: ${atlasTileManager.numRetrievedTiles}
+            |Tile work queue    done: $workIdx    left: ${WORK_QUEUE.size}
             |Graphics preset: ${graphics.name}
-            |translate: ${camController.actualTranslateUnits}    zoom target: ${camController.zoomTarget}
+            |pitch: ${camController.quat.pitch}, roll: ${camController.quat.roll}, yaw: ${camController.quat.yaw}
             """.trimMargin())
         } else {
             debugLabel.setText("FPS: ${Gdx.graphics.framesPerSecond}    Draw calls: ${profiler.drawCalls}")
@@ -275,6 +355,11 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
             for (vehicle in vehicles) {
                 vehicle.debug(shapeRender)
             }
+
+            for (tile in atlasTileManager.getTilesCulled(cam, graphics)) {
+                tile.debug(shapeRender)
+            }
+
             shapeRender.end()
 
 //            shapeRender.begin(ShapeRenderer.ShapeType.Filled)
@@ -301,12 +386,26 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
 
     override fun dispose() {
         stage.dispose()
-        LRUTileCache.dispose()
+        GCTileCache.dispose()
         profiler.disable()
         shapeRender.dispose()
         Logger.debug("Shutting down Hermes executor")
         hermesExecutor.shutdownNow()
         // we should no longer need assets since we quit the game
         ASSETS.dispose()
+    }
+
+    companion object {
+        /**
+         * List of work items to process per frame. Unlike Gdx.app.postRunnable, only [WORK_PER_FRAME] are
+         * processed per frame
+         */
+        val WORK_QUEUE = ConcurrentLinkedQueue<Runnable>()
+
+        /** Number of items from [WORK_QUEUE] to process per frame */
+        private const val WORK_PER_FRAME = 50
+
+        /** Absolute max number of items in the work queue to prevent RAM from filling up */
+        private const val WORK_QUEUE_ABSOLUTE_MAX = 8192
     }
 }

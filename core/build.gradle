@@ -32,6 +32,8 @@ dependencies {
   api "com.github.ben-manes.caffeine:caffeine:3.1.8"
   api 'io.github.sebasbaumh:postgis-java-ng:23.2.0'
   api 'org.postgresql:postgresql:42.6.0'
+  api 'org.apache.commons:commons-math3:3.6.1'
+
 
   // this is just for the GL profiler
   api "com.badlogicgames.gdx:gdx-backend-lwjgl3:$gdxVersion"

@@ -13,6 +13,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.Label
 import com.badlogic.gdx.scenes.scene2d.ui.Skin
 import com.badlogic.gdx.scenes.scene2d.ui.Table
 import com.badlogic.gdx.utils.viewport.ScreenViewport
+import com.decosegfault.atlas.map.GCTileCache
 import com.decosegfault.atlas.map.TileServerManager
 import com.decosegfault.atlas.util.Assets
 import com.decosegfault.atlas.util.ImageAnimation
@@ -46,6 +47,7 @@ class LoadingScreen(private val game: Game) : ScreenAdapter() {
     private var time = 0f
 
     override fun show() {
+        GCTileCache.init()
         skin = Skin(Gdx.files.internal("ui/uiskin.json"))
         stage = Stage(ScreenViewport())
         loadingGif = TextureAtlas(Gdx.files.internal("sprite/whatdadogdoin.atlas"))

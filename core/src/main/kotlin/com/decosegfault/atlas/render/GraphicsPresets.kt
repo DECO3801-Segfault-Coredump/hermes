@@ -31,10 +31,10 @@ object GraphicsPresets {
     private val standard = GraphicsPreset(
         name="Standard",
         description="Balanced settings for good framerate on most computers",
-        vehicleDrawDist=130.0f,
-        vehicleLodDist=70.0f,
-        tileDrawDist=130.0f,
-        anisotropic=16.0f,
+        vehicleDrawDist=300.0f,
+        vehicleLodDist=100.0f,
+        tileDrawDist=5000.0f,
+        anisotropic=8.0f,
         msaa=4,
         shadows=false,
     )
@@ -42,9 +42,9 @@ object GraphicsPresets {
     private val itRunsCrysis = GraphicsPreset(
         name="It Runs Crysis",
         description="High settings for powerful gaming PCs or workstations",
-        vehicleDrawDist=500.0f,
-        vehicleLodDist=100.0f,
-        tileDrawDist=200.0f,
+        vehicleDrawDist=900.0f,
+        vehicleLodDist=300.0f,
+        tileDrawDist=8000.0f,
         anisotropic=16.0f,
         msaa=8,
         shadows=false,

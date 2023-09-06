@@ -26,6 +26,7 @@ public class Lwjgl3Launcher {
         Thread.setDefaultUncaughtExceptionHandler((thread, throwable) -> {
             Logger.error("Uncaught exception in thread " + thread.getName() + ": " + throwable);
             Logger.error(throwable);
+            System.exit(1);
         });
 
         if (System.getProperty("debug") == null) {
@@ -72,7 +73,7 @@ public class Lwjgl3Launcher {
 
         Lwjgl3ApplicationConfiguration configuration = new Lwjgl3ApplicationConfiguration();
         configuration.setTitle("Hermes + Atlas (DECO3801)");
-        configuration.useVsync(false);
+        configuration.useVsync(false); // TODO release = vsync, debug = no vsync
         // force the use of OpenGL 3.2 - if this causes the game to go nuclear, tag @Matt
         configuration.setOpenGLEmulation(Lwjgl3ApplicationConfiguration.GLEmulation.GL32, 3, 2);
         configuration.setWindowedMode(1600, 900);

@@ -27,7 +27,6 @@ object TileServerManager {
     /** Command to stop the OSM docker container */
     private val DOCKER_STOP_CMD = "docker stop atlas-tileserver".split(" ")
 
-
     /** Name of the OSM tile server container */
     private const val CONTAINER_NAME = "overv/openstreetmap-tile-server"
 
@@ -81,7 +80,7 @@ object TileServerManager {
                 .replace("{x}", pos.x.toInt().toString())
                 .replace("{y}", pos.y.toInt().toString())
                 .replace("{z}", pos.z.toInt().toString()))
-        Logger.debug("Fetching tile: $url")
+        Logger.trace("Fetching tile: $url")
 
         var conn: InputStream? = null
         return try {
@@ -89,7 +88,7 @@ object TileServerManager {
             val bytes = conn?.readAllBytes()
             bytes
         } catch (e: IOException) {
-            Logger.warn("Unable to contact tile server: $e")
+            Logger.warn("Unable to fetch tile $pos: $e")
             null
         } finally {
             conn?.close()
