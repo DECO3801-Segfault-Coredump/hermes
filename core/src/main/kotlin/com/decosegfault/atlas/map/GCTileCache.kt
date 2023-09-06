@@ -7,6 +7,7 @@ import com.badlogic.gdx.graphics.Texture.TextureFilter
 import com.badlogic.gdx.math.Vector3
 import com.badlogic.gdx.math.WindowedMean
 import com.badlogic.gdx.utils.Disposable
+import com.decosegfault.atlas.screens.SimulationScreen
 import ktx.assets.disposeSafely
 import org.tinylog.kotlin.Logger
 import java.util.concurrent.ConcurrentHashMap
@@ -91,7 +92,6 @@ object GCTileCache : Disposable {
             }
             // now that we have the pixmap, we need to context switch into the render thread in order to
             // upload the texture
-            // TODO spread this work over multiple frames
             Gdx.app.postRunnable {
                 val texture = Texture(pixmap)
                 texture.setFilter(TextureFilter.Linear, TextureFilter.Linear)

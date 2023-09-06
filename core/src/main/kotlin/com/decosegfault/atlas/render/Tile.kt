@@ -46,7 +46,7 @@ data class Tile(val x: Float, val z: Float, val size: Float, val tileLookup : Ve
     /** Breakdown of tile in 2x2 sub-tiles */
     private var subTiles = mutableListOf<Tile>()
 
-    private var MAX_DIST = 512
+    private var MAX_DIST = 1024
 
     private var MIN_SIZE = 128
 

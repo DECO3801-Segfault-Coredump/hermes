@@ -32,6 +32,7 @@ import net.mgsx.gltf.scene3d.scene.SceneAsset
 import net.mgsx.gltf.scene3d.scene.SceneSkybox
 import net.mgsx.gltf.scene3d.utils.IBLBuilder
 import org.tinylog.kotlin.Logger
+import java.util.*
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import kotlin.math.max
@@ -252,6 +253,13 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
     override fun render(delta: Float) {
         clearScreen(0.0f, 0.0f, 0.0f)
 
+        // process a block of the work queue
+        var workIdx = 0
+        while (WORK_QUEUE.isNotEmpty() && workIdx < WORK_PER_FRAME) {
+            WORK_QUEUE.poll().run()
+            workIdx++
+        }
+
         if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
             // quit the game
             Gdx.app.exit()
@@ -372,5 +380,13 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
         hermesExecutor.shutdownNow()
         // we should no longer need assets since we quit the game
         ASSETS.dispose()
+    }
+
+    companion object {
+        /** List of work items to process per frame, like `Gdx.app.postRunnable` */
+        val WORK_QUEUE = LinkedList<Runnable>()
+
+        /** Number of items from [WORK_QUEUE] to process per frame */
+        const val WORK_PER_FRAME = 10
     }
 }

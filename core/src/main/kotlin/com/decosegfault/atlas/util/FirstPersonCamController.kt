@@ -22,7 +22,7 @@ class FirstPersonCamController(private val cam: PerspectiveCamera) : InputAdapte
     private val maxPitch = 89f // deg
     private val pointerSpeed = 1.6f
     private val speed = 100f // units per second
-    private val boostFactor = 8f
+    private val boostFactor = 4f
     private val minHeight = 5f
     private val maxHeight = 5000f
     val quat = Quaternion()
@@ -75,7 +75,8 @@ class FirstPersonCamController(private val cam: PerspectiveCamera) : InputAdapte
 
     fun update(delta: Float) {
         // TODO change speed based on height
-        val actualSpeed = if (Gdx.input.isKeyPressed(Input.Keys.SHIFT_LEFT)) speed * boostFactor else speed
+        val heightFactor = cam.position.y / 128f
+        val actualSpeed = if (Gdx.input.isKeyPressed(Input.Keys.SHIFT_LEFT)) speed * heightFactor * boostFactor else speed * heightFactor
 
         if (Gdx.input.isKeyPressed(Input.Keys.W)) {
             moveForward(actualSpeed * delta)
