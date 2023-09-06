@@ -256,7 +256,8 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
 
         // first, handle work queue emergency situations to prevent your RAM from filling up
         if (WORK_QUEUE.size >= WORK_QUEUE_ABSOLUTE_MAX) {
-            Logger.error("PANIC: Work queue emergency!! Shutting down NOW! Size: ${WORK_QUEUE.size}")
+            Logger.error("PANIC: Work queue emergency!! Size: ${WORK_QUEUE.size}")
+            Logger.error("Stats: ${GCTileCache.getStats()}")
             WORK_QUEUE.clear()
             GCTileCache.dispose()
             throw OutOfMemoryError("PANIC: Work queue emergency!")
@@ -395,13 +396,16 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
     }
 
     companion object {
-        /** List of work items to process per frame, like `Gdx.app.postRunnable` */
+        /**
+         * List of work items to process per frame. Unlike Gdx.app.postRunnable, only [WORK_PER_FRAME] are
+         * processed per frame
+         */
         val WORK_QUEUE = ConcurrentLinkedQueue<Runnable>()
 
         /** Number of items from [WORK_QUEUE] to process per frame */
         private const val WORK_PER_FRAME = 50
 
         /** Absolute max number of items in the work queue to prevent RAM from filling up */
-        private const val WORK_QUEUE_ABSOLUTE_MAX = 16384
+        private const val WORK_QUEUE_ABSOLUTE_MAX = 8192
     }
 }

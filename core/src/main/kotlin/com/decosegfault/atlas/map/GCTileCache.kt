@@ -10,8 +10,8 @@ import com.badlogic.gdx.utils.Disposable
 import com.decosegfault.atlas.screens.SimulationScreen
 import ktx.assets.disposeSafely
 import org.tinylog.kotlin.Logger
-import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.Executors
+import java.util.concurrent.*
+import kotlin.concurrent.thread
 import kotlin.math.roundToInt
 
 /**
@@ -45,22 +45,36 @@ object GCTileCache : Disposable {
      * as a CPU [Pixmap] in an async Executor from the tile server, then post a small runnable with
      * Gdx.app.postRunnable that allows us to upload the [Pixmap] into a [Texture].
      */
-    private val tileCache = ConcurrentHashMap<Vector3, Texture>()
+    private val tileCache = ConcurrentHashMap<Vector3, Texture>() // threaded (executor)
+
+    /** List of tiles which are currently in the process of being fetched and should not be re-fetched */
+    private val pendingFetches = ConcurrentHashMap.newKeySet<Vector3>() // threaded (executor)
 
     /** Tiles marked as currently in use on screen this frame */
-    private val tilesInUse = mutableSetOf<Vector3>()
+    private val tilesInUse = mutableSetOf<Vector3>() // serial (only called from main)
 
     /** Limit thread pool size to 2x the number of processors to prevent memory issues */
-    private val threadPoolSize = Runtime.getRuntime().availableProcessors() * 2
+    private val threadPoolSize = Runtime.getRuntime().availableProcessors()
 
-    /** Executor used for HTTP requests */
-    private val executor = Executors.newFixedThreadPool(threadPoolSize)
+    /** Queue used to manage tasks the executor should run when it's full (overflow) */
+    private val executorQueue = LinkedBlockingQueue<Runnable>()
+
+    /**
+     * Executor used for HTTP requests.
+     * This is the exact same as `Executors.newFixedThreadPool`, but we control the queue.
+     */
+    private val executor = ThreadPoolExecutor(
+        threadPoolSize, threadPoolSize,
+        0L, TimeUnit.MILLISECONDS,
+        executorQueue
+    )
 
     private lateinit var defaultTexture: Texture
     private val fetchTimes = WindowedMean(50)
     private var gcs = 0
     private var hits = 0
     private var misses = 0
+    private var total = 0
 
     fun init() {
         Logger.info("GCTileCache using $threadPoolSize threads and $MAX_TILES_RAM tiles max")
@@ -82,6 +96,11 @@ object GCTileCache : Disposable {
             hits++
             return
         }
+
+        // check if a pending fetch is in progress, and if so, tell caller to fuck off
+        if (pendingFetches.contains(pos)) return
+        pendingFetches.add(pos)
+
         executor.submit {
             // download the tile async on the executor thread
             val pixmap = TileServerManager.fetchTileAsPixmap(pos) ?: run {
@@ -91,14 +110,19 @@ object GCTileCache : Disposable {
             }
             // now that we have the pixmap, we need to context switch into the render thread in order to
             // upload the texture
+            // transfer our work to the simulation screen's concurrent work queue
+            // TODO on failure, if work queue cleared, free pixmap
             SimulationScreen.WORK_QUEUE.add {
                 val texture = Texture(pixmap)
                 texture.setFilter(TextureFilter.Linear, TextureFilter.Linear)
                 pixmap.dispose()
                 tileCache[pos] = texture
+
                 val end = (System.nanoTime() - begin) / 1e6f
                 fetchTimes.addValue(end)
+                total++
 
+                pendingFetches.remove(pos)
                 onRetrieved(texture)
             }
         }
@@ -115,14 +139,14 @@ object GCTileCache : Disposable {
 
         // perform a GC if we're above START_GC_THRESHOLD% or we were forced to
         if (fillRate >= START_GC_THRESHOLD || force) {
-            Logger.info("Garbage collecting, fill rate: ${fillRate * 100.0}%, used tiles: ${tilesInUse.size}")
+            Logger.info("Garbage collecting, fill rate: ${fillRate * 100.0}%, in use: ${tilesInUse.size}")
             var evicted = 0
             val maybeCanEvict = tileCache.keys().toList().toMutableList()
 
             while ((fillRate >= END_GC_THRESHOLD || force) && maybeCanEvict.isNotEmpty()) {
                 // check if this tile can be GC'd
-                // remove it from the list of items to check
-                val tile = maybeCanEvict.removeAt(0)
+                // remove it from the back of the list to save a shift down
+                val tile = maybeCanEvict.removeAt(maybeCanEvict.size - 1)
                 if (tile !in tilesInUse) {
                     fillRate = tileCache.size / MAX_TILES_RAM
                     evicted++
@@ -131,21 +155,21 @@ object GCTileCache : Disposable {
             }
 
             Logger.info("Evicted $evicted items this GC, reached fill rate of ${fillRate * 100}%")
-
             gcs++
         }
     }
 
+    /** Clears tiles in use for the next frame */
     fun nextFrame() {
         tilesInUse.clear()
     }
 
-    /** Tells the cache that the tile is in use and should not be GC'd */
+    /** Tells the cache that the tile is in use and should not be GCd */
     fun markUsed(tile: Vector3) {
         tilesInUse.add(tile)
     }
 
-    /** Evict a tile, must be on the main thread */
+    /** Evict a tile, **must be on the main thread** */
     private fun evict(key: Vector3) {
         val tileStr = "(${key.x.toInt()},${key.y.toInt()},${key.z.toInt()})"
         Logger.trace("Tile $tileStr evicted")
@@ -153,6 +177,7 @@ object GCTileCache : Disposable {
         tileCache.remove(key)
     }
 
+    /** Clear and reset cache */
     fun purge() {
         Logger.debug("Purging GCTileCache")
         for (key in tileCache.keys()) {
@@ -173,8 +198,8 @@ object GCTileCache : Disposable {
             hitRate = 0.0
         }
         return "Tile GC    hit: ${hitRate.roundToInt()}%    " +
-         "size: ${tileCache.size}     GCs: $gcs    " +
-          "fetch: ${fetchTimes.mean.roundToInt()} ms"
+            "size: ${tileCache.size}     GCs: $gcs    pending: ${executorQueue.size}    total: $total    " +
+            "fetch: ${fetchTimes.mean.roundToInt()} ms"
     }
 
     override fun dispose() {
