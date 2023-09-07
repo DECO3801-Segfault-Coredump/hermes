@@ -38,6 +38,9 @@ dependencies {
   api 'com.google.guava:guava:32.1.2-jre'
   api 'io.github.sebasbaumh:postgis-java-ng:23.2.0'
   api 'org.postgresql:postgresql:42.6.0'
+  api 'org.onebusaway:onebusaway-gtfs-realtime-api:1.2.0'
+
+//  api "com.esotericsoftware.yamlbeans:yamlbeans:1.15"
 
   // this is just for the GL profiler
   api "com.badlogicgames.gdx:gdx-backend-lwjgl3:$gdxVersion"
