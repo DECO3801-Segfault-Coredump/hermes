@@ -23,6 +23,7 @@ import com.decosegfault.atlas.util.Assets.ASSETS
 import com.decosegfault.atlas.util.FirstPersonCamController
 import com.decosegfault.atlas.util.StreetsGLCamController
 import com.decosegfault.hermes.VehicleType
+import com.google.common.util.concurrent.ThreadFactoryBuilder
 import ktx.app.clearScreen
 import net.mgsx.gltf.scene3d.attributes.PBRCubemapAttribute
 import net.mgsx.gltf.scene3d.attributes.PBRTextureAttribute
@@ -60,7 +61,7 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
     private val cam = PerspectiveCamera().apply {
         fieldOfView = 75f
         near = 0.1f
-        far = max(graphics.tileDrawDist, graphics.vehicleDrawDist) + 500f
+        far = max(graphics.tileDrawDist, graphics.vehicleDrawDist) * 10
 //        rotate(Vector3.X, -90f)
         translate(0f, 300f, 0f)
         update()
@@ -77,21 +78,6 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
     }
 
     private val camController = FirstPersonCamController(cam)
-
-//    private val camController = StreetsGLCamController(cam).apply {
-//        distance = 200f
-//    }
-
-//    private val camController = OldAtlasCameraController(cam)
-//        .apply {
-//        translateButton = Input.Buttons.RIGHT
-//        baseTranslateUnits = 40f
-//        scrollFactor = -0.1f
-//    }
-
-//    private val camController = AtlasFPCameraController(cam).apply {
-//
-//    }
 
     private var isUsingDebugCam = false
 
@@ -118,7 +104,9 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
     private var isDebugDraw = System.getProperty("debug") != null
 
     /** Executor to schedule Hermes tick asynchronously in its own thread */
-    private val hermesExecutor = Executors.newSingleThreadScheduledExecutor()
+    private val hermesExecutor = Executors.newSingleThreadScheduledExecutor(
+        ThreadFactoryBuilder().setNameFormat("Hermes").build()
+    )
 
     private val atlasTileManager = AtlasTileManager()
 
@@ -300,6 +288,9 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
             //Logger.debug("Camera pose:\npos: ${cam.position}\ndirection: ${cam.direction}")
             Logger.debug("Toggling usingDebugCam")
             isUsingDebugCam = !isUsingDebugCam
+        } else if (Gdx.input.isKeyJustPressed(Input.Keys.R)) {
+            Logger.debug("Reset camera")
+            cam.position.set(0f, 200f, 0f)
         }
 
         // update benchmark
@@ -366,6 +357,12 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
 //            shapeRender.point(camController.target.x, camController.target.y, camController.target.z)
 //            shapeRender.end()
         }
+
+//        shapeRender.projectionMatrix = stage.camera.combined
+//        shapeRender.begin(ShapeRenderer.ShapeType.Filled)
+//        shapeRender.color = Color.BLACK
+//        shapeRender.circle(Gdx.graphics.width / 2f, Gdx.graphics.height / 2f, 4f)
+//        shapeRender.end()
 
         stage.act()
         stage.draw()

@@ -8,6 +8,7 @@ import com.badlogic.gdx.math.Vector3
 import com.badlogic.gdx.math.WindowedMean
 import com.badlogic.gdx.utils.Disposable
 import com.decosegfault.atlas.screens.SimulationScreen
+import com.google.common.util.concurrent.ThreadFactoryBuilder
 import ktx.assets.disposeSafely
 import org.tinylog.kotlin.Logger
 import java.util.concurrent.*
@@ -66,7 +67,8 @@ object GCTileCache : Disposable {
     private val executor = ThreadPoolExecutor(
         threadPoolSize, threadPoolSize,
         0L, TimeUnit.MILLISECONDS,
-        executorQueue
+        executorQueue,
+        ThreadFactoryBuilder().setNameFormat("GCTileCache-%d").build()
     )
 
     private lateinit var defaultTexture: Texture

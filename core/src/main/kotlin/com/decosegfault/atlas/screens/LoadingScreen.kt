@@ -13,6 +13,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.Label
 import com.badlogic.gdx.scenes.scene2d.ui.Skin
 import com.badlogic.gdx.scenes.scene2d.ui.Table
 import com.badlogic.gdx.utils.viewport.ScreenViewport
+import com.decosegfault.atlas.map.BuildingGenerator
 import com.decosegfault.atlas.map.GCTileCache
 import com.decosegfault.atlas.map.TileServerManager
 import com.decosegfault.atlas.util.Assets
@@ -71,7 +72,7 @@ class LoadingScreen(private val game: Game) : ScreenAdapter() {
         stage.addActor(container)
 
         // run checks outside of render loop so we don't block render
-        thread(isDaemon = true) {
+        thread(isDaemon = true, name="LoadWorker") {
             // Start tile server
             TileServerManager.maybeStartTileServer()
             currentStage = LoadingStage.CHECKING_CONNECTIVITY
@@ -81,6 +82,7 @@ class LoadingScreen(private val game: Game) : ScreenAdapter() {
             while (!TileServerManager.pollTileServer()) {
                 Thread.sleep(1000)
             }
+            BuildingGenerator.connect()
             Thread.sleep(500)
 
             // 3D assets will now load in main thread
@@ -93,7 +95,7 @@ class LoadingScreen(private val game: Game) : ScreenAdapter() {
 
     /** Launches a thread which starts Hermes */
     private fun startHermes() {
-        thread(isDaemon = true) {
+        thread(isDaemon = true, name = "StartHermes") {
             // temporary
             Logger.info("Starting Hermes")
             Thread.sleep(1000)

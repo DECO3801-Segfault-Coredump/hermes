@@ -189,7 +189,7 @@ data class Tile(val x: Float, val z: Float, val size: Float, val tileLookup : Ve
         shouldDraw = true
 
         // Check iff tile can be culled
-        val closestPoint = AtlasUtils.bboxClosestPoint(cam.position, bbox)
+        val closestPoint = AtlasUtils.bboxClosestPoint(Vector3(cam.position.x, 0f, cam.position.z), bbox)
         val dist = cam.position.dst(closestPoint)
         if (dist >= graphics.tileDrawDist || !cam.frustum.boundsInFrustum(bbox)) {
             didCull = true

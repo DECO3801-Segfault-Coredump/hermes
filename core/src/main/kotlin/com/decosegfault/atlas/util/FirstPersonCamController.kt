@@ -6,6 +6,8 @@ import com.badlogic.gdx.InputAdapter
 import com.badlogic.gdx.graphics.PerspectiveCamera
 import com.badlogic.gdx.math.MathUtils
 import com.badlogic.gdx.math.Quaternion
+import com.badlogic.gdx.math.Vector3
+import ktx.math.unaryMinus
 
 /**
  * This is a port of ThreeJS PointerLockControls:
@@ -24,7 +26,7 @@ class FirstPersonCamController(private val cam: PerspectiveCamera) : InputAdapte
     private val speed = 300f // units per second
     private val boostFactor = 4f
     private val minHeight = 5f
-    private val maxHeight = 5000f
+    private val maxHeight = 8000f
     val quat = Quaternion()
 
     init {
@@ -33,9 +35,7 @@ class FirstPersonCamController(private val cam: PerspectiveCamera) : InputAdapte
     }
 
     private fun moveForward(distance: Float) {
-        // move forward parallel to the xz-plane
-        // assumes camera.up is y-up
-        val delta = cam.direction.cpy().nor().scl(distance)
+        val delta = cam.direction.cpy().crs(cam.up).nor().rotate(Vector3.Y, 90f).scl(distance)
         cam.position.add(delta)
     }
 
@@ -74,7 +74,6 @@ class FirstPersonCamController(private val cam: PerspectiveCamera) : InputAdapte
     }
 
     fun update(delta: Float) {
-        // TODO change speed based on height
         val heightFactor = cam.position.y / 128f
         val actualSpeed = if (Gdx.input.isKeyPressed(Input.Keys.SHIFT_LEFT)) speed * heightFactor * boostFactor else speed * heightFactor
 
@@ -89,6 +88,12 @@ class FirstPersonCamController(private val cam: PerspectiveCamera) : InputAdapte
         }
         if (Gdx.input.isKeyPressed(Input.Keys.D)) {
             moveRight(actualSpeed * delta)
+        }
+        if (Gdx.input.isKeyPressed(Input.Keys.CONTROL_LEFT)) {
+            cam.position.y -= actualSpeed * delta
+        }
+        if (Gdx.input.isKeyPressed(Input.Keys.SPACE)) {
+            cam.position.y += actualSpeed * delta
         }
 
 

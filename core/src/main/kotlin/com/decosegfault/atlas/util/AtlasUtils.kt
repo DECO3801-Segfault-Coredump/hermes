@@ -6,6 +6,9 @@ import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.math.Vector3
 import com.badlogic.gdx.math.collision.BoundingBox
 
+/**
+ * @author Various (see comments)
+ */
 object AtlasUtils {
     // https://gdbooks.gitbooks.io/3dcollisions/content/Chapter1/closest_point_aabb.html
     fun bboxClosestPoint(point: Vector3, bounds: BoundingBox): Vector3 {
