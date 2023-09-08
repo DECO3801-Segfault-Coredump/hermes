@@ -12,7 +12,6 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder
 import ktx.assets.disposeSafely
 import org.tinylog.kotlin.Logger
 import java.util.concurrent.*
-import kotlin.concurrent.thread
 import kotlin.math.roundToInt
 
 /**
@@ -113,22 +112,28 @@ object GCTileCache : Disposable {
             // now that we have the pixmap, we need to context switch into the render thread in order to
             // upload the texture
             // transfer our work to the simulation screen's concurrent work queue
-            // TODO on failure, if work queue cleared, free pixmap
-            SimulationScreen.WORK_QUEUE.add {
-                val texture = Texture(pixmap)
-                texture.setFilter(TextureFilter.Linear, TextureFilter.Linear)
-                pixmap.dispose()
-                tileCache[pos] = texture
-
-                val end = (System.nanoTime() - begin) / 1e6f
-                fetchTimes.addValue(end)
-                total++
-
-                pendingFetches.remove(pos)
-                onRetrieved(texture)
+            // the future allows us to be notified when the callable has completed
+            val future = CompletableFuture<Texture>()
+            val callable = Callable {
+                val tex = Texture(pixmap)
+                tex.setFilter(TextureFilter.Linear, TextureFilter.Linear)
+                return@Callable tex
             }
+            SimulationScreen.TEX_WORK_QUEUE.add(Pair(future, callable))
+
+            // now wait for the future to get back to us
+            val texture = future.get()
+            pixmap.dispose()
+            tileCache[pos] = texture
+
+            val end = (System.nanoTime() - begin) / 1e6f
+            fetchTimes.addValue(end)
+            misses++
+            total++
+
+            pendingFetches.remove(pos)
+            onRetrieved(texture)
         }
-        misses++
     }
 
     /**
@@ -157,6 +162,7 @@ object GCTileCache : Disposable {
             }
 
             Logger.info("Evicted $evicted items this GC, reached fill rate of ${fillRate * 100}%")
+            pendingFetches.clear()
             gcs++
         }
     }
@@ -200,7 +206,7 @@ object GCTileCache : Disposable {
             hitRate = 0.0
         }
         return "Tile GC    hit: ${hitRate.roundToInt()}%    " +
-            "size: ${tileCache.size}     GCs: $gcs    pending: ${executorQueue.size}    total: $total    " +
+            "size: ${tileCache.size}     GCs: $gcs    executor: ${executorQueue.size}    pending: ${pendingFetches.size}    total: $total    " +
             "fetch: ${fetchTimes.mean.roundToInt()} ms"
     }
 

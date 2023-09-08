@@ -1,5 +1,6 @@
 package com.decosegfault.atlas.util
 
+import com.badlogic.gdx.math.Matrix4
 import com.badlogic.gdx.math.Quaternion
 import com.badlogic.gdx.math.Rectangle
 import com.badlogic.gdx.math.Vector2
@@ -17,6 +18,11 @@ object AtlasUtils {
             point.y.coerceIn(bounds.min.y, bounds.max.y),
             point.z.coerceIn(bounds.min.z, bounds.max.z)
         )
+    }
+
+    fun BoundingBox.pad(padding: Float): BoundingBox {
+        val padScalar = Matrix4().scl(padding)
+        return mul(padScalar)
     }
 
     /**
