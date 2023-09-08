@@ -30,7 +30,7 @@ import kotlin.math.roundToInt
  */
 abstract class AbstractGarbageCollectedCache<K, V : Disposable>(
     private val name: String,
-    private val maxItems: Long,
+    private val maxItems: Double,
     private val startGcThreshold: Double,
     private val endGcThreshold: Double,
     threadPoolSize: Int,
@@ -124,7 +124,7 @@ abstract class AbstractGarbageCollectedCache<K, V : Disposable>(
                 }
             }
 
-            Logger.info("Evicted $evicted items this GC, reached fill rate of ${fillRate * 100}%")
+            Logger.info("Evicted $evicted items this GC from $name, reached fill rate of ${fillRate * 100}%, left: ${maybeCanEvict.size}")
             gcs++
         }
     }
@@ -165,9 +165,9 @@ abstract class AbstractGarbageCollectedCache<K, V : Disposable>(
         if (hitRate.isNaN()) {
             hitRate = 0.0
         }
-        return "$name    hit: ${hitRate.roundToInt()}%    " +
-            "size: ${cache.size}     GCs: $gcs    pending: ${executorQueue.size}    total: $total    " +
-            "fetch: ${fetchTimes.mean.roundToInt()} ms"
+        return "$name    size: ${cache.size}     GCs: $gcs    executor: ${executorQueue.size}    " +
+                "pending: ${pendingFetches.size}    " +
+                "fetch: ${fetchTimes.mean.roundToInt()} ms"
     }
 
     override fun dispose() {

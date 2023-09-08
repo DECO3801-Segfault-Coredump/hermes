@@ -324,11 +324,11 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
             val mem = ((Gdx.app.javaHeap + Gdx.app.nativeHeap) / 1e6).roundToInt()
             val deltaMs = (delta * 1000.0f).roundToInt()
             debugLabel.setText(
-            """FPS: ${Gdx.graphics.framesPerSecond} (${deltaMs} ms)    Memory: $mem MB    Draw calls: ${profiler.drawCalls}
+            """FPS: ${Gdx.graphics.framesPerSecond} (${deltaMs} ms)    Draw calls: ${profiler.drawCalls}    Memory: $mem MB
             |${GCTileCache.getStats()}
             |Vehicles    culled: ${sceneManager.cullRate}%    low LoD: ${sceneManager.lowLodRate}%    full: ${sceneManager.fullRenderRate}%    total: ${sceneManager.totalVehicles}
-            |Tiles displayed: ${atlasTileManager.numRetrievedTiles}
-            |Tile work queue    done: $workIdx    left: ${TEX_WORK_QUEUE.size}
+            |Tiles on screen: ${atlasTileManager.numRetrievedTiles}
+            |Texture work queue    done: $workIdx    left: ${TEX_WORK_QUEUE.size}
             |Graphics preset: ${graphics.name}
             |pitch: ${camController.quat.pitch}, roll: ${camController.quat.roll}, yaw: ${camController.quat.yaw}
             """.trimMargin())
