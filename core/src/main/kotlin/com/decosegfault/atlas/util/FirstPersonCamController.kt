@@ -96,8 +96,13 @@ class FirstPersonCamController(private val cam: PerspectiveCamera) : InputAdapte
             cam.position.y += actualSpeed * delta
         }
 
-
         cam.position.y = cam.position.y.coerceIn(minHeight, maxHeight)
         cam.update()
+    }
+
+    override fun scrolled(amountX: Float, amountY: Float): Boolean {
+        cam.fieldOfView += amountY
+        cam.update()
+        return true
     }
 }

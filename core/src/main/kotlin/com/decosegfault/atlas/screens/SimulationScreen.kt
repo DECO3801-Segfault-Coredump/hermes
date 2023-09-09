@@ -21,7 +21,6 @@ import com.decosegfault.atlas.render.*
 import com.decosegfault.atlas.util.Assets
 import com.decosegfault.atlas.util.Assets.ASSETS
 import com.decosegfault.atlas.util.FirstPersonCamController
-import com.decosegfault.atlas.util.StreetsGLCamController
 import com.decosegfault.hermes.VehicleType
 import com.google.common.util.concurrent.ThreadFactoryBuilder
 import ktx.app.clearScreen
@@ -33,10 +32,7 @@ import net.mgsx.gltf.scene3d.scene.SceneAsset
 import net.mgsx.gltf.scene3d.scene.SceneSkybox
 import net.mgsx.gltf.scene3d.utils.IBLBuilder
 import org.tinylog.kotlin.Logger
-import java.util.*
-import java.util.concurrent.ConcurrentLinkedQueue
-import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
+import java.util.concurrent.*
 import kotlin.math.max
 import kotlin.math.roundToInt
 import kotlin.random.Random
@@ -243,20 +239,21 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
         clearScreen(0.0f, 0.0f, 0.0f)
 
         // first, handle work queue emergency situations to prevent your RAM from filling up
-        if (WORK_QUEUE.size >= WORK_QUEUE_ABSOLUTE_MAX) {
-            Logger.error("PANIC: Work queue emergency!! Size: ${WORK_QUEUE.size}")
+        if (TEX_WORK_QUEUE.size >= WORK_QUEUE_ABSOLUTE_MAX) {
+            Logger.error("PANIC: Work queue emergency!! Size: ${TEX_WORK_QUEUE.size}")
             Logger.error("Stats: ${GCTileCache.getStats()}")
-            WORK_QUEUE.clear()
+            TEX_WORK_QUEUE.clear()
             GCTileCache.dispose()
             throw OutOfMemoryError("PANIC: Work queue emergency!")
         }
 
         // try and take up to WORK_PER_FRAME items from the work queue and run them
         var workIdx = 0
-        var item = WORK_QUEUE.poll()
+        var item = TEX_WORK_QUEUE.poll()
         while (item != null && workIdx < WORK_PER_FRAME) {
-            item.run()
-            item = WORK_QUEUE.poll()
+            val (future, callable) = item
+            future.complete(callable.call())
+            item = TEX_WORK_QUEUE.poll()
             workIdx++
         }
 
@@ -327,11 +324,11 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
             val mem = ((Gdx.app.javaHeap + Gdx.app.nativeHeap) / 1e6).roundToInt()
             val deltaMs = (delta * 1000.0f).roundToInt()
             debugLabel.setText(
-            """FPS: ${Gdx.graphics.framesPerSecond} (${deltaMs} ms)    Memory: $mem MB    Draw calls: ${profiler.drawCalls}
+            """FPS: ${Gdx.graphics.framesPerSecond} (${deltaMs} ms)    Draw calls: ${profiler.drawCalls}    Memory: $mem MB
             |${GCTileCache.getStats()}
             |Vehicles    culled: ${sceneManager.cullRate}%    low LoD: ${sceneManager.lowLodRate}%    full: ${sceneManager.fullRenderRate}%    total: ${sceneManager.totalVehicles}
-            |Tiles displayed: ${atlasTileManager.numRetrievedTiles}
-            |Tile work queue    done: $workIdx    left: ${WORK_QUEUE.size}
+            |Tiles on screen: ${atlasTileManager.numRetrievedTiles}
+            |Texture work queue    done: $workIdx    left: ${TEX_WORK_QUEUE.size}
             |Graphics preset: ${graphics.name}
             |pitch: ${camController.quat.pitch}, roll: ${camController.quat.roll}, yaw: ${camController.quat.yaw}
             """.trimMargin())
@@ -395,11 +392,13 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
     companion object {
         /**
          * List of work items to process per frame. Unlike Gdx.app.postRunnable, only [WORK_PER_FRAME] are
-         * processed per frame
+         * processed per frame.
+         * The Callable, is used to generate a value. After it's run, the CompletableFuture is notified of
+         * the value.
          */
-        val WORK_QUEUE = ConcurrentLinkedQueue<Runnable>()
+        val TEX_WORK_QUEUE = ConcurrentLinkedQueue<Pair<CompletableFuture<Texture>, Callable<Texture>>>()
 
-        /** Number of items from [WORK_QUEUE] to process per frame */
+        /** Number of items from [TEX_WORK_QUEUE] to process per frame */
         private const val WORK_PER_FRAME = 50
 
         /** Absolute max number of items in the work queue to prevent RAM from filling up */
