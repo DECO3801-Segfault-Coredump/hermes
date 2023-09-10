@@ -1,5 +1,6 @@
 package com.decosegfault.hermes;
 
+import com.badlogic.gdx.math.Vector3;
 import com.decosegfault.hermes.data.RouteData;
 import com.decosegfault.hermes.types.VehicleType;
 import com.google.transit.realtime.GtfsRealtime;
@@ -14,7 +15,6 @@ import java.net.URL;
 public class LiveDataFeed {
     private static final URI vehiclesURI;
     private static final URL vehiclesURL;
-    //public static Map<String, ArrayList<String>> vehicleData = new HashMap<>();
 
     static {
         try {
@@ -38,4 +38,14 @@ public class LiveDataFeed {
             VehicleType vehicleType = routeData.routeType;
         }
     }
+
+    public static Vector3 getVehiclePosition(GtfsRealtime.FeedEntity entity) {
+        Vector3 vehiclePosition = new Vector3();
+        float latitude = entity.getVehicle().getPosition().getLatitude();
+        float longitude = entity.getVehicle().getPosition().getLongitude();
+        vehiclePosition.add(latitude);
+        vehiclePosition.add(longitude);
+        return vehiclePosition;
+    }
+
 }
