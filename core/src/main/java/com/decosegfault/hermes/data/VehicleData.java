@@ -10,7 +10,7 @@ import java.util.ArrayList;
  */
 public class VehicleData {
     VehicleType vehicleType;
-    Vector3 position; //describes the 2d position and the orientation
+    public Vector3 position; //describes the 2d position and the orientation
     public VehicleData(VehicleType type) {
         vehicleType = type;
     }
