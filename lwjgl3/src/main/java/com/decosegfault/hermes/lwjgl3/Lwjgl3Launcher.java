@@ -5,6 +5,7 @@ import com.badlogic.gdx.backends.lwjgl3.Lwjgl3ApplicationConfiguration;
 import com.decosegfault.atlas.AtlasGame;
 import com.decosegfault.atlas.render.GraphicsPreset;
 import com.decosegfault.atlas.render.GraphicsPresets;
+import com.decosegfault.atlas.util.AtlasUtils;
 import org.tinylog.Logger;
 
 import javax.swing.*;
@@ -61,6 +62,7 @@ public class Lwjgl3Launcher {
 
         // write sim result and graphics result to file
         if (graphicsResult != null) GraphicsPresets.INSTANCE.writePreset((String) graphicsResult);
+        if (simResult != null) AtlasUtils.INSTANCE.writeHermesPreset(simResult.toString());
     }
 
     private static Lwjgl3Application createApplication() {

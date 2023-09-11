@@ -6,6 +6,17 @@ import com.badlogic.gdx.math.Rectangle
 import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.math.Vector3
 import com.badlogic.gdx.math.collision.BoundingBox
+import com.decosegfault.atlas.render.GraphicsPreset
+import com.decosegfault.atlas.render.GraphicsPresets
+import com.decosegfault.hermes.types.SimType
+import org.tinylog.kotlin.Logger
+import java.io.IOException
+import java.lang.IllegalArgumentException
+import java.nio.file.Paths
+import kotlin.io.path.createFile
+import kotlin.io.path.exists
+import kotlin.io.path.readText
+import kotlin.io.path.writeText
 
 /**
  * @author Various (see comments)
@@ -18,6 +29,35 @@ object AtlasUtils {
             point.y.coerceIn(bounds.min.y, bounds.max.y),
             point.z.coerceIn(bounds.min.z, bounds.max.z)
         )
+    }
+
+    fun writeHermesPreset(name: String) {
+        val path = Paths.get(System.getProperty("user.home"), "Documents", "DECOSegfault", "hermes.txt")
+        if (!path.exists()) {
+            Logger.debug("Creating hermes.txt file")
+            path.createFile()
+        }
+        Logger.info("Writing Hermes preset $name to path: $path")
+        path.writeText(name)
+    }
+
+    fun readHermesPreset(): SimType {
+        val path = Paths.get(System.getProperty("user.home"), "Documents", "DECOSegfault", "hermes.txt")
+        Logger.info("Loading Hermes preset from: $path")
+        var name: String
+        try {
+            name = path.readText().trim()
+            Logger.info("Using saved Hermes preset: $name")
+        } catch (e: IOException) {
+            Logger.info("Using default hermes preset 'History', saved does not exist")
+            name = "History"
+        }
+        return try {
+            SimType.valueOf(name.uppercase())
+        } catch (e: IllegalArgumentException) {
+            Logger.error("Invalid Hermes preset $name!!! Using standard!")
+            SimType.HISTORY
+        }
     }
 
     fun BoundingBox.pad(padding: Float): BoundingBox {

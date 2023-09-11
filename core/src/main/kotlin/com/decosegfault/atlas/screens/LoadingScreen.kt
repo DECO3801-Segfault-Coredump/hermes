@@ -17,6 +17,7 @@ import com.decosegfault.atlas.map.BuildingGenerator
 import com.decosegfault.atlas.map.GCTileCache
 import com.decosegfault.atlas.map.TileServerManager
 import com.decosegfault.atlas.util.Assets
+import com.decosegfault.atlas.util.AtlasUtils
 import com.decosegfault.atlas.util.ImageAnimation
 import com.decosegfault.hermes.HermesSim
 import com.decosegfault.hermes.types.SimType
@@ -73,8 +74,6 @@ class LoadingScreen(private val game: Game) : ScreenAdapter() {
 
         stage.addActor(container)
 
-        HermesSim.load(SimType.HISTORY)
-
         // run checks outside of render loop so we don't block render
         thread(isDaemon = true, name="LoadWorker") {
             // Start tile server
@@ -102,7 +101,8 @@ class LoadingScreen(private val game: Game) : ScreenAdapter() {
         thread(isDaemon = true, name = "StartHermes") {
             // temporary
             Logger.info("Starting Hermes")
-            Thread.sleep(1000)
+            val simType = AtlasUtils.readHermesPreset()
+            HermesSim.load(simType)
             currentStage = LoadingStage.DONE
         }
     }

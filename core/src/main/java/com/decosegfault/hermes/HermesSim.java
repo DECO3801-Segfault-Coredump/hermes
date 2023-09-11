@@ -4,6 +4,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.files.FileHandle;
+import com.decosegfault.atlas.render.AtlasVehicle;
+import com.decosegfault.hermes.data.VehicleData;
 import com.decosegfault.hermes.types.SimType;
 import org.onebusaway.gtfs.impl.GtfsDaoImpl;
 import org.onebusaway.gtfs.model.*;
@@ -21,11 +24,11 @@ import java.io.IOException;
 
 /**
  * @author Lachlan Ellis
+ * @author Matt Young
  */
-
 public class HermesSim {
 
-    public static Map<VehicleData, AtlasVehicle> vehicleMap = new Hashmap<VehicleData, AtlasVehicle>();
+    public static Map<VehicleData, AtlasVehicle> vehicleMap = new HashMap<>();
 
     /** time of day will be in seconds, max 86400 (one day) before looping back to 0 */
     static int time;
@@ -54,8 +57,8 @@ public class HermesSim {
         //RouteHandler.logRoutes();
         //RouteHandler.logTrips();
         //RouteHandler.logShapes();
-	for (TripData trip : tripsByShape.values()) {
-	    vehicleMap.put(trip.vehicle, null);
+	    for (TripData trip : RouteHandler.tripsByShape.values()) {
+//	        vehicleMap.put(trip.routeName, null);
         }
         Logger.info("GTFS Data Loaded");
 
@@ -66,7 +69,14 @@ public class HermesSim {
     public static void read()  {
         GtfsReader reader = new GtfsReader();
         try {
-            reader.setInputLocation(Gdx.files.internal("hermes/gtfs.zip").file());
+            // gtfs.zip is internal, extract it to /tmp so that the file reader can read it
+            FileHandle tmpPath = Gdx.files.external(System.getProperty("java.io.tmpdir") + "/DECOSegfault_hermes_gtfs.zip");
+            Logger.info("Copying Hermes gtfs.zip to " + tmpPath.path());
+
+            FileHandle gtfsZip = Gdx.files.internal("hermes/gtfs.zip");
+            gtfsZip.copyTo(tmpPath);
+
+            reader.setInputLocation(tmpPath.file());
         } catch (IOException noFile) {
             throw new IllegalArgumentException(noFile);
         }

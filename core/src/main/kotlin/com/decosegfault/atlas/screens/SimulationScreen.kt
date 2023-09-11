@@ -21,7 +21,7 @@ import com.decosegfault.atlas.render.*
 import com.decosegfault.atlas.util.Assets
 import com.decosegfault.atlas.util.Assets.ASSETS
 import com.decosegfault.atlas.util.FirstPersonCamController
-import com.decosegfault.hermes.VehicleType
+import com.decosegfault.hermes.types.VehicleType
 import com.google.common.util.concurrent.ThreadFactoryBuilder
 import ktx.app.clearScreen
 import net.mgsx.gltf.scene3d.attributes.PBRCubemapAttribute
