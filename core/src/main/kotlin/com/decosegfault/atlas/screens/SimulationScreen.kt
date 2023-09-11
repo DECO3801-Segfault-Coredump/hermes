@@ -21,6 +21,7 @@ import com.decosegfault.atlas.render.*
 import com.decosegfault.atlas.util.Assets
 import com.decosegfault.atlas.util.Assets.ASSETS
 import com.decosegfault.atlas.util.FirstPersonCamController
+import com.decosegfault.hermes.HermesSim
 import com.google.common.util.concurrent.ThreadFactoryBuilder
 import ktx.app.clearScreen
 import net.mgsx.gltf.scene3d.attributes.PBRCubemapAttribute
@@ -85,12 +86,6 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
 
     /** Debug shape renderer */
     private val shapeRender = ShapeRenderer()
-
-    /** Vehicles for benchmark, in future this will be from Hermes */
-    private val vehicles = mutableListOf<AtlasVehicle>()
-
-    /** Counter for when to move vehicles */
-    private var debugCounter = 0.0f
 
     /** True if vehicles should move in benchmark */
     private var shouldVehiclesMove = true
@@ -196,25 +191,10 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
         Logger.info("GL version: ${v.majorVersion}.${v.minorVersion}.${v.releaseVersion} vendor: ${v.vendorString} renderer: ${v.rendererString}")
     }
 
-    private fun constructBenchmarkScene() {
-        Logger.debug("Construct test scene")
-        vehicles.clear()
-        for (i in 0..200) {
-            val modelName = listOf("bus", "train", "ferry").random()
-            val modelLow = ASSETS["atlas/${modelName}_low.glb", SceneAsset::class.java]
-            val modelHigh = ASSETS["atlas/${modelName}_high.glb", SceneAsset::class.java]
-            val vehicle = AtlasVehicle(modelHigh, modelLow)
-            vehicle.updateTransform(Vector3.Zero)
-            vehicles.add(vehicle)
-        }
-    }
-
     private fun initialiseHermes() {
-        // Hermes.init()
-
         // tell Hermes to tick every 100 ms, in its own thread asynchronously, so we don't block the renderer
         hermesExecutor.scheduleAtFixedRate({
-            // HermesSim.tick()
+             HermesSim.tick()
         }, 0L, 100L, TimeUnit.MILLISECONDS)
     }
 
@@ -226,7 +206,7 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
 
         createTextUI()
         initialise3D()
-        constructBenchmarkScene()
+//        constructBenchmarkScene()
         initialiseHermes()
 
         mux.addProcessor(camController)
@@ -289,19 +269,6 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
             cam.position.set(0f, 200f, 0f)
         }
 
-        // update benchmark
-        debugCounter += delta
-        if (debugCounter >= 0.5f && shouldVehiclesMove) {
-            debugCounter = 0f
-            for (vehicle in vehicles) {
-                // x, y, theta degrees
-                val x = Random.nextDouble(-50.0, 50.0).toFloat()
-                val y = Random.nextDouble(-50.0, 50.0).toFloat()
-                val pos = Vector3(x, y, 0f)
-                vehicle.updateTransform(pos)
-            }
-        }
-
         // render 3D
         camController.update(delta)
         if (isUsingDebugCam) {
@@ -314,7 +281,7 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
         } else {
             cam.update()
         }
-        sceneManager.update(delta, vehicles)
+        sceneManager.update(delta, HermesSim.vehicleMap.values)
         sceneManager.render()
         GCTileCache.nextFrame()
 
@@ -339,7 +306,7 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
         if (isDebugDraw) {
             shapeRender.projectionMatrix = cam.combined
             shapeRender.begin(ShapeRenderer.ShapeType.Line)
-            for (vehicle in vehicles) {
+            for (vehicle in HermesSim.vehicleMap.values) {
                 vehicle.debug(shapeRender)
             }
 

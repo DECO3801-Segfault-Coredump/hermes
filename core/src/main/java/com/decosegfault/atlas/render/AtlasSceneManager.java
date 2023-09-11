@@ -30,6 +30,7 @@ import net.mgsx.gltf.scene3d.utils.EnvironmentUtil;
 import org.tinylog.Logger;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import com.decosegfault.hermes.HermesSim;
@@ -209,7 +210,7 @@ public class AtlasSceneManager implements Disposable {
      * Will check with {@link AtlasVehicle#getRenderModel(Camera, GraphicsPreset)}
      * to perform frustum culling and distance thresholding.
      */
-    public void update(float delta, List<AtlasVehicle> vehicles) {
+    public void update(float delta, Collection<AtlasVehicle> vehicles) {
         renderableProviders.clear();
         renderedAtlasVehicles.clear();
 
