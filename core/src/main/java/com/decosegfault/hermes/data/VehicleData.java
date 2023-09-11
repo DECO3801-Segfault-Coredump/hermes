@@ -4,12 +4,13 @@ import com.badlogic.gdx.math.Vector3;
 import com.decosegfault.hermes.types.VehicleType;
 
 import java.util.ArrayList;
+import java.util.Objects;
 
 /**
  * @author Lachlan Ellis
  */
 public class VehicleData {
-    VehicleType vehicleType;
+    public VehicleType vehicleType;
     public Vector3 position; //describes the 2d position and the orientation
     public VehicleData(VehicleType type) {
         vehicleType = type;

@@ -10,7 +10,7 @@ import com.badlogic.gdx.math.Matrix4
 import com.badlogic.gdx.math.Vector3
 import com.badlogic.gdx.math.collision.BoundingBox
 import com.badlogic.gdx.math.collision.Ray
-import com.badlogic.gdx.utils.Disposable
+import com.decosegfault.atlas.util.Assets
 import com.decosegfault.atlas.util.AtlasUtils
 import com.decosegfault.hermes.types.VehicleType
 import net.mgsx.gltf.scene3d.scene.SceneAsset
@@ -22,7 +22,7 @@ import net.mgsx.gltf.scene3d.scene.SceneAsset
  * @param modelHigh high poly 3D model
  * @param modelLow low poly 3D model
  */
-class AtlasVehicle(private val modelHigh: SceneAsset, private val modelLow: SceneAsset, val vehicleType: VehicleType) {
+class AtlasVehicle(private val modelHigh: SceneAsset, private val modelLow: SceneAsset) {
     /** actual transform of the vehicle shared between model instances */
     private val transform = Matrix4()
     /** original bbox for the model itself */
@@ -116,5 +116,17 @@ class AtlasVehicle(private val modelHigh: SceneAsset, private val modelLow: Scen
 
     fun intersectRay(ray: Ray): Boolean {
         return Intersector.intersectRayBoundsFast(ray, bbox)
+    }
+
+    companion object {
+        /** Creates a vehicle for a Hermes [VehicleType] */
+        fun createFromHermes(type: VehicleType): AtlasVehicle {
+            val modelName = type.name.lowercase()
+            val modelLow = Assets.ASSETS["atlas/${modelName}_low.glb", SceneAsset::class.java]
+            val modelHigh = Assets.ASSETS["atlas/${modelName}_high.glb", SceneAsset::class.java]
+            val vehicle = AtlasVehicle(modelHigh, modelLow)
+            vehicle.updateTransform(Vector3.Zero)
+            return vehicle
+        }
     }
 }

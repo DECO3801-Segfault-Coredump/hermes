@@ -21,7 +21,6 @@ import com.decosegfault.atlas.render.*
 import com.decosegfault.atlas.util.Assets
 import com.decosegfault.atlas.util.Assets.ASSETS
 import com.decosegfault.atlas.util.FirstPersonCamController
-import com.decosegfault.hermes.types.VehicleType
 import com.google.common.util.concurrent.ThreadFactoryBuilder
 import ktx.app.clearScreen
 import net.mgsx.gltf.scene3d.attributes.PBRCubemapAttribute
@@ -204,7 +203,7 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
             val modelName = listOf("bus", "train", "ferry").random()
             val modelLow = ASSETS["atlas/${modelName}_low.glb", SceneAsset::class.java]
             val modelHigh = ASSETS["atlas/${modelName}_high.glb", SceneAsset::class.java]
-            val vehicle = AtlasVehicle(modelHigh, modelLow, if (modelName == "train") VehicleType.TRAIN else VehicleType.BUS)
+            val vehicle = AtlasVehicle(modelHigh, modelLow)
             vehicle.updateTransform(Vector3.Zero)
             vehicles.add(vehicle)
         }

@@ -28,7 +28,7 @@ import java.io.IOException;
  */
 public class HermesSim {
 
-    public static Map<VehicleData, AtlasVehicle> vehicleMap = new HashMap<VehicleData, AtlasVehicle>();
+    public static Map<String, AtlasVehicle> vehicleMap = new HashMap<>();
 
     /** time of day will be in seconds, max 86400 (one day) before looping back to 0 */
     static int time;
@@ -57,13 +57,16 @@ public class HermesSim {
         //RouteHandler.logRoutes();
         //RouteHandler.logTrips();
         //RouteHandler.logShapes();
+        Logger.info("Linking Hermes-Atlas vehicles");
 	    for (TripData trip : RouteHandler.tripsByShape.values()) {
-	        vehicleMap.put(trip.vehicle, null);
+	        if (trip.vehicle == null || trip.vehicle.vehicleType == null) {
+                Logger.warn("Null trip vehicle! {} {}", trip.routeName, trip.routeID);
+                continue;
+            }
+	        var vehicle = AtlasVehicle.Companion.createFromHermes(trip.vehicle.vehicleType);
+	        vehicleMap.put(trip.routeID, vehicle);
         }
         Logger.info("GTFS Data Loaded");
-
-	// something like
-	//Atlas.generateVehicles()
     }
 
     public static void read()  {
