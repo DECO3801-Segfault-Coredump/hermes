@@ -17,6 +17,10 @@ else {
   apply plugin: 'application'
 }
 
+repositories {
+  maven { url "https://repo.camsys-apps.com/releases/" }
+}
+
 sourceSets.main.resources.srcDirs += [ rootProject.file('assets').path ]
 mainClassName = 'com.decosegfault.hermes.lwjgl3.Lwjgl3Launcher'
 eclipse.project.name = appName + '-lwjgl3'

@@ -4,6 +4,10 @@ sourceCompatibility = 17
 mainClassName = 'com.decosegfault.hermes.headless.HeadlessLauncher'
 eclipse.project.name = appName + '-headless'
 
+repositories {
+  maven { url "https://repo.camsys-apps.com/releases/" }
+}
+
 dependencies {
   implementation "com.badlogicgames.gdx:gdx-backend-headless:$gdxVersion"
   implementation "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop"

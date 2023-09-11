@@ -58,7 +58,7 @@ public class HermesSim {
         //RouteHandler.logTrips();
         //RouteHandler.logShapes();
 	    for (TripData trip : RouteHandler.tripsByShape.values()) {
-//	        vehicleMap.put(trip.routeName, null);
+//	        vehicleMap.put(, null);
         }
         Logger.info("GTFS Data Loaded");
 
