@@ -5,12 +5,12 @@ import java.util.Map;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
-import com.decosegfault.atlas.render.AtlasVehicle;
 import com.decosegfault.hermes.data.VehicleData;
 import com.decosegfault.hermes.types.SimType;
 import org.onebusaway.gtfs.impl.GtfsDaoImpl;
 import org.onebusaway.gtfs.model.*;
 import org.tinylog.Logger;
+import com.decosegfault.atlas.render.AtlasVehicle;
 
 import org.onebusaway.csv_entities.EntityHandler;
 import org.onebusaway.gtfs.serialization.GtfsReader;
@@ -28,7 +28,7 @@ import java.io.IOException;
  */
 public class HermesSim {
 
-    public static Map<VehicleData, AtlasVehicle> vehicleMap = new HashMap<>();
+    public static Map<VehicleData, AtlasVehicle> vehicleMap = new HashMap<VehicleData, AtlasVehicle>();
 
     /** time of day will be in seconds, max 86400 (one day) before looping back to 0 */
     static int time;
@@ -58,7 +58,7 @@ public class HermesSim {
         //RouteHandler.logTrips();
         //RouteHandler.logShapes();
 	    for (TripData trip : RouteHandler.tripsByShape.values()) {
-//	        vehicleMap.put(, null);
+	        vehicleMap.put(trip.vehicle, null);
         }
         Logger.info("GTFS Data Loaded");
 
