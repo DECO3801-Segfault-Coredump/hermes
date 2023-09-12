@@ -53,7 +53,7 @@ public class Lwjgl3Launcher {
         // TODO default graphics preset should be one saved to graphics.txt
 
         // next ask for simulation mode
-        Object[] simModes = new String[]{"Historical", "Live", "Simulated"};
+        Object[] simModes = new String[]{"History", "Live", "Simulated"};
         Object simResult = JOptionPane.showInputDialog(frame,
         "Select Hermes simulation mode:",
         "DECO3801 Hermes Config", JOptionPane.QUESTION_MESSAGE, null, simModes, simModes[1]);

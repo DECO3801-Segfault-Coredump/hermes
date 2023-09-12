@@ -38,7 +38,7 @@ object AtlasUtils {
             path.createFile()
         }
         Logger.info("Writing Hermes preset $name to path: $path")
-        path.writeText(name)
+        path.writeText(name.uppercase())
     }
 
     fun readHermesPreset(): SimType {
