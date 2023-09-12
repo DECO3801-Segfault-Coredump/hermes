@@ -16,6 +16,8 @@ import com.badlogic.gdx.scenes.scene2d.ui.Skin
 import com.badlogic.gdx.scenes.scene2d.ui.Table
 import com.badlogic.gdx.utils.viewport.ExtendViewport
 import com.badlogic.gdx.utils.viewport.FitViewport
+import com.decosegfault.atlas.map.BuildingManager
+import com.decosegfault.atlas.map.GCBuildingCache
 import com.decosegfault.atlas.map.GCTileCache
 import com.decosegfault.atlas.render.*
 import com.decosegfault.atlas.util.Assets
@@ -108,6 +110,8 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
 
     private val atlasTileManager = AtlasTileManager()
 
+    private val buildingManager = BuildingManager()
+
     private fun createTextUI() {
         val skin = ASSETS["ui/uiskin.json", Skin::class.java]
 
@@ -187,6 +191,7 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
 
         // setup ground plane tile manager
         sceneManager.setAtlasTileManager(atlasTileManager)
+        sceneManager.setBuildingManager(buildingManager)
 
         // setup decal batch for rendering
         sceneManager.decalBatch = DecalBatch(CameraGroupStrategy(cam))
@@ -321,6 +326,7 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
         sceneManager.update(delta, vehicles)
         sceneManager.render()
         GCTileCache.nextFrame()
+        GCBuildingCache.nextFrame()
 
         // render debug UI
         if (isDebugDraw) {
@@ -329,6 +335,7 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
             debugLabel.setText(
             """FPS: ${Gdx.graphics.framesPerSecond} (${deltaMs} ms)    Draw calls: ${profiler.drawCalls}    Memory: $mem MB
             |${GCTileCache.getStats()}
+            |${GCBuildingCache.getStats()}
             |Vehicles    culled: ${sceneManager.cullRate}%    low LoD: ${sceneManager.lowLodRate}%    full: ${sceneManager.fullRenderRate}%    total: ${sceneManager.totalVehicles}
             |Tiles on screen: ${atlasTileManager.numRetrievedTiles}
             |Texture work queue    done: $workIdx    left: ${TEX_WORK_QUEUE.size}
