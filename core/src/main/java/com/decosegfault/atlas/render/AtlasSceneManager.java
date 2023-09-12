@@ -18,6 +18,7 @@ import com.badlogic.gdx.graphics.g3d.utils.ShaderProvider;
 import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Disposable;
+import com.decosegfault.atlas.map.BuildingManager;
 import net.mgsx.gltf.scene3d.attributes.PBRMatrixAttribute;
 import net.mgsx.gltf.scene3d.lights.DirectionalShadowLight;
 import net.mgsx.gltf.scene3d.lights.PointLightEx;
@@ -87,6 +88,9 @@ public class AtlasSceneManager implements Disposable {
 
     /** Controller to render ground plane tiles */
     private AtlasTileManager atlasTileManager;
+
+    /** Controller used to render buildings */
+    private BuildingManager buildingManager;
 
     public AtlasSceneManager(GraphicsPreset graphics) {
         this(24);
@@ -236,6 +240,12 @@ public class AtlasSceneManager implements Disposable {
         for (Tile tile : gamer) {
             var decal = tile.getDecal();
             if (decal != null) tileDecals.add(decal);
+        }
+
+        // Submit building chunks for rendering
+        var buildingChunks = buildingManager.getBuildingChunksCulled(camera, graphics);
+        for (ModelCache chunk : buildingChunks) {
+            renderableProviders.add(chunk);
         }
 
         if (camera != null) {
@@ -494,6 +504,14 @@ public class AtlasSceneManager implements Disposable {
      */
     public void setAtlasTileManager(AtlasTileManager atlasTileManager) {
         this.atlasTileManager = atlasTileManager;
+    }
+
+    /**
+     * Sets the building manager
+     * @param buildingManager New building manager instance
+     */
+    public void setBuildingManager(BuildingManager buildingManager) {
+        this.buildingManager = buildingManager;
     }
 
     public void setAmbientLight(float lum) {
