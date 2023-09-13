@@ -76,11 +76,13 @@ public class HermesSim {
         GtfsReader reader = new GtfsReader();
         try {
             // gtfs.zip is internal, extract it to /tmp so that the file reader can read it
-            FileHandle tmpPath = Gdx.files.external(System.getProperty("java.io.tmpdir") + "/DECOSegfault_hermes_gtfs.zip");
-            Logger.info("Copying Hermes gtfs.zip to " + tmpPath.path());
+            FileHandle tmpPath = Gdx.files.absolute(System.getProperty("java.io.tmpdir") + "/DECOSegfault_hermes_gtfs.zip");
+            Logger.info("Copying Hermes gtfs.zip to " + tmpPath.path() + "..." + System.getProperty("java.io.tmpdir"));
 
-            FileHandle gtfsZip = Gdx.files.internal("hermes/gtfs.zip");
+            FileHandle gtfsZip = Gdx.files.internal("assets/hermes/gtfs.zip");
+            Logger.info("Copying Hermes gtfs.zip 2 to " + gtfsZip.file().getAbsolutePath());
             gtfsZip.copyTo(tmpPath);
+
 
             reader.setInputLocation(tmpPath.file());
         } catch (IOException noFile) {
