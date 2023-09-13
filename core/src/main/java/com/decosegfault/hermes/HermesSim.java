@@ -6,6 +6,7 @@ import java.util.Map;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.math.Vector3;
 import com.decosegfault.hermes.data.VehicleData;
 import com.decosegfault.hermes.types.SimType;
 import org.onebusaway.gtfs.impl.GtfsDaoImpl;
@@ -42,9 +43,19 @@ public class HermesSim {
      * in sim mode, moves vehicles at a set speed based on tick speed.
      */
     public static void tick() {
-        for (TripData trip : RouteHandler.tripsByShape.values()) {
-            //trip.vehicle.tick(*position vector, z can be whatever*)
-            //uhhh set the live data here lol
+
+        for (TripData trip : RouteHandler.tripsByShape.values()) {\
+            if(RouteHandler.simType == SimType.LIVE) {
+                //trip.vehicle.tick(*position vector, z can be whatever*)
+                //uhhh set the live data here lol
+            } else if(RouteHandler.simType == SimType.HISTORY) {
+                for (TripData trip2LachlanEllisFixYourCode : RouteHandler.tripsByShape.values()) {
+	                trip2LachlanEllisFixYourCode.vehicle.tick(trip.routeMap.get(0));
+                }
+            }
+            //apply coordinate conversion function here
+            vehicleMap.get(trip.routeID).updateTransform(trip.vehicle.position);
+
         }
 
         for (Map.Entry<String, AtlasVehicle> pair : vehicleMap.entrySet()) {
