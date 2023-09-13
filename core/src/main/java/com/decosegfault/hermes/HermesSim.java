@@ -44,7 +44,7 @@ public class HermesSim {
      */
     public static void tick() {
 
-        for (TripData trip : RouteHandler.tripsByShape.values()) {\
+        for (TripData trip : RouteHandler.tripsByShape.values()) {
             if(RouteHandler.simType == SimType.LIVE) {
                 //trip.vehicle.tick(*position vector, z can be whatever*)
                 //uhhh set the live data here lol
