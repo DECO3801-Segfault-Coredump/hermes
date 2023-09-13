@@ -4,6 +4,7 @@ import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.graphics.Camera
 import com.badlogic.gdx.math.Intersector
 import com.badlogic.gdx.math.Plane
+import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.math.Vector3
 import com.decosegfault.atlas.util.AtlasUtils
 import kotlin.math.*
@@ -36,8 +37,7 @@ class AtlasTileManager {
     private var MAX_DIST = 1024
 
     /** Latitude and Longitude of NW most tile in lookup. */
-    private val BRISBANE_LAT = -26.80936358805377
-    private val BRISBANE_LON = 152.58018493652344
+    private val BRISBANE_LAT_LONG = Vector2(-26.809364f, 152.58018f)
 
     /** Size of grid to draw based on number of the largest tiles. */
     private val NUM_X_TILES = 20
@@ -50,21 +50,16 @@ class AtlasTileManager {
 
 
     init {
-        // Shift to centre tile plane on (0, 0, 0)
+        val nwTile = AtlasUtils.latLongToTileNum(BRISBANE_LAT_LONG)
+
         val xShift = NUM_X_TILES/2
         val zShift = NUM_Y_TILES/2
-
-        // Tile lookup calculation from Open Street Map Wiki
-        // [https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames]
-        val n = 1 shl MIN_ZOOM
-        val xTile = ((BRISBANE_LON + 180.0) / 360.0 * n).toInt().toFloat() + xShift
-        val yTile = ((1.0 - asinh(tan(BRISBANE_LAT * PI / 180)) / PI) / 2.0 * n).toInt().toFloat() + zShift
 
         // Create all the largest tiles
         for (i in -xShift until xShift) {
             for (j in -zShift until zShift) {
                 tileSurface.add(Tile(i * MAX_SIZE, j * MAX_SIZE, MAX_SIZE,
-                    Vector3(xTile + i, yTile + j, MIN_ZOOM.toFloat())
+                    Vector3(nwTile.x + i, nwTile.y + j, MIN_ZOOM.toFloat())
                 ))
             }
         }

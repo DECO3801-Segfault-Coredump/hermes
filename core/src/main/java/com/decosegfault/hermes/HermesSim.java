@@ -5,6 +5,7 @@ import java.util.Map;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
+import com.badlogic.gdx.math.Vector3;
 import com.decosegfault.hermes.data.VehicleData;
 import com.decosegfault.hermes.types.SimType;
 import org.onebusaway.gtfs.impl.GtfsDaoImpl;
@@ -45,6 +46,13 @@ public class HermesSim {
             //trip.vehicle.tick(*position vector, z can be whatever*)
             //uhhh set the live data here lol
         }
+
+        for (Map.Entry<String, AtlasVehicle> pair : vehicleMap.entrySet()) {
+            // TODO @Lachlan Ellis lookup vehicle position
+
+            var lakes = new Vector3(-27.499593094511493f, 153.01620933407332f, 0f);
+            pair.getValue().updateTransformFromHermes(lakes);
+        }
     }
 
     /**
@@ -55,7 +63,10 @@ public class HermesSim {
      */
     public static void load(SimType simType) {
         RouteHandler.simType = simType;
-        read(); //placeholder
+        if(simType != SimType.LIVE) {
+            read();
+        }
+        //placeholder
         RouteHandler.sortShapes();
         //RouteHandler.logRoutes();
         //RouteHandler.logTrips();
