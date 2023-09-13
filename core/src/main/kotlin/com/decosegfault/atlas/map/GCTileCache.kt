@@ -53,14 +53,15 @@ object GCTileCache : AbstractGarbageCollectedCache<Vector3, Texture>(
         // now that we have the pixmap, we need to context switch into the render thread in order to
         // upload the texture
         // transfer our work to the simulation screen's concurrent work queue
-        // the future allows us to be notified when the callable has completed
         val future = CompletableFuture<Texture>()
-        val callable = Callable {
+        val runnable = Runnable {
             val tex = Texture(pixmap)
             tex.setFilter(TextureFilter.Linear, TextureFilter.Linear)
-            return@Callable tex
+            future.complete(tex)
         }
-        SimulationScreen.TEX_WORK_QUEUE.add(Pair(future, callable))
+        synchronized (SimulationScreen.TEX_WORK_QUEUE) {
+            SimulationScreen.TEX_WORK_QUEUE.add(runnable)
+        }
 
         // now wait for the future to get back to us
         val texture = future.get()

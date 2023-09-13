@@ -32,7 +32,9 @@ import net.mgsx.gltf.scene3d.scene.SceneAsset
 import net.mgsx.gltf.scene3d.scene.SceneSkybox
 import net.mgsx.gltf.scene3d.utils.IBLBuilder
 import org.tinylog.kotlin.Logger
+import java.util.*
 import java.util.concurrent.*
+import java.util.concurrent.locks.Lock
 import kotlin.math.max
 import kotlin.math.roundToInt
 import kotlin.random.Random
@@ -249,12 +251,13 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
 
         // try and take up to WORK_PER_FRAME items from the work queue and run them
         var workIdx = 0
-        var item = TEX_WORK_QUEUE.poll()
-        while (item != null && workIdx < WORK_PER_FRAME) {
-            val (future, callable) = item
-            future.complete(callable.call())
-            item = TEX_WORK_QUEUE.poll()
-            workIdx++
+        synchronized(TEX_WORK_QUEUE) {
+            var item = TEX_WORK_QUEUE.poll()
+            while (item != null && workIdx < WORK_PER_FRAME) {
+                item.run()
+                item = TEX_WORK_QUEUE.poll()
+                workIdx++
+            }
         }
 
         if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
@@ -393,10 +396,11 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
         /**
          * List of work items to process per frame. Unlike Gdx.app.postRunnable, only [WORK_PER_FRAME] are
          * processed per frame.
-         * The Callable, is used to generate a value. After it's run, the CompletableFuture is notified of
-         * the value.
+         *
+         * **IMPORTANT:** MUST BE SYNCHRONISED USING A `synchronized` BLOCK! This is not concurrent
+         * by default due to the stupid way in which I pull items off the queue.
          */
-        val TEX_WORK_QUEUE = ConcurrentLinkedQueue<Pair<CompletableFuture<Texture>, Callable<Texture>>>()
+        val TEX_WORK_QUEUE = LinkedList<Runnable>()
 
         /** Number of items from [TEX_WORK_QUEUE] to process per frame */
         private const val WORK_PER_FRAME = 50
