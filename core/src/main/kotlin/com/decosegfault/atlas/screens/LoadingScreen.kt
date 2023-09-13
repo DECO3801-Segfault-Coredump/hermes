@@ -74,8 +74,6 @@ class LoadingScreen(private val game: Game) : ScreenAdapter() {
 
         stage.addActor(container)
 
-        HermesSim.load(SimType.HISTORY)
-
         // run checks outside of render loop so we don't block render
         thread(isDaemon = true, name="LoadWorker") {
             // Start tile server
