@@ -13,16 +13,15 @@ public class TripData {
     VehicleType routeType;
     public String routeID;
     public String routeName;
-    public List<Vector3> routeMap =  new ArrayList<Vector3>();
+    public List<Vector3> routeMap =  new ArrayList<>();
     public VehicleData vehicle;
-    List<StopData> stopList = new ArrayList<StopData>();
+    List<StopData> stopList = new ArrayList<>();
     int startTime;
     /** optional, only used in history mode */
     int endTime = -1;
     public TripData(int type) {
         switch (type) {
             case 2 -> routeType = VehicleType.TRAIN;
-            case 3 -> routeType = VehicleType.BUS;
             case 4 -> routeType = VehicleType.FERRY;
             default -> routeType = VehicleType.BUS;
         }
