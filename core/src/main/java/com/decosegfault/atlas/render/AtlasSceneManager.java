@@ -6,6 +6,8 @@ import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.attributes.DirectionalLightsAttribute;
 import com.badlogic.gdx.graphics.g3d.attributes.PointLightsAttribute;
 import com.badlogic.gdx.graphics.g3d.attributes.SpotLightsAttribute;
+import com.badlogic.gdx.graphics.g3d.decals.Decal;
+import com.badlogic.gdx.graphics.g3d.decals.DecalBatch;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.graphics.g3d.environment.PointLight;
 import com.badlogic.gdx.graphics.g3d.environment.SpotLight;
@@ -28,6 +30,7 @@ import net.mgsx.gltf.scene3d.utils.EnvironmentUtil;
 import org.tinylog.Logger;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import com.decosegfault.hermes.HermesSim;
@@ -46,6 +49,7 @@ import com.decosegfault.hermes.HermesSim;
  *
  * @author mgsx
  * @author Matt Young (modifications for Atlas)
+ * @author Henry Batt (modifications for Atlas)
  */
 public class AtlasSceneManager implements Disposable {
     protected final EnvironmentCache computedEnvironment = new EnvironmentCache();
@@ -78,7 +82,14 @@ public class AtlasSceneManager implements Disposable {
     private int renderedVehicles = 0;
 
     /** List of AtlasVehicles that actually got rendered */
-    private List<AtlasVehicle> renderedAtlasVehicles = new ArrayList<>();
+    private final List<AtlasVehicle> renderedAtlasVehicles = new ArrayList<>();
+
+    /** Ground plane tiling collection and batch drawer */
+    private final Array<Decal> tileDecals = new Array<>();
+    private DecalBatch decalBatch;
+
+    /** Controller to render ground plane tiles */
+    private AtlasTileManager atlasTileManager;
 
     public AtlasSceneManager(GraphicsPreset graphics) {
         this(24);
@@ -140,6 +151,14 @@ public class AtlasSceneManager implements Disposable {
         this.depthBatch = depthBatch;
     }
 
+    public DecalBatch getDecalBatch() {
+        return decalBatch;
+    }
+
+    public void setDecalBatch(DecalBatch decalBatch) {
+        this.decalBatch = decalBatch;
+    }
+
     public void setShaderProvider(ShaderProvider shaderProvider) {
         batch.dispose();
         batch = new ModelBatch(shaderProvider, renderableSorter);
@@ -187,10 +206,11 @@ public class AtlasSceneManager implements Disposable {
     }
 
     /**
-     * Updates skybox and vehicle render list. Will check with {@link AtlasVehicle#getRenderModel(Camera, GraphicsPreset)}
+     * Updates skybox, vehicle render list, and ground plane tiling list.
+     * Will check with {@link AtlasVehicle#getRenderModel(Camera, GraphicsPreset)}
      * to perform frustum culling and distance thresholding.
      */
-    public void update(float delta, List<AtlasVehicle> vehicles) {
+    public void update(float delta, Collection<AtlasVehicle> vehicles) {
         renderableProviders.clear();
         renderedAtlasVehicles.clear();
 
@@ -211,6 +231,14 @@ public class AtlasSceneManager implements Disposable {
             } else {
                 renderedVehicles++;
             }
+        }
+
+        // Load ground plane tiles for rendering
+        tileDecals.clear();
+        List<Tile> gamer = atlasTileManager.getTilesCulled( camera, graphics);
+        for (Tile tile : gamer) {
+            var decal = tile.getDecal();
+            if (decal != null) tileDecals.add(decal);
         }
 
         if (camera != null) {
@@ -342,6 +370,8 @@ public class AtlasSceneManager implements Disposable {
         renderTransmission();
 
         renderColors();
+
+        renderDecal();
     }
 
     public void renderMirror() {
@@ -407,6 +437,17 @@ public class AtlasSceneManager implements Disposable {
     }
 
     /**
+     * Render all tile decals.
+     */
+    public void renderDecal() {
+        for (Decal decal: tileDecals) {
+            decalBatch.add(decal);
+        }
+
+        decalBatch.flush();
+    }
+
+    /**
      * Render colors only. You should call {@link #renderShadows()} before. (useful when you're using your own
      * frame buffer to render scenes)
      */
@@ -447,6 +488,15 @@ public class AtlasSceneManager implements Disposable {
 
     public void setSkyBox(SceneSkybox skyBox) {
         this.skyBox = skyBox;
+    }
+
+    /**
+     * Sets the tile manager to used for ground plane.
+     *
+     * @param atlasTileManager  Tile manager instance to use.
+     */
+    public void setAtlasTileManager(AtlasTileManager atlasTileManager) {
+        this.atlasTileManager = atlasTileManager;
     }
 
     public void setAmbientLight(float lum) {

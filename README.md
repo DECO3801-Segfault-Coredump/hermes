@@ -22,7 +22,7 @@ to run the renderer.
 - Henry Batt
 
 **Frontend authors:**
-- Connor Vilaysack and Marcus Rehbock wrote the data analytics frontend which is available [here](TODO)
+- Connor Vilaysack wrote the data analytics frontend which is available [here](https://github.com/DECO3801-Segfault-Coredump/frontend)
 
 ## Setting up the toolchain
 First, you need to install the dependencies for Hermes and Atlas, which are:
@@ -63,8 +63,16 @@ I haven't got around to doing this yet. If it does become necessary ping @matt.
 **Key bindings for SimulationScreen:**
 
 - ESCAPE: Quit
+- ENTER: Toggle fullscreen
 - G: Show/hide debug info
-- ]: Purge LRUTileCache
+- ]: Force garbage collected caches to run a GC
+- [: Pause/resume vehicle benchmark
+- WASD: Move forward, left, back, right
+- Mouse: Look
+- Shift: Boost movement speed
+- CTRL: Move down
+- SPACE: Zoom up
+- R: Reset camera
 
 To toggle debug mode: Go to Run -> Edit configurations, go to Lwjgl3Launcher, click "Modify options", then
 check "Add VM options". In the field labeled "VM options", paste: `-Ddebug=true` (this is adding a system

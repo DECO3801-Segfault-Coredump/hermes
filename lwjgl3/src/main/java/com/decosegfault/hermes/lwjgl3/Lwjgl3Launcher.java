@@ -5,6 +5,7 @@ import com.badlogic.gdx.backends.lwjgl3.Lwjgl3ApplicationConfiguration;
 import com.decosegfault.atlas.AtlasGame;
 import com.decosegfault.atlas.render.GraphicsPreset;
 import com.decosegfault.atlas.render.GraphicsPresets;
+import com.decosegfault.atlas.util.AtlasUtils;
 import org.tinylog.Logger;
 
 import javax.swing.*;
@@ -26,6 +27,7 @@ public class Lwjgl3Launcher {
         Thread.setDefaultUncaughtExceptionHandler((thread, throwable) -> {
             Logger.error("Uncaught exception in thread " + thread.getName() + ": " + throwable);
             Logger.error(throwable);
+            System.exit(1);
         });
 
         if (System.getProperty("debug") == null) {
@@ -51,7 +53,7 @@ public class Lwjgl3Launcher {
         // TODO default graphics preset should be one saved to graphics.txt
 
         // next ask for simulation mode
-        Object[] simModes = new String[]{"Historical", "Live", "Simulated"};
+        Object[] simModes = new String[]{"History", "Live", "Simulated"};
         Object simResult = JOptionPane.showInputDialog(frame,
         "Select Hermes simulation mode:",
         "DECO3801 Hermes Config", JOptionPane.QUESTION_MESSAGE, null, simModes, simModes[1]);
@@ -60,6 +62,7 @@ public class Lwjgl3Launcher {
 
         // write sim result and graphics result to file
         if (graphicsResult != null) GraphicsPresets.INSTANCE.writePreset((String) graphicsResult);
+        if (simResult != null) AtlasUtils.INSTANCE.writeHermesPreset(simResult.toString());
     }
 
     private static Lwjgl3Application createApplication() {
@@ -72,7 +75,7 @@ public class Lwjgl3Launcher {
 
         Lwjgl3ApplicationConfiguration configuration = new Lwjgl3ApplicationConfiguration();
         configuration.setTitle("Hermes + Atlas (DECO3801)");
-        configuration.useVsync(false);
+        configuration.useVsync(false); // TODO release = vsync, debug = no vsync
         // force the use of OpenGL 3.2 - if this causes the game to go nuclear, tag @Matt
         configuration.setOpenGLEmulation(Lwjgl3ApplicationConfiguration.GLEmulation.GL32, 3, 2);
         configuration.setWindowedMode(1600, 900);

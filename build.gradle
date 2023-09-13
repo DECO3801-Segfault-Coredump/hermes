@@ -10,8 +10,11 @@ buildscript {
   }
   dependencies {
     classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion"
-
   }
+}
+
+repositories {
+  maven { url "https://repo.camsys-apps.com/releases/" }
 }
 
 allprojects {
