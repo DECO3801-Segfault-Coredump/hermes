@@ -17,7 +17,7 @@ public class VehicleData {
         vehicleType = type;
     }
     public void tick(Vector3 newPosition) {
-        position.set(newPosition.x, newPosition.y, atan2(newPosition.y-oldPosition.y, newPosition.x-oldPosition.x))
-        oldPosition = newPosition
+        position.set(newPosition.x, newPosition.y, (float) Math.atan2(newPosition.y-oldPosition.y, newPosition.x-oldPosition.x));
+        oldPosition = newPosition;
     }
 }
