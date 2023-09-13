@@ -50,6 +50,8 @@ textures if possible. Let's break it down.
 which is in turn drawn to the screen
 
 ## Notes
+**PostGIS**
+
 We will use the same Docker container for rendering, by connecting to the PostgresSQL database.
 
 `psql -h localhost -p 5432 -U renderer gis` (password is also `renderer`)
@@ -60,5 +62,16 @@ We may also be able to use this: https://osm2pgsql.org/examples/3dbuildings/
 
 Otherwise, we should port OSMBuilding: https://github.com/Beakerboy/OSMBuilding/
 
-### Extrusion links
+Querying buildings using PostGIS: https://gis.stackexchange.com/a/460730
+
+PostGIS queries: https://www.bostongis.com/PrinterFriendly.aspx?content_name=loading_osm_postgis
+
+Projection type: If you open the PostGIS database in DBeaver, and go to Databases -> gis -> Schemas -> Public -> Views, 
+click on `geometry_columns`, then click on Data, you'll see `srid` is 3857 which is Web Mercator. So the
+database is entirely in Web Mercator coords, which is great for us. Sources:
+- https://epsg.io/3857
+- https://gis.stackexchange.com/a/22156
+
+**Extrusion**
+
 TODO

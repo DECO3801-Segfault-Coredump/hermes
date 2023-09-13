@@ -98,7 +98,6 @@ class LoadingScreen(private val game: Game) : ScreenAdapter() {
         thread(isDaemon = true, name = "StartHermes") {
             // temporary
             Logger.info("Starting Hermes")
-            Thread.sleep(1000)
             currentStage = LoadingStage.DONE
         }
     }
