@@ -12,10 +12,12 @@ import java.util.Objects;
 public class VehicleData {
     public VehicleType vehicleType;
     public Vector3 position; //describes the 2d position and the orientation
+    public Vector3 oldPosition = new Vector3(0, 0, 0);
     public VehicleData(VehicleType type) {
         vehicleType = type;
     }
-    public void tick() {
-
+    public void tick(Vector3 newPosition) {
+        position.set(newPosition.x, newPosition.y, atan2(newPosition.y-oldPosition.y, newPosition.x-oldPosition.x))
+        oldPosition = newPosition
     }
 }

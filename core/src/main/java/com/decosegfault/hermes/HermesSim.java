@@ -41,7 +41,10 @@ public class HermesSim {
      * in sim mode, moves vehicles at a set speed based on tick speed.
      */
     public static void tick() {
-
+        for (TripData trip : RouteHandler.tripsByShape.values()) {
+            //trip.vehicle.tick(*position vector, z can be whatever*)
+            //uhhh set the live data here lol
+        }
     }
 
     /**
