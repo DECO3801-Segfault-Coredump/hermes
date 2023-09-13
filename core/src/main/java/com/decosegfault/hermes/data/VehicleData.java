@@ -1,5 +1,6 @@
 package com.decosegfault.hermes.data;
 
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.decosegfault.hermes.types.VehicleType;
 
@@ -17,7 +18,7 @@ public class VehicleData {
         vehicleType = type;
     }
     public void tick(Vector3 newPosition) {
-        position.set(newPosition.x, newPosition.y, (new Vector2(newPosition.x, newPosition.y)).angle(new Vector2(oldPosition.x, oldPosition.y)));
+        position.set(newPosition.x, newPosition.y, (new Vector2(newPosition.x, newPosition.y)).angleDeg(new Vector2(oldPosition.x, oldPosition.y)));
         oldPosition = newPosition;
     }
 }
