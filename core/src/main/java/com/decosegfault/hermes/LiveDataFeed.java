@@ -75,8 +75,8 @@ public class LiveDataFeed {
         Vector3 vehiclePosition = new Vector3();
         float latitude = entity.getVehicle().getPosition().getLatitude();
         float longitude = entity.getVehicle().getPosition().getLongitude();
-        vehiclePosition.add(latitude);
-        vehiclePosition.add(longitude);
+        vehiclePosition.x = latitude;
+        vehiclePosition.y = longitude;
         return vehiclePosition;
     }
 }

@@ -41,7 +41,9 @@ public class HermesSim {
      * in sim mode, moves vehicles at a set speed based on tick speed.
      */
     public static void tick() {
-
+        if (RouteHandler.simType == SimType.LIVE) {
+            // @Ellis
+        }
     }
 
     /**
