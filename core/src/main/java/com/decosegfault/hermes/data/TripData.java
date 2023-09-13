@@ -24,6 +24,7 @@ public class TripData {
             case 2 -> routeType = VehicleType.TRAIN;
             case 3 -> routeType = VehicleType.BUS;
             case 4 -> routeType = VehicleType.FERRY;
+            default -> routeType = VehicleType.BUS;
         }
         vehicle = new VehicleData(routeType);
     }
