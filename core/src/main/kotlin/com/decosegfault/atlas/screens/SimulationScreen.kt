@@ -8,7 +8,6 @@ import com.badlogic.gdx.graphics.g3d.decals.CameraGroupStrategy
 import com.badlogic.gdx.graphics.g3d.decals.DecalBatch
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import com.badlogic.gdx.graphics.profiling.GLProfiler
-import com.badlogic.gdx.math.Vector3
 import com.badlogic.gdx.scenes.scene2d.Stage
 import com.badlogic.gdx.scenes.scene2d.ui.Image
 import com.badlogic.gdx.scenes.scene2d.ui.Label
@@ -16,6 +15,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.Skin
 import com.badlogic.gdx.scenes.scene2d.ui.Table
 import com.badlogic.gdx.utils.viewport.ExtendViewport
 import com.badlogic.gdx.utils.viewport.FitViewport
+import com.decosegfault.atlas.map.AtlasTileManager
 import com.decosegfault.atlas.map.GCTileCache
 import com.decosegfault.atlas.render.*
 import com.decosegfault.atlas.util.Assets
@@ -28,16 +28,13 @@ import net.mgsx.gltf.scene3d.attributes.PBRCubemapAttribute
 import net.mgsx.gltf.scene3d.attributes.PBRTextureAttribute
 import net.mgsx.gltf.scene3d.lights.DirectionalLightEx
 import net.mgsx.gltf.scene3d.lights.DirectionalShadowLight
-import net.mgsx.gltf.scene3d.scene.SceneAsset
 import net.mgsx.gltf.scene3d.scene.SceneSkybox
 import net.mgsx.gltf.scene3d.utils.IBLBuilder
 import org.tinylog.kotlin.Logger
 import java.util.*
 import java.util.concurrent.*
-import java.util.concurrent.locks.Lock
 import kotlin.math.max
 import kotlin.math.roundToInt
-import kotlin.random.Random
 
 /**
  * Implements the main screen for rendering the simulation
@@ -334,6 +331,7 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
             |Texture work queue    done: $workIdx    left: ${TEX_WORK_QUEUE.size}
             |Graphics preset: ${graphics.name}
             |pitch: ${camController.quat.pitch}, roll: ${camController.quat.roll}, yaw: ${camController.quat.yaw}
+            |x: ${cam.position.x}, y: ${cam.position.y}, z: ${cam.position.z}
             """.trimMargin())
         } else {
             debugLabel.setText("FPS: ${Gdx.graphics.framesPerSecond}    Draw calls: ${profiler.drawCalls}")
