@@ -140,7 +140,7 @@ abstract class AbstractGarbageCollectedCache<K, V : Disposable>(
     }
 
     /** Evict an item, **must be on the main thread** */
-    private fun evict(key: K) {
+    open fun evict(key: K) {
         cache[key].disposeSafely()
         cache.remove(key)
     }
@@ -161,10 +161,6 @@ abstract class AbstractGarbageCollectedCache<K, V : Disposable>(
 
     /** @return cache hit rate stats for displaying */
     fun getStats(): String {
-        var hitRate = ((hits / (hits + misses).toDouble()) * 100.0)
-        if (hitRate.isNaN()) {
-            hitRate = 0.0
-        }
         return "$name    size: ${cache.size}     GCs: $gcs    executor: ${executorQueue.size}    " +
                 "pending: ${pendingFetches.size}    " +
                 "fetch: ${fetchTimes.mean.roundToInt()} ms"

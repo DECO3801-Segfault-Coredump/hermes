@@ -1,6 +1,7 @@
 package com.decosegfault.atlas.map
 
 import com.badlogic.gdx.graphics.g3d.ModelCache
+import com.badlogic.gdx.math.DelaunayTriangulator
 import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.math.Vector3
 import io.github.sebasbaumh.postgis.PGgeometry
@@ -42,7 +43,7 @@ object BuildingGenerator {
      *
      * Original source: https://gis.stackexchange.com/a/460730 (rewritten by Matt to fix it up quite a bit)
      */
-    private val BUILDING_QUERY = """SELECT ST_AsText(way), tags->'building:levels'
+    private val BUILDING_QUERY = """SELECT osm_id, way, tags->'building:levels'
         |FROM planet_osm_polygon
         |WHERE (way && st_makebox2d(st_point(?, ?), st_point(?, ?)))
         |AND building IS NOT NULL;
@@ -66,23 +67,49 @@ object BuildingGenerator {
 
         statement = conn.prepareStatement(BUILDING_QUERY)
         // test generated using scripts/wgs84_to_webmercator.py
-        val min = Vector2(17032550.567945454f, -3186449.72959389f)
-        val max = Vector2(17033933.18596778f, -3184777.3303385503f)
+        val min = Vector2(1.703255E7f, -3186449.8f)
+        val max = Vector2(1.7033934E7f, -3184777.2f)
         getBuildingsInBounds(min, max)
     }
 
-    private fun getBuildingsInBounds(min: Vector2, max: Vector2) {
+    /**
+     * Determines the OSM buildings that line in the bounding box from [min] to [max]. This will block as
+     * it queries the DB.
+     * @return list of buildings
+     */
+    fun getBuildingsInBounds(min: Vector2, max: Vector2): MutableSet<Building> {
+        val buildings = mutableSetOf<Building>()
+
         statement.setFloat(1, min.x)
         statement.setFloat(2, min.y)
         statement.setFloat(3, max.x)
         statement.setFloat(4, max.y)
+
         try {
             val result = statement.executeQuery()
-            Logger.debug("Results: ${result}")
+            while (result.next()) {
+                val id = result.getLong(1)
+                val geometry = result.getObject(2) as PGgeometry
+                val floors = result.getInt(3)
+                Logger.debug("ID: $id, geom: $geometry, floors: $floors")
+
+                // convert PostGIS polygon to libGDX Polygon
+                val pgPolygon = geometry.geometry as io.github.sebasbaumh.postgis.Polygon
+                val vertices = mutableListOf<Float>()
+                for (point in pgPolygon.coordinates) {
+                    vertices.add(point.x.toFloat())
+                    vertices.add(point.y.toFloat())
+                }
+
+                val gdxPolygon = com.badlogic.gdx.math.Polygon(vertices.toFloatArray())
+                buildings.add(Building(id, gdxPolygon, floors))
+            }
         } catch (e: SQLException) {
             Logger.warn("Unable to query building in bounds, min: $min, max: $max, $e")
             Logger.warn(e)
         }
+
+        return buildings
     }
 
     /**
