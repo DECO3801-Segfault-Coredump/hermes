@@ -94,7 +94,8 @@ object AtlasUtils {
     }
 
     /**
-     * Converts the given latitude, longitude and zoom level into Slippy Tile Map lookup
+     * Converts the given latitude, longitude and zoom level into Slippy Tile Map lookup.
+     * Inverse of latLongZoomToSlippyCoord method.
      *
      * @param latLongZoom   Vector containing the latitude, longitude, and zoom level to find.
      * @return A vector containing the x, y, zoom values for the tile.
@@ -128,7 +129,7 @@ object AtlasUtils {
      * Converts lat/long coords into Atlas coords
      * **suitable for calling AtlasVehicle.updateTransform**
      *
-     * @param   latLong Vector containing latitude, longitude to find x,y pixel coords for.
+     * @param latLong   Vector containing latitude, longitude to find x,y pixel coords for.
      * @return Vector with x,y pixel coords for latLong, with z same as latLong param.
      */
     fun latLongToAtlas(latLong: Vector3): Vector3 {
