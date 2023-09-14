@@ -1,11 +1,8 @@
-package com.decosegfault.atlas.render
+package com.decosegfault.atlas.map
 
-import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.graphics.Camera
-import com.badlogic.gdx.math.Intersector
-import com.badlogic.gdx.math.Plane
-import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.math.Vector3
+import com.decosegfault.atlas.render.GraphicsPreset
 import com.decosegfault.atlas.util.AtlasUtils
 import kotlin.math.*
 
@@ -20,46 +17,18 @@ class AtlasTileManager {
     /** Collection of all largest-resolution tiles that make up plane */
     private var tileSurface = mutableListOf<Tile>()
 
-    /** Range of zoom levels to generate tiles in. */
-    private var MAX_ZOOM = 20
-    private var MIN_ZOOM = 13
-
-    /** Grid size of smallest possible tile unit. */
-    private var MIN_TILE = 16f
-
-    /** Largest possible resolution for a tile based on the min zoom level. */
-    private var MAX_SIZE = MIN_TILE * 2.0.pow(23 - MIN_ZOOM).toFloat()
-
-    /** Smallest possible resolution for a tile based on the max zoom level. */
-    private var MIN_SIZE = MIN_TILE * 2.0.pow(23 - MAX_ZOOM).toFloat()
-
-    /** Maximum distance to be from tile, for resolution scaling. */
-    private var MAX_DIST = 1024
-
-    /** Latitude and Longitude of NW most tile in lookup. */
-    private val BRISBANE_LAT_LONG = Vector2(-26.809364f, 152.58018f)
-
-    /** Size of grid to draw based on number of the largest tiles. */
-    private val NUM_X_TILES = 20
-    private val NUM_Y_TILES = 36
-
     /** Number of tiles retrieved in last getTiles/getTilesCulled call. */
     var numRetrievedTiles = 0
 
-    private val groundPlane = Plane(Vector3(0f, 1f, 0f), 0f)
-
-
     init {
-        val nwTile = AtlasUtils.latLongToTileNum(BRISBANE_LAT_LONG)
-
-        val xShift = NUM_X_TILES/2
-        val zShift = NUM_Y_TILES/2
-
+        val nwTile = AtlasUtils.latLongZoomToSlippyCoord(Vector3(AtlasUtils.NW_BRISBANE_LAT_LONG, 13f))
+        val xShift = AtlasUtils.NUM_X_TILES/2
+        val zShift = AtlasUtils.NUM_Y_TILES/2
         // Create all the largest tiles
         for (i in -xShift until xShift) {
             for (j in -zShift until zShift) {
-                tileSurface.add(Tile(i * MAX_SIZE, j * MAX_SIZE, MAX_SIZE,
-                    Vector3(nwTile.x + i, nwTile.y + j, MIN_ZOOM.toFloat())
+                tileSurface.add(Tile(i * AtlasUtils.MAX_SIZE, j * AtlasUtils.MAX_SIZE, AtlasUtils.MAX_SIZE,
+                    Vector3(nwTile.x + i + xShift, nwTile.y + j + zShift, AtlasUtils.MIN_ZOOM.toFloat())
                 ))
             }
         }
@@ -75,8 +44,8 @@ class AtlasTileManager {
      */
     private fun calculateSize(cam: Camera): Float {
         val dist = cam.position.y
-        val distance = 2.0.pow((dist / MAX_DIST).toInt()).toFloat()
-        return MIN_SIZE * distance
+        val distance = 2.0.pow((dist / AtlasUtils.MAX_DIST).toInt()).toFloat()
+        return AtlasUtils.MIN_SIZE * distance
     }
 
     /**
@@ -91,8 +60,8 @@ class AtlasTileManager {
     private fun calculateSize(cam: Camera, tile: Tile): Float {
         val closestPoint = AtlasUtils.bboxClosestPoint(cam.position, tile.bbox)
         val dist = cam.position.dst(closestPoint)
-        val distance = 2.0.pow((dist / MAX_DIST).toInt()).toFloat()
-        return MIN_SIZE * distance
+        val distance = 2.0.pow((dist / AtlasUtils.MAX_DIST).toInt()).toFloat()
+        return AtlasUtils.MIN_SIZE * distance
     }
 
     /**

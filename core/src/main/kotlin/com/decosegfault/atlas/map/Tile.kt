@@ -1,17 +1,14 @@
-package com.decosegfault.atlas.render
+package com.decosegfault.atlas.map
 
-import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.graphics.Camera
 import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.g2d.TextureRegion
 import com.badlogic.gdx.graphics.g3d.decals.Decal
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
-import com.badlogic.gdx.math.Intersector
-import com.badlogic.gdx.math.Plane
 import com.badlogic.gdx.math.Vector3
 import com.badlogic.gdx.math.collision.BoundingBox
 import com.badlogic.gdx.utils.Disposable
-import com.decosegfault.atlas.map.GCTileCache
+import com.decosegfault.atlas.render.GraphicsPreset
 import com.decosegfault.atlas.util.AtlasUtils
 import kotlin.math.pow
 
@@ -45,10 +42,6 @@ data class Tile(val x: Float, val z: Float, val size: Float, val tileLookup : Ve
 
     /** Breakdown of tile in 2x2 sub-tiles */
     private var subTiles = mutableListOf<Tile>()
-
-    private var MAX_DIST = 1024
-
-    private var MIN_SIZE = 128
 
     init {
         val minX = x
@@ -198,8 +191,8 @@ data class Tile(val x: Float, val z: Float, val size: Float, val tileLookup : Ve
             return allTiles
         }
 
-        val distance = 2.0.pow((dist / MAX_DIST).toInt()).toFloat()
-        val size =  MIN_SIZE * distance
+        val distance = 2.0.pow((dist / AtlasUtils.MAX_DIST).toInt()).toFloat()
+        val size =  AtlasUtils.MIN_SIZE * distance
 
         // We are at correct resolution, draw this tile. Base Case
         if (this.size <= size) {

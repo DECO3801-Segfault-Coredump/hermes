@@ -2,8 +2,6 @@ package com.decosegfault.atlas.util
 
 import com.badlogic.gdx.math.*
 import com.badlogic.gdx.math.collision.BoundingBox
-import com.decosegfault.atlas.render.GraphicsPreset
-import com.decosegfault.atlas.render.GraphicsPresets
 import com.decosegfault.hermes.types.SimType
 import org.tinylog.kotlin.Logger
 import java.io.IOException
@@ -19,6 +17,38 @@ import kotlin.math.*
  * @author Various (see comments)
  */
 object AtlasUtils {
+
+    /** Range of zoom levels to generate tiles in. */
+    val MAX_ZOOM = 20
+    val MIN_ZOOM = 13
+
+    /** Size of grid to draw based on number of the largest tiles. */
+    val NUM_X_TILES = 20
+    val NUM_Y_TILES = 32
+
+    /** Latitude and Longitude of NW most tile in lookup. */
+    val NW_BRISBANE_LAT_LONG = Vector2(-26.809364f, 152.58018f)
+
+    /** Maximum distance to be from tile, for resolution scaling. */
+    val MAX_DIST = 1024
+
+    /** Grid size of the smallest possible tile unit, and its corresponding zoom level. */
+    val MIN_TILE = 16f
+    val TOTAL_MAX_ZOOM = 23
+    val PIXEL_ZOOM = TOTAL_MAX_ZOOM + log2(MIN_TILE)
+
+    /** Largest possible resolution for a tile based on the min zoom level. */
+    val MAX_SIZE = MIN_TILE * 2.0.pow(TOTAL_MAX_ZOOM - MIN_ZOOM).toFloat()
+
+    /** Smallest possible resolution for a tile based on the max zoom level. */
+    val MIN_SIZE = MIN_TILE * 2.0.pow(TOTAL_MAX_ZOOM - MAX_ZOOM).toFloat()
+
+    /** Dynamically calculate the slippy centre of the map based on NW corner and size */
+    val NW_BRISBANE_SLIPPY_CORRD = latLongZoomToSlippyCoord(Vector3(NW_BRISBANE_LAT_LONG, MIN_ZOOM.toFloat()))
+    val MAP_CENTRE_SLIPPY = latLongZoomToSlippyCoord(slippyCoordToLatLongZoom(
+        Vector3(NW_BRISBANE_SLIPPY_CORRD).add(NUM_X_TILES / 2f, NUM_Y_TILES / 2f, 0f))
+        .add(0f, 0f, (PIXEL_ZOOM - MIN_ZOOM))).sub(0f, 0f, PIXEL_ZOOM)
+
     // https://gdbooks.gitbooks.io/3dcollisions/content/Chapter1/closest_point_aabb.html
     fun bboxClosestPoint(point: Vector3, bounds: BoundingBox): Vector3 {
         return Vector3(
@@ -63,50 +93,47 @@ object AtlasUtils {
         }
     }
 
-
-    /** Size of grid to draw based on number of the largest tiles. */
-    private val NUM_X_TILES = 20
-    private val NUM_Y_TILES = 36
-    private var MIN_ZOOM = 13
-
-
-    fun latLongToTileNum(latLong: Vector2) : Vector2 {
-        // Shift to centre tile plane on (0, 0, 0)
-        val xShift = NUM_X_TILES/2
-        val zShift = NUM_Y_TILES/2
-
+    /**
+     * Converts the given latitude, longitude and zoom level into Slippy Tile Map lookup
+     *
+     * @param latLongZoom   Vector containing the latitude, longitude, and zoom level to find.
+     * @return A vector containing the x, y, zoom values for the tile.
+     */
+    fun latLongZoomToSlippyCoord(latLongZoom: Vector3) : Vector3 {
         // Tile lookup calculation from Open Street Map Wiki
         // [https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames]
-        val n = 1 shl MIN_ZOOM
-        val xTile = ((latLong.y + 180.0) / 360.0 * n).toInt().toFloat() + xShift
-        val yTile = ((1.0 - asinh(tan(latLong.x * PI / 180)) / PI) / 2.0 * n).toInt().toFloat() + zShift
-        return Vector2(xTile, yTile)
+        val n = 1 shl latLongZoom.z.toInt()
+        val xTile = ((latLongZoom.y + 180.0) / 360.0 * n).toInt().toFloat()
+        val yTile = ((1.0 - asinh(tan(latLongZoom.x * PI / 180)) / PI) / 2.0 * n).toInt().toFloat()
+        return Vector3(xTile, yTile, latLongZoom.z)
     }
 
-
+    /**
+     * Converts a given x, y, and zoom level for a slippy tile into a latitude, and longitude.
+     * Inverse of latLongZoomToSlippyCoord method.
+     *
+     * @param xYZoom    Vector containing the x, y, zoom of a tile to get latitude and longitude of.
+     * @return  A vector with the latitude, and longitude of the given tile.
+     */
+    fun slippyCoordToLatLongZoom(xYZoom: Vector3) : Vector3 {
+        // Tile conversion calculation from Open Street Map Wiki
+        // [https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames]
+        val n = 1 shl xYZoom.z.toInt()
+        val long = xYZoom.x / n * 360f - 180f
+        val lat = atan(sinh(PI * (1 - 2 * xYZoom.y / n))) * 180 / PI
+        return Vector3(lat.toFloat(), long, xYZoom.z)
+    }
 
     /**
      * Converts lat/long coords into Atlas coords
      * **suitable for calling AtlasVehicle.updateTransform**
+     *
+     * @param   latLong Vector containing latitude, longitude to find x,y pixel coords for.
+     * @return Vector with x,y pixel coords for latLong, with z same as latLong param.
      */
     fun latLongToAtlas(latLong: Vector3): Vector3 {
-        val xShift = NUM_X_TILES/2
-        val zShift = NUM_Y_TILES/2
-
-        val width = 20f * 2f.pow(7f) // FIXME @Henry Batt
-        val height = 36f * 2f.pow(7f) // FIXME @Henry Batt
-        val x = (latLong.y + 180) * width / 360
-
-        val latRad = latLong.x * PI /180
-        val mercN = ln(tan((PI/4) + (latRad/2)))
-        val y = (height/2)-(width*mercN/(2*PI))
-
-
-        return Vector3(x, y.toFloat(), latLong.z)
-//        val n = 1 shl 20
-//        val xTile = ((latLong.y + 180.0) / 360.0 * n) + xShift
-//        val yTile = ((1.0 - asinh(tan(latLong.x * PI / 180)) / PI) / 2.0 * n) + zShift
-//
-//        return Vector3(xTile.toFloat(), yTile.toFloat(), latLong.z)
+        val coords = latLongZoomToSlippyCoord(Vector3(latLong.x, latLong.y, PIXEL_ZOOM))
+        coords.z = latLong.z
+        return coords.sub(MAP_CENTRE_SLIPPY)
     }
 }
