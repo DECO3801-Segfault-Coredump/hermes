@@ -17,10 +17,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.Skin
 import com.badlogic.gdx.scenes.scene2d.ui.Table
 import com.badlogic.gdx.utils.viewport.ExtendViewport
 import com.badlogic.gdx.utils.viewport.FitViewport
-import com.decosegfault.atlas.map.BuildingManager
-import com.decosegfault.atlas.map.GCBuildingCache
-import com.decosegfault.atlas.map.TileManager
-import com.decosegfault.atlas.map.GCTileCache
+import com.decosegfault.atlas.map.*
 import com.decosegfault.atlas.render.*
 import com.decosegfault.atlas.util.Assets
 import com.decosegfault.atlas.util.Assets.ASSETS
@@ -358,10 +355,17 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
                 vehicle.debug(shapeRender)
             }
 
-            val tiles = tileManager.getTilesCulled(cam, graphics)
+            var tiles = tileManager.getTilesCulled(cam, graphics)
             for (tile in tiles) {
                 tile.debug(shapeRender)
             }
+
+            val buildingChunks = buildingManager.getBuildingChunksCulled(cam, graphics)
+            Logger.debug(buildingManager.numRetrievedBuildingChunks)
+            for (buildingChunk in buildingChunks) {
+                buildingChunk.debugBBox(shapeRender)
+            }
+
             shapeRender.end()
 
 //            batch.begin()
