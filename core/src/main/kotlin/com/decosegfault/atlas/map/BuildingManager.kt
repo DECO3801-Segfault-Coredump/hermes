@@ -6,7 +6,7 @@ import com.decosegfault.atlas.render.GraphicsPreset
 
 /**
  * This class manages fetching and rendering buildings. Basically the building equivalent of
- * AtlasTileManager. For more info see docs/atlas_buildings_design.md
+ * TileManager. For more info see docs/atlas_buildings_design.md
  *
  * @author Matt Young
  */
