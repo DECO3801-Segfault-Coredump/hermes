@@ -47,6 +47,7 @@ import kotlin.random.Random
  * Implements the main screen for rendering the simulation
  *
  * @author Matt Young
+ * @author Henry Batt
  */
 class SimulationScreen(private val game: Game) : ScreenAdapter() {
     private val graphics = GraphicsPresets.getSavedGraphicsPreset()
@@ -365,7 +366,6 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
             }
 
             val buildingChunks = buildingManager.getBuildingChunksCulled(cam, graphics)
-            Logger.debug(buildingManager.numRetrievedBuildingChunks)
             for (buildingChunk in buildingChunks) {
                 buildingChunk.debugBBox(shapeRender)
             }

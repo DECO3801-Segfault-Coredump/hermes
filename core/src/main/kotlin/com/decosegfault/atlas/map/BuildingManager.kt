@@ -12,6 +12,7 @@ import kotlin.math.pow
  * TileManager. For more info see docs/atlas_buildings_design.md
  *
  * @author Matt Young
+ * @author Henry Batt
  */
 class BuildingManager {
 
@@ -34,7 +35,6 @@ class BuildingManager {
     }
 
     fun getBuildingChunksCulled(cam: Camera, graphics: GraphicsPreset): List<BuildingChunk> {
-        Logger.debug(CHUNK_SIZE)
         val chunks = mutableListOf<BuildingChunk>()
         for (buildingChunk in buildingChunkSurface) {
             for (subChunk in buildingChunk.getChunksCulled(CHUNK_SIZE, cam, graphics)) {

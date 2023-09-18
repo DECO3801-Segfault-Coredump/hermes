@@ -8,6 +8,15 @@ import com.badlogic.gdx.math.collision.BoundingBox
 import com.decosegfault.atlas.render.GraphicsPreset
 import com.decosegfault.atlas.util.AtlasUtils
 
+/**
+ * A square planar chunk with recursive sub-chunks to hold building models.
+ *
+ * @param x     X-coordinate of chunk centre
+ * @param z     Z-coordinate of the chunk centre
+ * @param size  The size of the square chunk in pixels
+ *
+ * @author Henry Batt
+ */
 class BuildingChunk(val x: Float, val z: Float, val size: Float) {
 
     var didCull = false
