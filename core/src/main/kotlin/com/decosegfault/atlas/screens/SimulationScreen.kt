@@ -18,6 +18,10 @@ import com.badlogic.gdx.scenes.scene2d.ui.Table
 import com.badlogic.gdx.utils.viewport.ExtendViewport
 import com.badlogic.gdx.utils.viewport.FitViewport
 import com.decosegfault.atlas.map.*
+import com.decosegfault.atlas.map.BuildingManager
+import com.decosegfault.atlas.map.GCBuildingCache
+import com.decosegfault.atlas.map.TileManager
+import com.decosegfault.atlas.map.GCTileCache
 import com.decosegfault.atlas.render.*
 import com.decosegfault.atlas.util.Assets
 import com.decosegfault.atlas.util.Assets.ASSETS
