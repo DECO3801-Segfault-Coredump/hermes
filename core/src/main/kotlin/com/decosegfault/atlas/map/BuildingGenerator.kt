@@ -1,10 +1,19 @@
 package com.decosegfault.atlas.map
 
+import com.badlogic.gdx.graphics.Color
+import com.badlogic.gdx.graphics.GL20
+import com.badlogic.gdx.graphics.VertexAttributes
+import com.badlogic.gdx.graphics.g3d.Material
+import com.badlogic.gdx.graphics.g3d.Model
 import com.badlogic.gdx.graphics.g3d.ModelCache
-import com.badlogic.gdx.math.DelaunayTriangulator
+import com.badlogic.gdx.graphics.g3d.ModelInstance
+import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder
+import com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BoxShapeBuilder
+import com.badlogic.gdx.math.MathUtils
 import com.badlogic.gdx.math.Vector2
-import com.badlogic.gdx.math.Vector3
+import com.decosegfault.atlas.util.Triangle
 import io.github.sebasbaumh.postgis.PGgeometry
+import net.mgsx.gltf.scene3d.attributes.PBRColorAttribute
 import org.postgresql.PGConnection
 import org.postgresql.geometric.PGpolygon
 import org.tinylog.kotlin.Logger
@@ -36,6 +45,12 @@ object BuildingGenerator {
     private const val STOREY_HEIGHT = 4.3f
 
     /**
+     * The tallest building in Brisbane is currently the Brisbane Skytower which is 90 storeys tall
+     * We clamp building storeys to this many in case of OSM data misinputs so they're not mega tall
+     */
+    private const val MAX_STOREYS = 90f
+
+    /**
      * Query to find polygons and tags for OSM buildings in a bounding box. Assumes coordinates in Web
      * Mercator (EPSG coord ID 3857), which is true for this osm2pgsql generated PostGIS DB.
      * Selects the polygon of the building ("way") and the number of levels if available. For more info see
@@ -48,6 +63,12 @@ object BuildingGenerator {
         |WHERE (way && st_makebox2d(st_point(?, ?), st_point(?, ?)))
         |AND building IS NOT NULL;
     """.trimMargin()
+
+    private val BUILDING_COLOUR = Color.LIGHT_GRAY
+
+    private val BUILDING_MATERIAL = Material().apply {
+        set(PBRColorAttribute.createBaseColorFactor(BUILDING_COLOUR))
+    }
 
     private lateinit var conn: Connection
 
@@ -118,11 +139,41 @@ object BuildingGenerator {
     }
 
     /**
+     * Extrudes the given triangulated base of a building into a 3D model
+     * @param height height in metres
+     */
+    private fun extrudeToModel(tris: List<Triangle>, height: Float): Model {
+        val modelBuilder = ModelBuilder()
+        val mpb = modelBuilder.part(
+            "building", GL20.GL_TRIANGLES,
+            VertexAttributes.Usage.Position.toLong() or VertexAttributes.Usage.Normal.toLong(),
+            BUILDING_MATERIAL
+        )
+        BoxShapeBuilder.build(mpb, 5f, height, 5f)
+        return modelBuilder.end()
+    }
+
+    /**
      * Generates a building chunk. Buildings are packaged together into a ModelCache.
      */
-    fun generateBuildingChunk(chunk: Vector3): ModelCache {
+    fun generateBuildingChunk(buildings: Set<Building>): ModelCache {
         val cache = ModelCache()
         cache.begin()
+
+        for (building in buildings) {
+            // calculate the triangulation of the floor plan
+            val triangles = building.triangulate()
+
+            // limit the height of buildings in case of errors, and if a height is missing give a default
+            // height of 1 floor
+            val height = MathUtils.clamp(building.floors.toFloat(), 1f, MAX_STOREYS) * STOREY_HEIGHT
+
+            // extrude the triangulation into a 3D model and insert into cache
+            val model = extrudeToModel(triangles, height) // FIXME: memory leak here (need to free model)
+            val instance = ModelInstance(model)
+            cache.add(instance)
+        }
+
         cache.end()
         return cache
     }

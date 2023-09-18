@@ -75,3 +75,21 @@ database is entirely in Web Mercator coords, which is great for us. Sources:
 **Extrusion**
 
 TODO
+
+**Coordinates**
+
+Centre of Brisbane in Atlas is: `-27.410786,153.01758`
+
+Convert to EPSG 3857 Web Mercator (from WGS84 to Web Mercator):
+https://epsg.io/transform#s_srs=4326&t_srs=3857&x=153.0175800&y=-27.4107860
+
+Yields: `x=17033839.088019006, y=-3174888.4441493554`
+
+Subtract these from the PostGIS database to centre the buildings
+
+---
+
+random building web mercator: `17042011.25221322 -3178371.2622345123`
+
+actual in game: `27370.577 11667.356`
+

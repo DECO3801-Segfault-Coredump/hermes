@@ -1,6 +1,7 @@
 package com.decosegfault.atlas.map
 
 import com.badlogic.gdx.graphics.g3d.ModelCache
+import com.badlogic.gdx.math.MathUtils
 import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.math.Vector3
 import com.decosegfault.atlas.util.AbstractGarbageCollectedCache
@@ -47,6 +48,9 @@ object GCBuildingCache : AbstractGarbageCollectedCache<Vector3, ModelCache>(
 
         // now we have the actual list of buildings to process on this thread, register them
         buildingAssignments[key] = buildings.toList()
+
+        // process buildings
+        val chunk = BuildingGenerator.generateBuildingChunk(buildings)
 
         throw NotImplementedError()
     }

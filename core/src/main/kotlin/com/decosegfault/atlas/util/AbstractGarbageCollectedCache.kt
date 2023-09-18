@@ -62,6 +62,7 @@ abstract class AbstractGarbageCollectedCache<K, V : Disposable>(
     private var hits = 0
     private var misses = 0
     private var total = 0
+    private var shouldGcNextFrame = false
 
     /** Implementers should override this function to instantiate a new item. Can block for as long as you want. */
     abstract fun newItem(key: K): V
@@ -72,7 +73,6 @@ abstract class AbstractGarbageCollectedCache<K, V : Disposable>(
      */
     fun retrieve(item: K, onRetrieved: (V) -> Unit) {
         val begin = System.nanoTime()
-        garbageCollect()
         val maybeItem = cache[item]
         if (maybeItem != null) {
             // tile was already in cache
@@ -129,9 +129,21 @@ abstract class AbstractGarbageCollectedCache<K, V : Disposable>(
         }
     }
 
-    /** Clears items in use for the next frame */
+    /** Performs garbage collection and clears items in use for next frame */
     fun nextFrame() {
+        if (shouldGcNextFrame) {
+            Logger.debug("Forcing GC this frame")
+            garbageCollect(true)
+            shouldGcNextFrame = false
+        } else {
+            garbageCollect()
+        }
         itemsInUse.clear()
+    }
+
+    /** Tells the garbage collector to GC on the next frame */
+    fun gcNextFrame() {
+        shouldGcNextFrame = true
     }
 
     /** Tells the cache that the item is in use and should not be GCd */
