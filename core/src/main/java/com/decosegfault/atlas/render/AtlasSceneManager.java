@@ -19,6 +19,8 @@ import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Disposable;
 import com.decosegfault.atlas.map.BuildingManager;
+import com.decosegfault.atlas.map.AtlasTileManager;
+import com.decosegfault.atlas.map.Tile;
 import net.mgsx.gltf.scene3d.attributes.PBRMatrixAttribute;
 import net.mgsx.gltf.scene3d.lights.DirectionalShadowLight;
 import net.mgsx.gltf.scene3d.lights.PointLightEx;
