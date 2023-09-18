@@ -3,6 +3,9 @@ package com.decosegfault.atlas.render
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.graphics.Camera
 import com.badlogic.gdx.graphics.Color
+import com.badlogic.gdx.graphics.PerspectiveCamera
+import com.badlogic.gdx.graphics.g2d.BitmapFont
+import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.gdx.graphics.g2d.TextureRegion
 import com.badlogic.gdx.graphics.g3d.decals.Decal
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
@@ -14,6 +17,7 @@ import com.badlogic.gdx.utils.Disposable
 import com.decosegfault.atlas.map.GCTileCache
 import com.decosegfault.atlas.util.AtlasUtils
 import kotlin.math.pow
+import kotlin.math.roundToInt
 
 /**
  * A square planar tile with recursive sub-tiles, and image decal for texturing.
@@ -319,5 +323,11 @@ data class Tile(val x: Float, val z: Float, val size: Float, val tileLookup : Ve
         if (didCull) return
         render.color = if (didUseSubTiles) Color.GREEN else Color.RED
         render.box(bbox.min.x, bbox.min.y, bbox.max.z, bbox.width, bbox.height, bbox.depth)
+    }
+
+    fun debugText(batch: SpriteBatch, font: BitmapFont, cam: PerspectiveCamera) {
+        val pos = cam.project(bbox.getCenter(Vector3()))
+        font.color = Color.BLACK
+        font.draw(batch, "${tileLookup.x.toInt()},${tileLookup.y.toInt()},${tileLookup.z.toInt()}", pos.x, pos.y)
     }
 }

@@ -4,6 +4,7 @@ import com.badlogic.gdx.*
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3ApplicationConfiguration
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Graphics
 import com.badlogic.gdx.graphics.*
+import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.gdx.graphics.g3d.decals.CameraGroupStrategy
 import com.badlogic.gdx.graphics.g3d.decals.DecalBatch
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
@@ -112,9 +113,11 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
 
     private val buildingManager = BuildingManager()
 
-    private fun createTextUI() {
-        val skin = ASSETS["ui/uiskin.json", Skin::class.java]
+    private val skin = ASSETS["ui/uiskin.json", Skin::class.java]
 
+    private val batch = SpriteBatch()
+
+    private fun createTextUI() {
         // hack to use linear scaling instead of nearest neighbour for text
         // makes the text slightly less ugly, but ideally we should use FreeType
         // https://stackoverflow.com/a/33633682/5007892
@@ -354,22 +357,22 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
                 vehicle.debug(shapeRender)
             }
 
-            for (tile in atlasTileManager.getTilesCulled(cam, graphics)) {
+            val tiles = atlasTileManager.getTilesCulled(cam, graphics)
+            for (tile in tiles) {
                 tile.debug(shapeRender)
             }
-
             shapeRender.end()
+
+//            batch.begin()
+//            for (tile in tiles) {
+//                tile.debugText(batch, skin.getFont("window"), cam)
+//            }
+//            batch.end()
 
 //            shapeRender.begin(ShapeRenderer.ShapeType.Filled)
 //            shapeRender.point(camController.target.x, camController.target.y, camController.target.z)
 //            shapeRender.end()
         }
-
-//        shapeRender.projectionMatrix = stage.camera.combined
-//        shapeRender.begin(ShapeRenderer.ShapeType.Filled)
-//        shapeRender.color = Color.BLACK
-//        shapeRender.circle(Gdx.graphics.width / 2f, Gdx.graphics.height / 2f, 4f)
-//        shapeRender.end()
 
         stage.act()
         stage.draw()
@@ -393,6 +396,7 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
         GCTileCache.dispose()
         profiler.disable()
         shapeRender.dispose()
+        batch.dispose()
         Logger.debug("Shutting down Hermes executor")
         hermesExecutor.shutdownNow()
         // we should no longer need assets since we quit the game

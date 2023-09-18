@@ -109,6 +109,11 @@ object BuildingGenerator {
             Logger.warn(e)
         }
 
+        for (building in buildings) {
+            val triangles = building.triangulate()
+            Logger.debug("Have ${triangles.size} triangles")
+        }
+
         return buildings
     }
 
