@@ -19,7 +19,7 @@ import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Disposable;
 import com.decosegfault.atlas.map.BuildingManager;
-import com.decosegfault.atlas.map.AtlasTileManager;
+import com.decosegfault.atlas.map.TileManager;
 import com.decosegfault.atlas.map.Tile;
 import net.mgsx.gltf.scene3d.attributes.PBRMatrixAttribute;
 import net.mgsx.gltf.scene3d.lights.DirectionalShadowLight;
@@ -89,7 +89,7 @@ public class AtlasSceneManager implements Disposable {
     private DecalBatch decalBatch;
 
     /** Controller to render ground plane tiles */
-    private AtlasTileManager atlasTileManager;
+    private TileManager tileManager;
 
     /** Controller used to render buildings */
     private BuildingManager buildingManager;
@@ -238,7 +238,7 @@ public class AtlasSceneManager implements Disposable {
 
         // Load ground plane tiles for rendering
         tileDecals.clear();
-        List<Tile> gamer = atlasTileManager.getTilesCulled( camera, graphics);
+        List<Tile> gamer = tileManager.getTilesCulled( camera, graphics);
         for (Tile tile : gamer) {
             var decal = tile.getDecal();
             if (decal != null) tileDecals.add(decal);
@@ -502,10 +502,10 @@ public class AtlasSceneManager implements Disposable {
     /**
      * Sets the tile manager to used for ground plane.
      *
-     * @param atlasTileManager  Tile manager instance to use.
+     * @param tileManager  Tile manager instance to use.
      */
-    public void setAtlasTileManager(AtlasTileManager atlasTileManager) {
-        this.atlasTileManager = atlasTileManager;
+    public void setAtlasTileManager(TileManager tileManager) {
+        this.tileManager = tileManager;
     }
 
     /**

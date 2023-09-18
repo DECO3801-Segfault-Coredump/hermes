@@ -19,7 +19,7 @@ import com.badlogic.gdx.utils.viewport.ExtendViewport
 import com.badlogic.gdx.utils.viewport.FitViewport
 import com.decosegfault.atlas.map.BuildingManager
 import com.decosegfault.atlas.map.GCBuildingCache
-import com.decosegfault.atlas.map.AtlasTileManager
+import com.decosegfault.atlas.map.TileManager
 import com.decosegfault.atlas.map.GCTileCache
 import com.decosegfault.atlas.render.*
 import com.decosegfault.atlas.util.Assets
@@ -109,7 +109,7 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
         ThreadFactoryBuilder().setNameFormat("Hermes").build()
     )
 
-    private val atlasTileManager = AtlasTileManager()
+    private val tileManager = TileManager()
 
     private val buildingManager = BuildingManager()
 
@@ -193,7 +193,7 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
         sceneManager.skyBox = SceneSkybox(environmentCubemap)
 
         // setup ground plane tile manager
-        sceneManager.setAtlasTileManager(atlasTileManager)
+        sceneManager.setAtlasTileManager(tileManager)
         sceneManager.setBuildingManager(buildingManager)
 
         // setup decal batch for rendering
@@ -340,7 +340,7 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
             |${GCTileCache.getStats()}
             |${GCBuildingCache.getStats()}
             |Vehicles    culled: ${sceneManager.cullRate}%    low LoD: ${sceneManager.lowLodRate}%    full: ${sceneManager.fullRenderRate}%    total: ${sceneManager.totalVehicles}
-            |Tiles on screen: ${atlasTileManager.numRetrievedTiles}
+            |Tiles on screen: ${tileManager.numRetrievedTiles}
             |Texture work queue    done: $workIdx    left: ${TEX_WORK_QUEUE.size}
             |Graphics preset: ${graphics.name}
             |pitch: ${camController.quat.pitch}, roll: ${camController.quat.roll}, yaw: ${camController.quat.yaw}
@@ -358,7 +358,7 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
                 vehicle.debug(shapeRender)
             }
 
-            val tiles = atlasTileManager.getTilesCulled(cam, graphics)
+            val tiles = tileManager.getTilesCulled(cam, graphics)
             for (tile in tiles) {
                 tile.debug(shapeRender)
             }
