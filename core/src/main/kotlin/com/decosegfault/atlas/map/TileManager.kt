@@ -12,7 +12,7 @@ import kotlin.math.*
  *
  * @author Henry Batt
  */
-class AtlasTileManager {
+class TileManager {
 
     /** Collection of all largest-resolution tiles that make up plane */
     private var tileSurface = mutableListOf<Tile>()

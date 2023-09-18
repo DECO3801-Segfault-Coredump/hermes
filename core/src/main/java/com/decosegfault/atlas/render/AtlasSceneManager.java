@@ -18,8 +18,9 @@ import com.badlogic.gdx.graphics.g3d.utils.ShaderProvider;
 import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Disposable;
+import com.decosegfault.atlas.map.BuildingChunk;
 import com.decosegfault.atlas.map.BuildingManager;
-import com.decosegfault.atlas.map.AtlasTileManager;
+import com.decosegfault.atlas.map.TileManager;
 import com.decosegfault.atlas.map.Tile;
 import net.mgsx.gltf.scene3d.attributes.PBRMatrixAttribute;
 import net.mgsx.gltf.scene3d.lights.DirectionalShadowLight;
@@ -89,7 +90,7 @@ public class AtlasSceneManager implements Disposable {
     private DecalBatch decalBatch;
 
     /** Controller to render ground plane tiles */
-    private AtlasTileManager atlasTileManager;
+    private TileManager tileManager;
 
     /** Controller used to render buildings */
     private BuildingManager buildingManager;
@@ -238,17 +239,15 @@ public class AtlasSceneManager implements Disposable {
 
         // Load ground plane tiles for rendering
         tileDecals.clear();
-        List<Tile> gamer = atlasTileManager.getTilesCulled( camera, graphics);
-        for (Tile tile : gamer) {
+        for (Tile tile : tileManager.getTilesCulled( camera, graphics)){
             var decal = tile.getDecal();
             if (decal != null) tileDecals.add(decal);
         }
 
-        // Submit building chunks for rendering
-        var buildingChunks = buildingManager.getBuildingChunksCulled(camera, graphics);
-        for (ModelCache chunk : buildingChunks) {
-            renderableProviders.add(chunk);
-        }
+//        // Submit building chunks for rendering
+//        for (BuildingChunk chunk : buildingManager.getBuildingChunksCulled(camera, graphics)) {
+//            renderableProviders.add(chunk.getBuildingCache());
+//        }
 
         if (camera != null) {
             updateEnvironment();
@@ -502,10 +501,10 @@ public class AtlasSceneManager implements Disposable {
     /**
      * Sets the tile manager to used for ground plane.
      *
-     * @param atlasTileManager  Tile manager instance to use.
+     * @param tileManager  Tile manager instance to use.
      */
-    public void setAtlasTileManager(AtlasTileManager atlasTileManager) {
-        this.atlasTileManager = atlasTileManager;
+    public void setTileManager(TileManager tileManager) {
+        this.tileManager = tileManager;
     }
 
     /**
