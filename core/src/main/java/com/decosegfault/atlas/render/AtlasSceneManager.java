@@ -244,10 +244,11 @@ public class AtlasSceneManager implements Disposable {
             if (decal != null) tileDecals.add(decal);
         }
 
-//        // Submit building chunks for rendering
-//        for (BuildingChunk chunk : buildingManager.getBuildingChunksCulled(camera, graphics)) {
-//            renderableProviders.add(chunk.getBuildingCache());
-//        }
+        // Submit building chunks for rendering
+        for (BuildingChunk chunk : buildingManager.getBuildingChunksCulled(camera, graphics)) {
+            var modelCache = chunk.getBuildingCache();
+            if (modelCache != null) renderableProviders.add(modelCache);
+        }
 
         if (camera != null) {
             updateEnvironment();

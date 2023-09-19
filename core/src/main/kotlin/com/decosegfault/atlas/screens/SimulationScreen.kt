@@ -17,7 +17,6 @@ import com.badlogic.gdx.scenes.scene2d.ui.Skin
 import com.badlogic.gdx.scenes.scene2d.ui.Table
 import com.badlogic.gdx.utils.viewport.ExtendViewport
 import com.badlogic.gdx.utils.viewport.FitViewport
-import com.decosegfault.atlas.map.*
 import com.decosegfault.atlas.map.BuildingManager
 import com.decosegfault.atlas.map.GCBuildingCache
 import com.decosegfault.atlas.map.TileManager
@@ -146,7 +145,7 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
         container.pad(10f)
         container.add(debugLabel)
         container.setFillParent(true)
-        container.bottom().left()
+        container.top().left()
         container.pack()
 
         // add a label saying "(c) OpenStreetMap contributors" in the bottom right corner to comply with
@@ -251,21 +250,21 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
         clearScreen(0.0f, 0.0f, 0.0f)
 
         // first, handle work queue emergency situations to prevent your RAM from filling up
-        if (TEX_WORK_QUEUE.size >= WORK_QUEUE_ABSOLUTE_MAX) {
-            Logger.error("PANIC: Work queue emergency!! Size: ${TEX_WORK_QUEUE.size}")
+        if (WORK_QUEUE.size >= WORK_QUEUE_ABSOLUTE_MAX) {
+            Logger.error("PANIC: Work queue emergency!! Size: ${WORK_QUEUE.size}")
             Logger.error("Stats: ${GCTileCache.getStats()}")
-            TEX_WORK_QUEUE.clear()
+            WORK_QUEUE.clear()
             GCTileCache.dispose()
             throw OutOfMemoryError("PANIC: Work queue emergency!")
         }
 
         // try and take up to WORK_PER_FRAME items from the work queue and run them
         var workIdx = 0
-        synchronized(TEX_WORK_QUEUE) {
-            var item = TEX_WORK_QUEUE.poll()
+        synchronized(WORK_QUEUE) {
+            var item = WORK_QUEUE.poll()
             while (item != null && workIdx < WORK_PER_FRAME) {
                 item.run()
-                item = TEX_WORK_QUEUE.poll()
+                item = WORK_QUEUE.poll()
                 workIdx++
             }
         }
@@ -295,9 +294,9 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
             shouldVehiclesMove = !shouldVehiclesMove
         } else if (Gdx.input.isKeyJustPressed(Input.Keys.P)) {
             // debug camera pose and frustum culling
-            //Logger.debug("Camera pose:\npos: ${cam.position}\ndirection: ${cam.direction}")
-            Logger.debug("Toggling usingDebugCam")
-            isUsingDebugCam = !isUsingDebugCam
+            Logger.debug("Camera pose:\npos: ${cam.position}\ndirection: ${cam.direction}")
+//            Logger.debug("Toggling usingDebugCam")
+//            isUsingDebugCam = !isUsingDebugCam
         } else if (Gdx.input.isKeyJustPressed(Input.Keys.R)) {
             Logger.debug("Reset camera")
             cam.position.set(0f, 200f, 0f)
@@ -343,13 +342,13 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
             |${GCBuildingCache.getStats()}
             |Vehicles    culled: ${sceneManager.cullRate}%    low LoD: ${sceneManager.lowLodRate}%    full: ${sceneManager.fullRenderRate}%    total: ${sceneManager.totalVehicles}
             |Tiles on screen: ${tileManager.numRetrievedTiles}
-            |Texture work queue    done: $workIdx    left: ${TEX_WORK_QUEUE.size}
+            |Work queue    done: $workIdx    left: ${WORK_QUEUE.size}
             |Graphics preset: ${graphics.name}
             |pitch: ${camController.quat.pitch}, roll: ${camController.quat.roll}, yaw: ${camController.quat.yaw}
             |x: ${cam.position.x}, y: ${cam.position.y}, z: ${cam.position.z}
             """.trimMargin())
         } else {
-            debugLabel.setText("FPS: ${Gdx.graphics.framesPerSecond}    Draw calls: ${profiler.drawCalls}")
+            debugLabel.setText("FPS: ${Gdx.graphics.framesPerSecond}    Draw calls: ${profiler.drawCalls}\n${GCTileCache.getStats()}")
         }
 
         // draw bounding boxes for vehicles
@@ -360,7 +359,7 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
                 vehicle.debug(shapeRender)
             }
 
-            var tiles = tileManager.getTilesCulled(cam, graphics)
+            val tiles = tileManager.getTilesCulled(cam, graphics)
             for (tile in tiles) {
                 tile.debug(shapeRender)
             }
@@ -403,6 +402,7 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
     override fun dispose() {
         stage.dispose()
         GCTileCache.dispose()
+        GCBuildingCache.dispose()
         profiler.disable()
         shapeRender.dispose()
         batch.dispose()
@@ -420,12 +420,18 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
          * **IMPORTANT:** MUST BE SYNCHRONISED USING A `synchronized` BLOCK! This is not concurrent
          * by default due to the stupid way in which I pull items off the queue.
          */
-        val TEX_WORK_QUEUE = LinkedList<Runnable>()
+        private val WORK_QUEUE = LinkedList<Runnable>()
 
-        /** Number of items from [TEX_WORK_QUEUE] to process per frame */
+        /** Number of items from [WORK_QUEUE] to process per frame */
         private const val WORK_PER_FRAME = 50
 
         /** Absolute max number of items in the work queue to prevent RAM from filling up */
         private const val WORK_QUEUE_ABSOLUTE_MAX = 8192
+
+        fun addWork(runnable: Runnable) {
+            synchronized (WORK_QUEUE) {
+                WORK_QUEUE.add(runnable)
+            }
+        }
     }
 }

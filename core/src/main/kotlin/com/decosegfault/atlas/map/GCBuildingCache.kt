@@ -1,15 +1,14 @@
 package com.decosegfault.atlas.map
 
 import com.badlogic.gdx.graphics.g3d.ModelCache
-import com.badlogic.gdx.math.MathUtils
 import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.math.Vector3
 import com.decosegfault.atlas.util.AbstractGarbageCollectedCache
-import java.util.Collections
+import org.tinylog.kotlin.Logger
 import java.util.concurrent.ConcurrentHashMap
 
 /** **Soft** limit of buildings */
-private const val MAX_BUILDINGS_RAM = 2048.0
+private const val MAX_BUILDINGS_RAM = 1024.0
 
 /** If the cache is this% full, start trying to evict items */
 private const val START_GC_THRESHOLD = 0.90
@@ -24,7 +23,7 @@ private const val END_GC_THRESHOLD = 0.50
  *
  * @author Matt Young
  */
-object GCBuildingCache : AbstractGarbageCollectedCache<Vector3, ModelCache>(
+object GCBuildingCache : AbstractGarbageCollectedCache<Pair<Vector2, Vector2>, ModelCache>(
     "GCBuildingCache",
     MAX_BUILDINGS_RAM,
     START_GC_THRESHOLD,
@@ -36,26 +35,30 @@ object GCBuildingCache : AbstractGarbageCollectedCache<Vector3, ModelCache>(
      * the "chunk bags a building" behaviour described in atlas_buildings_design.md, and is used to ensure that
      * we don't have duplicate buildings in the world.
      */
-    private val buildingAssignments = ConcurrentHashMap<Vector3, List<Building>>()
+    private val buildingAssignments = ConcurrentHashMap<Pair<Vector2, Vector2>, Set<Building>>()
     // note if the above doesn't work we can always try using the synchronized keyword instead
 
-    override fun newItem(key: Vector3): ModelCache {
-        val buildings = BuildingGenerator.getBuildingsInBounds(Vector2(), Vector2())
+    /**
+     * Thread local building generator. Due to PostgresSQL connections, we can't share building generator
+     * across threads as it crashes and would also reduce performance.
+     */
+    private val buildingGenerator = ThreadLocal.withInitial { BuildingGenerator() }
+
+    override fun newItem(key: Pair<Vector2, Vector2>): ModelCache {
+        val buildings = buildingGenerator.get().getBuildingsInBounds(key.first, key.second)
+        val origSize = buildings.size
 
         // remove buildings that have been "bagsed" by other threads
         val allOtherBuildings = buildingAssignments.values.flatten().toHashSet()
         buildings.removeAll(allOtherBuildings)
+        Logger.debug("Removed ${origSize - buildings.size} buildings, processing ${buildings.size}")
 
-        // now we have the actual list of buildings to process on this thread, register them
-        buildingAssignments[key] = buildings.toList()
-
-        // process buildings
-        val chunk = BuildingGenerator.generateBuildingChunk(buildings)
-
-        throw NotImplementedError()
+        // now we have the actual list of buildings to process on this thread, register and process them
+        buildingAssignments[key] = buildings
+        return buildingGenerator.get().generateBuildingChunk(buildings)
     }
 
-    override fun evict(key: Vector3) {
+    override fun evict(key: Pair<Vector2, Vector2>) {
         super.evict(key)
         // remove all buildings associated with this chunk
         buildingAssignments.remove(key)
