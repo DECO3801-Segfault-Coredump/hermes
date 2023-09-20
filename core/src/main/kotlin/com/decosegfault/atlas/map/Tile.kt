@@ -14,7 +14,6 @@ import com.badlogic.gdx.utils.Disposable
 import com.decosegfault.atlas.render.GraphicsPreset
 import com.decosegfault.atlas.util.AtlasUtils
 import kotlin.math.pow
-import kotlin.math.roundToInt
 
 /**
  * A square planar tile with recursive sub-tiles, and image decal for texturing.
@@ -51,7 +50,7 @@ data class Tile(val x: Float, val z: Float, val size: Float, val tileLookup : Ve
     init {
         val minX = x
         val minZ = z
-        bbox = BoundingBox(Vector3(minX, 0f, minZ), Vector3(minX + size, 0f, minZ + size))
+        bbox = BoundingBox(Vector3(minX - 64, 0f, minZ - 64), Vector3(minX + size + 64, 0f, minZ + size + 64))
     }
 
     /**
