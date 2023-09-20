@@ -51,6 +51,18 @@ public class LiveDataFeed {
         return vehiclesList;
     }
 
+
+
+    public static GtfsRealtime.FeedMessage getLiveDataFeed() {
+        GtfsRealtime.FeedMessage feed;
+        try {
+            feed = GtfsRealtime.FeedMessage.parseFrom(vehiclesURL.openStream());
+        } catch (IOException e) {
+            throw new RuntimeException();
+        }
+        return feed;
+    }
+
     /**
      * Retrieves relevant vehicle data from live data feed and stores as VehicleData
      * instances in vehiclesList

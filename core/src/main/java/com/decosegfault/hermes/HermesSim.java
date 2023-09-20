@@ -5,18 +5,17 @@ import java.util.Map;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
-import com.decosegfault.hermes.data.VehicleData;
+import com.decosegfault.hermes.frontend.FrontendData;
+import com.decosegfault.hermes.frontend.FrontendEndpoint;
+import com.decosegfault.hermes.frontend.FrontendServer;
 import com.decosegfault.hermes.types.SimType;
 import org.onebusaway.gtfs.impl.GtfsDaoImpl;
 import org.onebusaway.gtfs.model.*;
 import org.tinylog.Logger;
 import com.decosegfault.atlas.render.AtlasVehicle;
 
-import org.onebusaway.csv_entities.EntityHandler;
 import org.onebusaway.gtfs.serialization.GtfsReader;
-import com.decosegfault.hermes.data.RouteData;
 import com.decosegfault.hermes.data.TripData;
-import com.decosegfault.hermes.types.SimType;
 import org.onebusaway.gtfs.model.Route;
 import org.onebusaway.gtfs.model.Trip;
 
@@ -27,6 +26,8 @@ import java.io.IOException;
  * @author Matt Young
  */
 public class HermesSim {
+
+    private static FrontendServer server = new FrontendServer();
 
     public static Map<String, AtlasVehicle> vehicleMap = new HashMap<>();
 
@@ -44,6 +45,11 @@ public class HermesSim {
         if (RouteHandler.simType == SimType.LIVE) {
             // @Ellis
         }
+
+        // transmit data to the frontend
+        FrontendData data = new FrontendData();
+        data.setRouteLongName("fuck you");
+        FrontendEndpoint.broadcast(data);
     }
 
     /**
@@ -69,6 +75,9 @@ public class HermesSim {
 	        vehicleMap.put(trip.routeID, vehicle);
         }
         Logger.info("GTFS Data Loaded");
+
+        Logger.info("Starting frontend server");
+        server.start();
     }
 
     public static void read()  {
@@ -127,6 +136,10 @@ public class HermesSim {
             RouteHandler.addShape(element);
         }
 
+    }
+
+    public static void shutdown() {
+        server.stop();
     }
 
 //    private static class GtfsEntityHandler implements EntityHandler {
