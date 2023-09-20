@@ -2,7 +2,9 @@ package com.decosegfault.atlas.map
 
 import com.badlogic.gdx.graphics.Camera
 import com.badlogic.gdx.graphics.Color
+import com.badlogic.gdx.graphics.g3d.ModelCache
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
+import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.math.Vector3
 import com.badlogic.gdx.math.collision.BoundingBox
 import com.decosegfault.atlas.render.GraphicsPreset
@@ -16,15 +18,17 @@ import com.decosegfault.atlas.util.AtlasUtils
  * @param size  The size of the square chunk in pixels
  *
  * @author Henry Batt
+ * @author Matt Young
  */
 class BuildingChunk(val x: Float, val z: Float, val size: Float) {
-
     var didCull = false
     var didUseSubChunk = false
 
-    private val bbox : BoundingBox = BoundingBox(Vector3(x, 0f, z), Vector3(x + size, 0f, z + size))
+    private val bbox = BoundingBox(Vector3(x, 0f, z), Vector3(x + size, 0f, z + size))
 
     private var subChunks = mutableListOf<BuildingChunk>()
+
+    private var modelCache: ModelCache? = null
 
     /**
      * Returns all chucks that make up this grid chunk including itself.
@@ -118,6 +122,13 @@ class BuildingChunk(val x: Float, val z: Float, val size: Float) {
         if (didCull) return
         render.color = if (didUseSubChunk) Color.GREEN else Color.BLUE
         render.box(bbox.min.x, bbox.min.y, bbox.max.z, bbox.width, bbox.height, bbox.depth)
+    }
+
+    fun getBuildingCache(): ModelCache? {
+        GCBuildingCache.retrieve(Pair(Vector2(x, z), Vector2(x + size, z + size))) {
+            this.modelCache = it
+        }
+        return modelCache
     }
 
     /**

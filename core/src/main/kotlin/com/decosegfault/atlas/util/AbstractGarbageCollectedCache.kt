@@ -54,7 +54,10 @@ abstract class AbstractGarbageCollectedCache<K, V : Disposable>(
         threadPoolSize, threadPoolSize,
         0L, TimeUnit.MILLISECONDS,
         executorQueue,
-        ThreadFactoryBuilder().setNameFormat("$name-%d").build()
+        ThreadFactoryBuilder()
+            .setNameFormat("$name-%d")
+            .setDaemon(true)
+            .build()
     )
 
     private val fetchTimes = WindowedMean(50)
