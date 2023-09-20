@@ -38,7 +38,7 @@ object GraphicsPresets {
         anisotropic=8.0f,
         msaa=4,
         shadows=false,
-        workPerFrame=10,
+        workPerFrame=20,
     )
 
     private val itRunsCrysis = GraphicsPreset(
@@ -50,7 +50,7 @@ object GraphicsPresets {
         anisotropic=16.0f,
         msaa=8,
         shadows=false,
-        workPerFrame=20,
+        workPerFrame=50,
     )
 
     private val nasaSupercomputer = GraphicsPreset(

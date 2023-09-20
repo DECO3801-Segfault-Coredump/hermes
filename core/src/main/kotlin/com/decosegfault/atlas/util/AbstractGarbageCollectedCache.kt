@@ -50,7 +50,7 @@ abstract class AbstractGarbageCollectedCache<K, V : Disposable>(
      * Executor used for HTTP requests.
      * This is the exact same as `Executors.newFixedThreadPool`, but we control the queue.
      */
-    private val executor = ThreadPoolExecutor(
+    private val executor = ThrowingThreadExecutor(
         threadPoolSize, threadPoolSize,
         0L, TimeUnit.MILLISECONDS,
         executorQueue,

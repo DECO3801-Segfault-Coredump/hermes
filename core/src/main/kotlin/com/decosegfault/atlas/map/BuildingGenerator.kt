@@ -25,6 +25,7 @@ import org.postgresql.geometric.PGpolygon
 import org.tinylog.kotlin.Logger
 import java.lang.Error
 import java.lang.Exception
+import java.lang.IllegalStateException
 import java.sql.Connection
 import java.sql.DriverManager
 import java.sql.PreparedStatement
@@ -135,48 +136,42 @@ class BuildingGenerator : Disposable {
         val cache = ModelCache()
         cache.begin()
 
-        // FIXME we need a much better way of catching exceptions, at the executor level
-        try {
-            for (building in buildings) {
-                // calculate the triangulation of the floor plan
-                val triangles = building.triangulate()
+        for (building in buildings) {
+            // calculate the triangulation of the floor plan
+            val triangles = building.triangulate()
 
-                // limit the height of buildings in case of errors, and if a height is missing give a default
-                // height of 1 floor
-                val height = MathUtils.clamp(building.floors.toFloat(), 1f, MAX_STOREYS) * STOREY_HEIGHT
+            // limit the height of buildings in case of errors, and if a height is missing give a default
+            // height of 1 floor
+            val height = MathUtils.clamp(building.floors.toFloat(), 1f, MAX_STOREYS) * STOREY_HEIGHT
 
-                // extrude the triangulation into a 3D model and insert into cache
-                val model = extrudeToModel(triangles, height) // FIXME: memory leak here (need to free model)
+            // extrude the triangulation into a 3D model and insert into cache
+            val model = extrudeToModel(triangles, height) // FIXME: memory leak here (need to free model)
 
-                // once again, we have to call back to the main thread
-                val future = CompletableFuture<ModelInstance>()
-                val runnable = Runnable {
-                    future.complete(ModelInstance(model))
-                }
-                SimulationScreen.addWork(runnable)
-                val instance = future.get()
-
-                // our models are centred about the origin (hopefully), so we need to translate it to the building
-                // coords
-                val centroid = building.polygon.getCentroid(Vector2())
-                val atlasPos = AtlasUtils.latLongToAtlas(centroid)
-                instance.transform.translate(atlasPos.x, 0f, atlasPos.y)
-                instance.calculateTransforms()
-                cache.add(instance)
-            }
-
-            // we need to send this work (cache.end()) back to the main thread
-            val future = CompletableFuture<Boolean>()
+            // once again, we have to call back to the main thread
+            val future = CompletableFuture<ModelInstance>()
             val runnable = Runnable {
-                cache.end()
-                future.complete(true)
+                future.complete(ModelInstance(model))
             }
             SimulationScreen.addWork(runnable)
-            future.get()
-        } catch (e: Exception) {
-            Logger.error(e)
-            Gdx.app.exit()
+            val instance = future.get()
+
+            // our models are centred about the origin (hopefully), so we need to translate it to the building
+            // coords
+            val centroid = building.polygon.getCentroid(Vector2())
+            val atlasPos = AtlasUtils.latLongToAtlas(centroid)
+            instance.transform.translate(atlasPos.x, 0f, atlasPos.y)
+            instance.calculateTransforms()
+            cache.add(instance)
         }
+
+        // we need to send this work (cache.end()) back to the main thread
+        val future = CompletableFuture<Boolean>()
+        val runnable = Runnable {
+            cache.end()
+            future.complete(true)
+        }
+        SimulationScreen.addWork(runnable)
+        future.get()
         Logger.warn("Processing buildings ${buildings.hashCode()} took ${(System.nanoTime() - begin) / 1e6} ms")
         return cache
     }

@@ -262,7 +262,7 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
         var workIdx = 0
         synchronized(WORK_QUEUE) {
             var item = WORK_QUEUE.poll()
-            while (item != null && workIdx < WORK_PER_FRAME) {
+            while (item != null && workIdx < graphics.workPerFrame) {
                 item.run()
                 item = WORK_QUEUE.poll()
                 workIdx++
@@ -421,9 +421,6 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
          * by default due to the stupid way in which I pull items off the queue.
          */
         private val WORK_QUEUE = LinkedList<Runnable>()
-
-        /** Number of items from [WORK_QUEUE] to process per frame */
-        private const val WORK_PER_FRAME = 50
 
         /** Absolute max number of items in the work queue to prevent RAM from filling up */
         private const val WORK_QUEUE_ABSOLUTE_MAX = 8192
