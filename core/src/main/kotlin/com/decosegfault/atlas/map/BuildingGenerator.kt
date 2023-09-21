@@ -1,9 +1,7 @@
 package com.decosegfault.atlas.map
 
-import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.GL20
-import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.graphics.VertexAttributes
 import com.badlogic.gdx.graphics.g3d.Material
 import com.badlogic.gdx.graphics.g3d.Model
@@ -18,17 +16,14 @@ import com.badlogic.gdx.utils.Disposable
 import com.decosegfault.atlas.screens.SimulationScreen
 import com.decosegfault.atlas.util.AtlasUtils
 import com.decosegfault.atlas.util.Triangle
+import io.github.sebasbaumh.postgis.MultiPolygon
 import io.github.sebasbaumh.postgis.PGgeometry
+import io.github.sebasbaumh.postgis.Polygon
 import net.mgsx.gltf.scene3d.attributes.PBRColorAttribute
 import org.postgresql.PGConnection
 import org.postgresql.geometric.PGpolygon
 import org.tinylog.kotlin.Logger
-import java.lang.Error
-import java.lang.Exception
-import java.lang.IllegalStateException
-import java.sql.Connection
 import java.sql.DriverManager
-import java.sql.PreparedStatement
 import java.sql.SQLException
 import java.util.concurrent.CompletableFuture
 
@@ -83,17 +78,23 @@ class BuildingGenerator : Disposable {
 //                Logger.debug("ID: $id, geom: $geometry, floors: $floors")
 
                 // convert PostGIS polygon to libGDX Polygon
-                val pgPolygon = geometry.geometry as io.github.sebasbaumh.postgis.Polygon
+                if (geometry.geometry !is Polygon) {
+                    Logger.error("PostGIS gave us unsupported geometry: ${geometry.geometry} ${geometry.geometry?.javaClass}")
+                    return hashSetOf()
+                }
+                val pgPolygon = geometry.geometry as Polygon
                 val vertices = mutableListOf<Float>()
                 for (point in pgPolygon.coordinates) {
-                    vertices.add(point.x.toFloat())
+                    // note y/x ordering as PostGIS uses long/lat whereas we use lat/long
                     vertices.add(point.y.toFloat())
+                    vertices.add(point.x.toFloat())
                 }
 
-                // convert libGDX polygon to building
+                // convert libGDX polygon to building (also convert from WGS84 lat/long to long/lat)
                 val gdxPolygon = com.badlogic.gdx.math.Polygon(vertices.toFloatArray())
                 val building = Building(id, gdxPolygon, floors)
-                building.normalise()
+                // convert in place to Atlas coords from WGS84
+                building.toAtlas()
                 buildings.add(building)
             }
         } catch (e: SQLException) {
@@ -119,7 +120,7 @@ class BuildingGenerator : Disposable {
         // we need to send this work (modelBuilder.end()) back to the main thread
         val future = CompletableFuture<Model>()
         val runnable = Runnable {
-            BoxShapeBuilder.build(mpb, 5f, height, 5f)
+            BoxShapeBuilder.build(mpb, 100f, height, 100f)
             future.complete(modelBuilder.end())
         }
         SimulationScreen.addWork(runnable)
@@ -155,12 +156,16 @@ class BuildingGenerator : Disposable {
             SimulationScreen.addWork(runnable)
             val instance = future.get()
 
-            // our models are centred about the origin (hopefully), so we need to translate it to the building
-            // coords
-            val centroid = building.polygon.getCentroid(Vector2())
-            val atlasPos = AtlasUtils.latLongToAtlas(centroid)
-            instance.transform.translate(atlasPos.x, 0f, atlasPos.y)
+            // we DON'T translate the building, we centre it about the origin and translate the VERTICES
+            // yes this is stupid as fuck
+            // no I DON't care!!!!
+
+            // testing ONLY
+            val centroid = triangles[0].centroid()
+            instance.transform.translate(centroid.x, 0f, centroid.y)
             instance.calculateTransforms()
+
+//            Logger.debug("Adding building ${building.osmId} at centroid ${building.polygon.getCentroid(Vector2())}")
             cache.add(instance)
         }
 

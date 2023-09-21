@@ -1,11 +1,12 @@
 package com.decosegfault.atlas.map
 
-import com.badlogic.gdx.math.DelaunayTriangulator
 import com.badlogic.gdx.math.EarClippingTriangulator
 import com.badlogic.gdx.math.Polygon
 import com.badlogic.gdx.math.Vector2
+import com.decosegfault.atlas.util.AtlasUtils
 import com.decosegfault.atlas.util.Triangle
 import org.tinylog.kotlin.Logger
+import java.lang.IllegalStateException
 
 /**
  * An OpenStreetMap building
@@ -25,9 +26,12 @@ data class Building(
     // on Westfield Chermside lmao (OSM ID 10072620)
     private val triangulator = EarClippingTriangulator()
 //    private val triangulator = DelaunayTriangulator()
+    private var isAtlas = false
 
     /** Triangulates the polygon [polygon] in this building */
     fun triangulate(): List<Triangle> {
+        if (!isAtlas) throw IllegalStateException("Must be in Atlas coords")
+
         val indices = triangulator.computeTriangles(polygon.transformedVertices, 0, polygon.transformedVertices.size)
         val out = mutableListOf<Triangle>()
 
@@ -50,12 +54,18 @@ data class Building(
         return out
     }
 
-    /** Translates the polygon floor plan to be about the origin by first calculating the centroid */
-    fun normalise() {
-        val centroid = polygon.getCentroid(Vector2())
-        polygon.translate(-centroid.x, -centroid.y)
-        // attempt to force an update of transformed vertices
-        polygon.transformedVertices
+    /** Converts WGS84 lat/long vertex coords (in that order) to Atlas */
+    fun toAtlas() {
+        if (isAtlas) throw IllegalStateException("Already in Atlas coords")
+
+        for (i in 0 until polygon.vertexCount) {
+            val vertex = polygon.getVertex(i, Vector2())
+            // at this point, we were already transformed into lat/long, we just need to convert to Atlas coords
+            val atlasCoord = AtlasUtils.latLongToAtlas(vertex)
+            polygon.setVertex(i, atlasCoord.x, atlasCoord.y)
+        }
+
+        isAtlas = true
     }
 
     // compare and hashcode both use just the osmId, which should be unique, for performance

@@ -122,6 +122,7 @@ class BuildingChunk(val x: Float, val z: Float, val size: Float) {
         if (didCull) return
         render.color = if (didUseSubChunk) Color.GREEN else Color.BLUE
         render.box(bbox.min.x, bbox.min.y, bbox.max.z, bbox.width, bbox.height, bbox.depth)
+        // TODO draw bbox of buildings
     }
 
     fun getBuildingCache(): ModelCache? {
