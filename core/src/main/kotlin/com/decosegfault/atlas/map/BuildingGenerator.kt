@@ -109,7 +109,7 @@ class BuildingGenerator : Disposable {
      * Extrudes the given triangulated base of a building into a 3D model
      * @param height height in metres
      */
-    private fun extrudeToModel(tris: List<Triangle>, height: Float): Model {
+    private fun extrudeToModel(building: Building, tris: List<Triangle>, height: Float): Model {
         val modelBuilder = ModelBuilder()
         modelBuilder.begin()
         val mpb = modelBuilder.part(
@@ -117,10 +117,19 @@ class BuildingGenerator : Disposable {
             VertexAttributes.Usage.Position.toLong() or VertexAttributes.Usage.Normal.toLong(),
             BUILDING_MATERIAL
         )
+
+        // extrude each triangle into a prism
+        for (tri in tris) {
+            tri.extrudeUpToPrismMesh(mpb, height)
+//            println(tri.dumpAsWgs84Wkt())
+        }
+
         // we need to send this work (modelBuilder.end()) back to the main thread
         val future = CompletableFuture<Model>()
         val runnable = Runnable {
-            BoxShapeBuilder.build(mpb, 100f, height, 100f)
+            // testing only (draw as bounding rectangle instead of polygon)
+//            val rect = building.polygon.boundingRectangle
+//            BoxShapeBuilder.build(mpb, rect.x, 0f, rect.y, rect.width, height, rect.height)
             future.complete(modelBuilder.end())
         }
         SimulationScreen.addWork(runnable)
@@ -146,7 +155,7 @@ class BuildingGenerator : Disposable {
             val height = MathUtils.clamp(building.floors.toFloat(), 1f, MAX_STOREYS) * STOREY_HEIGHT
 
             // extrude the triangulation into a 3D model and insert into cache
-            val model = extrudeToModel(triangles, height) // FIXME: memory leak here (need to free model)
+            val model = extrudeToModel(building, triangles, height) // FIXME: memory leak here (need to free model)
 
             // once again, we have to call back to the main thread
             val future = CompletableFuture<ModelInstance>()
@@ -157,13 +166,12 @@ class BuildingGenerator : Disposable {
             val instance = future.get()
 
             // we DON'T translate the building, we centre it about the origin and translate the VERTICES
-            // yes this is stupid as fuck
-            // no I DON't care!!!!
+            // this is kind of stupid, but it ensures accurate positioning
 
             // testing ONLY
-            val centroid = triangles[0].centroid()
-            instance.transform.translate(centroid.x, 0f, centroid.y)
-            instance.calculateTransforms()
+//            val centroid = triangles[0].centroid()
+//            instance.transform.translate(centroid.x, 0f, centroid.y)
+//            instance.calculateTransforms()
 
 //            Logger.debug("Adding building ${building.osmId} at centroid ${building.polygon.getCentroid(Vector2())}")
             cache.add(instance)

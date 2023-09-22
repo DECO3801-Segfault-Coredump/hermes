@@ -43,9 +43,9 @@ data class Building(
             val i3 = indices[i + 2]
 
             // construct points from vertices (x is +0, y is +1)
-            val v1 = Vector2(polygon.transformedVertices[i1 + 0], polygon.transformedVertices[i1 + 1])
-            val v2 = Vector2(polygon.transformedVertices[i2 + 0], polygon.transformedVertices[i2 + 1])
-            val v3 = Vector2(polygon.transformedVertices[i3 + 0], polygon.transformedVertices[i3 + 1])
+            val v1 = polygon.getVertex(i1.toInt(), Vector2())
+            val v2 = polygon.getVertex(i2.toInt(), Vector2())
+            val v3 = polygon.getVertex(i3.toInt(), Vector2())
             val triangle = Triangle(v1, v2, v3)
             out.add(triangle)
 
