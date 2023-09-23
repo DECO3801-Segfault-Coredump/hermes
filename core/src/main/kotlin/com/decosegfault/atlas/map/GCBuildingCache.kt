@@ -7,8 +7,12 @@ import com.decosegfault.atlas.util.AbstractGarbageCollectedCache
 import org.tinylog.kotlin.Logger
 import java.util.concurrent.ConcurrentHashMap
 
-/** **Soft** limit of buildings */
-private const val MAX_BUILDINGS_RAM = 1024.0
+/**
+ * **Soft** limit of buildings.
+ * HACK: Disposing building meshes is too hard, and the chunks are large enough, so we will just never
+ * dispose buildings.
+ */
+private const val MAX_BUILDINGS_RAM = Double.MAX_VALUE
 
 /** If the cache is this% full, start trying to evict items */
 private const val START_GC_THRESHOLD = 0.90

@@ -2,6 +2,7 @@ package com.decosegfault.atlas.map
 
 import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.GL20
+import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.graphics.VertexAttributes
 import com.badlogic.gdx.graphics.g3d.Material
 import com.badlogic.gdx.graphics.g3d.Model
@@ -14,12 +15,14 @@ import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.math.Vector3
 import com.badlogic.gdx.utils.Disposable
 import com.decosegfault.atlas.screens.SimulationScreen
+import com.decosegfault.atlas.util.Assets.ASSETS
 import com.decosegfault.atlas.util.AtlasUtils
 import com.decosegfault.atlas.util.Triangle
 import io.github.sebasbaumh.postgis.MultiPolygon
 import io.github.sebasbaumh.postgis.PGgeometry
 import io.github.sebasbaumh.postgis.Polygon
 import net.mgsx.gltf.scene3d.attributes.PBRColorAttribute
+import net.mgsx.gltf.scene3d.attributes.PBRTextureAttribute
 import org.postgresql.PGConnection
 import org.postgresql.geometric.PGpolygon
 import org.tinylog.kotlin.Logger
@@ -114,7 +117,8 @@ class BuildingGenerator : Disposable {
         modelBuilder.begin()
         val mpb = modelBuilder.part(
             "building", GL20.GL_TRIANGLES,
-            VertexAttributes.Usage.Position.toLong() or VertexAttributes.Usage.Normal.toLong(),
+            VertexAttributes.Usage.Position.toLong() or VertexAttributes.Usage.Normal.toLong()
+            or VertexAttributes.Usage.TextureCoordinates.toLong(),
             BUILDING_MATERIAL
         )
 
@@ -142,7 +146,6 @@ class BuildingGenerator : Disposable {
      */
     fun generateBuildingChunk(buildings: Set<Building>): ModelCache {
         val begin = System.nanoTime()
-        Logger.warn("Starting generating buildings ${buildings.hashCode()}")
         val cache = ModelCache()
         cache.begin()
 
@@ -185,7 +188,7 @@ class BuildingGenerator : Disposable {
         }
         SimulationScreen.addWork(runnable)
         future.get()
-        Logger.warn("Processing buildings ${buildings.hashCode()} took ${(System.nanoTime() - begin) / 1e6} ms")
+        Logger.debug("Processing buildings ${buildings.hashCode()} took ${(System.nanoTime() - begin) / 1e6} ms")
         return cache
     }
 
@@ -208,7 +211,7 @@ class BuildingGenerator : Disposable {
         private const val WEB_MERCATOR_ID = 3857
 
         /** Approximate height in metres of one storey. Source: https://en.wikipedia.org/wiki/Storey#Overview */
-        private const val STOREY_HEIGHT = 4.3f
+        private const val STOREY_HEIGHT = 4.3f * 3f
 
         /**
          * The tallest building in Brisbane is currently the Brisbane Skytower which is 90 storeys tall.
@@ -230,10 +233,11 @@ class BuildingGenerator : Disposable {
         |AND building IS NOT NULL;
         """.trimMargin()
 
-        private val BUILDING_COLOUR = Color.LIGHT_GRAY
+        private val BUILDING_COLOUR = Color.WHITE
 
         private val BUILDING_MATERIAL = Material().apply {
             set(PBRColorAttribute.createBaseColorFactor(BUILDING_COLOUR))
+//            set(PBRTextureAttribute.createBaseColorTexture(ASSETS["sprite/blocks1.jpg", Texture::class.java]))
         }
     }
 }

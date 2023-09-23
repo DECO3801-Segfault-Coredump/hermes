@@ -81,12 +81,4 @@ data class Building(
     override fun hashCode(): Int {
         return osmId.hashCode()
     }
-
-    companion object {
-        /**
-         * Some buildings seem to triangulate incorrectly and produce too many vertices. If the triangulation
-         * is above this threshold, the building is skipped.
-         */
-        private val MAX_VERTS = 1024
-    }
 }

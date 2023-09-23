@@ -49,32 +49,28 @@ data class Triangle(
         // generate vertices as per the article
         mpb.ensureVertices(7)
         mpb.ensureTriangleIndices(7)
-        val i1 = mpb.vertex(i1V, null, null, null)
-        val i2 = mpb.vertex(i2V, null, null, null)
-        val i3 = mpb.vertex(i3V, null, null, null)
-        val n1 = mpb.vertex(n1V, null, null, null)
-        val n2 = mpb.vertex(n2V, null, null, null)
-        val n3 = mpb.vertex(n3V, null, null, null)
+        val i1 = mpb.vertex(i1V, Vector3.Y, null, null)
+        val i2 = mpb.vertex(i2V, Vector3.Y, null, null)
+        val i3 = mpb.vertex(i3V, Vector3.Y, null, null)
+        val n1 = mpb.vertex(n1V, Vector3.Y, null, null)
+        val n2 = mpb.vertex(n2V, Vector3.Y, null, null)
+        val n3 = mpb.vertex(n3V, Vector3.Y, null, null)
 
-        // libGDX appears to use clockwise vertex ordering?
-        // whereas the article uses CCW ordering
-        // so we reverse everything
+        // these are all the vertices from the blog
+        // this actually seems all correct except for the roof
+        // side note though it allows you to see how the triangles are constructed!
+        mpb.triangle(n1, n3, n2)
+        mpb.triangle(n1, i1, n2)
+        mpb.triangle(n2, i1, i2)
+        mpb.triangle(n3, n2, i2)
+        mpb.triangle(n3, i2, i3)
+        mpb.triangle(n3, i3, i1)
+        mpb.triangle(n3, i1, n1)
 
-        // FIXME these vertices aren't completely correct
-
-        // top
+        // top v2 (this is just top but with CW vertex ordering rather than CCW)
+        // if you remove this, you can see through the roof to debug the building triangulation!
         mpb.triangle(n2, n3, n1)
 
-        // side 1
-        mpb.triangle(n2, i1, n1)
-        mpb.triangle(i2, i1, n2)
-
-        // side 2
-        mpb.triangle(i2, n2, n3)
-        mpb.triangle(i3, i2, n3)
-
-        // side 3
-        mpb.triangle(i1, i3, n3)
-        mpb.triangle(n1, i1, n3)
+        // it works!!!!!!!
     }
 }
