@@ -51,6 +51,18 @@ public class LiveDataFeed {
         return vehiclesList;
     }
 
+
+
+    public static GtfsRealtime.FeedMessage getLiveDataFeed() {
+        GtfsRealtime.FeedMessage feed;
+        try {
+            feed = GtfsRealtime.FeedMessage.parseFrom(vehiclesURL.openStream());
+        } catch (IOException e) {
+            throw new RuntimeException();
+        }
+        return feed;
+    }
+
     /**
      * Retrieves relevant vehicle data from live data feed and stores as VehicleData
      * instances in vehiclesList
@@ -75,8 +87,8 @@ public class LiveDataFeed {
         Vector3 vehiclePosition = new Vector3();
         float latitude = entity.getVehicle().getPosition().getLatitude();
         float longitude = entity.getVehicle().getPosition().getLongitude();
-        vehiclePosition.add(latitude);
-        vehiclePosition.add(longitude);
+        vehiclePosition.x = latitude;
+        vehiclePosition.y = longitude;
         return vehiclePosition;
     }
 }

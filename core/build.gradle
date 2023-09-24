@@ -1,6 +1,10 @@
 [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
 eclipse.project.name = appName + '-core'
 
+repositories {
+  maven { url "https://repo.camsys-apps.com/releases/" }
+}
+
 dependencies {
   api "com.badlogicgames.gdx:gdx-ai:$aiVersion"
   api "com.badlogicgames.gdx:gdx-freetype:$gdxVersion"
@@ -28,12 +32,20 @@ dependencies {
 
   api 'org.tinylog:tinylog-api-kotlin:2.6.1'
   api 'org.tinylog:tinylog-impl:2.6.2'
-  api 'com.github.OneBusAway:onebusaway-gtfs-modules:onebusaway-gtfs-modules-1.2.6'
-  api 'org.slf4j:slf4j-log4j12:1.7.29'
+  api 'org.onebusaway:onebusaway-gtfs:1.3.88'
+  api 'org.tinylog:slf4j-tinylog:2.6.2'
   api "com.github.mgsx-dev.gdx-gltf:gltf:7d70839067ead66ec6107bc1be8c060c7c0fc7aa"
-  api "com.github.ben-manes.caffeine:caffeine:3.1.8"
-  // https://mvnrepository.com/artifact/org.onebusaway/onebusaway-gtfs-realtime-api
+  api 'com.google.guava:guava:32.1.2-jre'
+  api 'io.github.sebasbaumh:postgis-java-ng:23.2.0'
+  api 'org.postgresql:postgresql:42.6.0'
   api 'org.onebusaway:onebusaway-gtfs-realtime-api:1.2.0'
+  api 'io.socket:engine.io-server:6.2.1'
+  api 'com.google.code.gson:gson:2.10.1'
+  api 'jakarta.websocket:jakarta.websocket-api:2.1.1'
+  api 'org.eclipse.jetty.websocket:javax-websocket-server-impl:9.4.52.v20230823'
+  api 'org.eclipse.jetty.websocket:websocket-javax-server:10.0.16'
+
+
 
 //  api "com.esotericsoftware.yamlbeans:yamlbeans:1.15"
 

@@ -4,16 +4,18 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.files.FileHandle;
+import com.decosegfault.hermes.frontend.FrontendData;
+import com.decosegfault.hermes.frontend.FrontendEndpoint;
+import com.decosegfault.hermes.frontend.FrontendServer;
 import com.decosegfault.hermes.types.SimType;
 import org.onebusaway.gtfs.impl.GtfsDaoImpl;
 import org.onebusaway.gtfs.model.*;
 import org.tinylog.Logger;
+import com.decosegfault.atlas.render.AtlasVehicle;
 
-import org.onebusaway.csv_entities.EntityHandler;
 import org.onebusaway.gtfs.serialization.GtfsReader;
-import com.decosegfault.hermes.data.RouteData;
 import com.decosegfault.hermes.data.TripData;
-import com.decosegfault.hermes.types.SimType;
 import org.onebusaway.gtfs.model.Route;
 import org.onebusaway.gtfs.model.Trip;
 
@@ -21,11 +23,13 @@ import java.io.IOException;
 
 /**
  * @author Lachlan Ellis
+ * @author Matt Young
  */
-
 public class HermesSim {
 
-    public static Map<VehicleData, AtlasVehicle> vehicleMap = new Hashmap<VehicleData, AtlasVehicle>();
+    private static FrontendServer server = new FrontendServer();
+
+    public static Map<String, AtlasVehicle> vehicleMap = new HashMap<>();
 
     /** time of day will be in seconds, max 86400 (one day) before looping back to 0 */
     static int time;
@@ -38,7 +42,14 @@ public class HermesSim {
      * in sim mode, moves vehicles at a set speed based on tick speed.
      */
     public static void tick() {
+        if (RouteHandler.simType == SimType.LIVE) {
+            // @Ellis
+        }
 
+        // transmit data to the frontend
+        FrontendData data = new FrontendData();
+        data.setRouteLongName("fuck you");
+        FrontendEndpoint.broadcast(data);
     }
 
     /**
@@ -54,19 +65,32 @@ public class HermesSim {
         //RouteHandler.logRoutes();
         //RouteHandler.logTrips();
         //RouteHandler.logShapes();
-	for (TripData trip : tripsByShape.values()) {
-	    vehicleMap.put(trip.vehicle, null);
+        Logger.info("Linking Hermes-Atlas vehicles");
+	    for (TripData trip : RouteHandler.tripsByShape.values()) {
+	        if (trip.vehicle == null || trip.vehicle.vehicleType == null) {
+                Logger.warn("Null trip vehicle! {} {}", trip.routeName, trip.routeID);
+                continue;
+            }
+	        var vehicle = AtlasVehicle.Companion.createFromHermes(trip.vehicle.vehicleType);
+	        vehicleMap.put(trip.routeID, vehicle);
         }
         Logger.info("GTFS Data Loaded");
 
-	// something like
-	//Atlas.generateVehicles()
+        Logger.info("Starting frontend server");
+        server.start();
     }
 
     public static void read()  {
         GtfsReader reader = new GtfsReader();
         try {
-            reader.setInputLocation(Gdx.files.internal("hermes/gtfs.zip").file());
+            // gtfs.zip is internal, extract it to /tmp so that the file reader can read it
+            FileHandle tmpPath = Gdx.files.external(System.getProperty("java.io.tmpdir") + "/DECOSegfault_hermes_gtfs.zip");
+            Logger.info("Copying Hermes gtfs.zip to " + tmpPath.path());
+
+            FileHandle gtfsZip = Gdx.files.internal("hermes/gtfs.zip");
+            gtfsZip.copyTo(tmpPath);
+
+            reader.setInputLocation(tmpPath.file());
         } catch (IOException noFile) {
             throw new IllegalArgumentException(noFile);
         }
@@ -112,6 +136,10 @@ public class HermesSim {
             RouteHandler.addShape(element);
         }
 
+    }
+
+    public static void shutdown() {
+        server.stop();
     }
 
 //    private static class GtfsEntityHandler implements EntityHandler {

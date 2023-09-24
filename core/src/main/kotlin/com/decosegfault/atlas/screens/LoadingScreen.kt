@@ -13,8 +13,11 @@ import com.badlogic.gdx.scenes.scene2d.ui.Label
 import com.badlogic.gdx.scenes.scene2d.ui.Skin
 import com.badlogic.gdx.scenes.scene2d.ui.Table
 import com.badlogic.gdx.utils.viewport.ScreenViewport
+import com.decosegfault.atlas.map.BuildingGenerator
+import com.decosegfault.atlas.map.GCTileCache
 import com.decosegfault.atlas.map.TileServerManager
 import com.decosegfault.atlas.util.Assets
+import com.decosegfault.atlas.util.AtlasUtils
 import com.decosegfault.atlas.util.ImageAnimation
 import com.decosegfault.hermes.HermesSim
 import com.decosegfault.hermes.types.SimType
@@ -24,7 +27,7 @@ import kotlin.concurrent.thread
 import kotlin.math.roundToInt
 
 /**
- * Loading screen for the application. This class is based on my (Matt)'s previous work:
+ * Loading screen for the application. This class is partially based on my (Matt)'s previous work:
  * https://github.com/UQRacing/gazilla/blob/master/core/src/main/kotlin/com/uqracing/gazilla/client/screens/LoadingScreen.kt
  *
  * @author Matt Young
@@ -48,6 +51,7 @@ class LoadingScreen(private val game: Game) : ScreenAdapter() {
     private var time = 0f
 
     override fun show() {
+        GCTileCache.init()
         skin = Skin(Gdx.files.internal("ui/uiskin.json"))
         stage = Stage(ScreenViewport())
         loadingGif = TextureAtlas(Gdx.files.internal("sprite/whatdadogdoin.atlas"))
@@ -70,10 +74,8 @@ class LoadingScreen(private val game: Game) : ScreenAdapter() {
 
         stage.addActor(container)
 
-        HermesSim.load(SimType.HISTORY)
-
         // run checks outside of render loop so we don't block render
-        thread(isDaemon = true) {
+        thread(isDaemon = true, name="LoadWorker") {
             // Start tile server
             TileServerManager.maybeStartTileServer()
             currentStage = LoadingStage.CHECKING_CONNECTIVITY
@@ -83,6 +85,7 @@ class LoadingScreen(private val game: Game) : ScreenAdapter() {
             while (!TileServerManager.pollTileServer()) {
                 Thread.sleep(1000)
             }
+            BuildingGenerator.connect()
             Thread.sleep(500)
 
             // 3D assets will now load in main thread
@@ -95,9 +98,11 @@ class LoadingScreen(private val game: Game) : ScreenAdapter() {
 
     /** Launches a thread which starts Hermes */
     private fun startHermes() {
-        thread(isDaemon = true) {
+        thread(isDaemon = true, name = "StartHermes") {
             // temporary
-            Thread.sleep(1000)
+            Logger.info("Starting Hermes")
+            val simType = AtlasUtils.readHermesPreset()
+            HermesSim.load(simType)
             currentStage = LoadingStage.DONE
         }
     }

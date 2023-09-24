@@ -14,7 +14,7 @@ public class TripData {
     public String routeID;
     public String routeName;
     public List<Vector3> routeMap =  new ArrayList<Vector3>();
-    VehicleData vehicle;
+    public VehicleData vehicle;
     List<StopData> stopList = new ArrayList<StopData>();
     int startTime;
     /** optional, only used in history mode */
