@@ -105,12 +105,43 @@ object AtlasUtils {
      * Converts lat/long coords into Atlas coords
      * **suitable for calling AtlasVehicle.updateTransform**
      *
-     * @param   latLong Vector containing latitude, longitude to find x,y pixel coords for.
+     * @param latLong   Vector containing latitude, longitude to find x,y pixel coords for.
      * @return Vector with x,y pixel coords for latLong, with z same as latLong param.
      */
     fun latLongToAtlas(latLong: Vector3): Vector3 {
         val coords = latLongZoomToSlippyCoord(Vector3(latLong.x, latLong.y, PIXEL_ZOOM))
         coords.z = latLong.z
         return coords.sub(MAP_CENTRE_SLIPPY)
+    }
+
+    /**
+     * @see [latLongToAtlas]
+     */
+    fun latLongToAtlas(latLong: Vector2): Vector2 {
+        val coords = latLongZoomToSlippyCoord(Vector3(latLong.x, latLong.y, PIXEL_ZOOM))
+        coords.sub(MAP_CENTRE_SLIPPY)
+        return Vector2(coords.x, coords.y)
+    }
+
+    /**
+     * Converts Atlas coords into lat/long coords.
+     *
+     * @param atlasCoords   Vector with x,y pixel coords for latLong, with z same as latLong param.
+     * @return Vector containing latitude, longitude to find x,y pixel coords for.
+     */
+    fun atlasToLatLong(atlasCoords: Vector3): Vector3 {
+        val coords = Vector3(atlasCoords).add(MAP_CENTRE_SLIPPY)
+        val latLong = slippyCoordToLatLongZoom(Vector3(coords.x, coords.y, PIXEL_ZOOM))
+        latLong.z = coords.z
+        return latLong
+    }
+
+    /**
+     * @see [atlasToLatLong]
+     */
+    fun atlasToLatLong(atlasCoords: Vector2): Vector2 {
+        val coords = Vector2(atlasCoords).add(Vector2(MAP_CENTRE_SLIPPY.x, MAP_CENTRE_SLIPPY.y))
+        val latLong = slippyCoordToLatLongZoom(Vector3(coords.x, coords.y, PIXEL_ZOOM))
+        return Vector2(latLong.x, latLong.y)
     }
 }

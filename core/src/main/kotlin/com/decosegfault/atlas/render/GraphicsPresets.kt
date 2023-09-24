@@ -26,6 +26,7 @@ object GraphicsPresets {
         anisotropic=1.0f,
         msaa=0,
         shadows=false,
+        workPerFrame=1,
     )
 
     private val standard = GraphicsPreset(
@@ -37,6 +38,7 @@ object GraphicsPresets {
         anisotropic=8.0f,
         msaa=4,
         shadows=false,
+        workPerFrame=20,
     )
 
     private val itRunsCrysis = GraphicsPreset(
@@ -48,6 +50,7 @@ object GraphicsPresets {
         anisotropic=16.0f,
         msaa=8,
         shadows=false,
+        workPerFrame=50,
     )
 
     private val nasaSupercomputer = GraphicsPreset(
@@ -59,6 +62,7 @@ object GraphicsPresets {
         anisotropic=64.0f, // this is insane lmao
         msaa=64, // wtf
         shadows=true,
+        workPerFrame=Int.MAX_VALUE,
     )
 
     private val presets = listOf(genuinePotato, standard, itRunsCrysis, nasaSupercomputer)

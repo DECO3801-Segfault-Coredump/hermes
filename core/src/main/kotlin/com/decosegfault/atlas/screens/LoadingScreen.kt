@@ -82,7 +82,6 @@ class LoadingScreen(private val game: Game) : ScreenAdapter() {
             while (!TileServerManager.pollTileServer()) {
                 Thread.sleep(1000)
             }
-            BuildingGenerator.connect()
             Thread.sleep(500)
 
             // 3D assets will now load in main thread
@@ -98,7 +97,6 @@ class LoadingScreen(private val game: Game) : ScreenAdapter() {
         thread(isDaemon = true, name = "StartHermes") {
             // temporary
             Logger.info("Starting Hermes")
-            Thread.sleep(1000)
             currentStage = LoadingStage.DONE
         }
     }

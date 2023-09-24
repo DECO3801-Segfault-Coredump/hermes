@@ -9,6 +9,7 @@ package com.decosegfault.atlas.render
  * @param anisotropic Number of texture anisotropic filtering samples
  * @param msaa MSAA samples
  * @param shadows true/false should shadows be rendered
+ * @param workPerFrame number of items from SimulationScreen.WORK_QUEUE to process per frame
  * @author Matt Young
  */
 data class GraphicsPreset(
@@ -24,4 +25,6 @@ data class GraphicsPreset(
     var msaa: Int,
 
     var shadows: Boolean,
+
+    var workPerFrame: Int,
 )
