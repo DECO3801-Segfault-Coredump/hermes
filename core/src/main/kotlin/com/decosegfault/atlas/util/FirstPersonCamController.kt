@@ -25,7 +25,7 @@ class FirstPersonCamController(private val cam: PerspectiveCamera) : InputAdapte
     private val pointerSpeed = 1.6f
     private val speed = 300f // units per second
     private val boostFactor = 4f
-    private val minHeight = 5f
+    private val minHeight = 1f
     private val maxHeight = 8000f
     val quat = Quaternion()
 

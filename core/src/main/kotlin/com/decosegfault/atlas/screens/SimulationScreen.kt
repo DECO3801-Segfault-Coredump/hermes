@@ -4,10 +4,12 @@ import com.badlogic.gdx.*
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3ApplicationConfiguration
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Graphics
 import com.badlogic.gdx.graphics.*
+import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.gdx.graphics.g3d.decals.CameraGroupStrategy
 import com.badlogic.gdx.graphics.g3d.decals.DecalBatch
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import com.badlogic.gdx.graphics.profiling.GLProfiler
+import com.badlogic.gdx.math.Vector3
 import com.badlogic.gdx.scenes.scene2d.Stage
 import com.badlogic.gdx.scenes.scene2d.ui.Image
 import com.badlogic.gdx.scenes.scene2d.ui.Label
@@ -15,19 +17,22 @@ import com.badlogic.gdx.scenes.scene2d.ui.Skin
 import com.badlogic.gdx.scenes.scene2d.ui.Table
 import com.badlogic.gdx.utils.viewport.ExtendViewport
 import com.badlogic.gdx.utils.viewport.FitViewport
-import com.decosegfault.atlas.map.AtlasTileManager
+import com.decosegfault.atlas.map.BuildingManager
+import com.decosegfault.atlas.map.GCBuildingCache
+import com.decosegfault.atlas.map.TileManager
 import com.decosegfault.atlas.map.GCTileCache
 import com.decosegfault.atlas.render.*
 import com.decosegfault.atlas.util.Assets
 import com.decosegfault.atlas.util.Assets.ASSETS
 import com.decosegfault.atlas.util.FirstPersonCamController
-import com.decosegfault.hermes.HermesSim
+import com.decosegfault.hermes.VehicleType
 import com.google.common.util.concurrent.ThreadFactoryBuilder
 import ktx.app.clearScreen
 import net.mgsx.gltf.scene3d.attributes.PBRCubemapAttribute
 import net.mgsx.gltf.scene3d.attributes.PBRTextureAttribute
 import net.mgsx.gltf.scene3d.lights.DirectionalLightEx
 import net.mgsx.gltf.scene3d.lights.DirectionalShadowLight
+import net.mgsx.gltf.scene3d.scene.SceneAsset
 import net.mgsx.gltf.scene3d.scene.SceneSkybox
 import net.mgsx.gltf.scene3d.utils.IBLBuilder
 import org.tinylog.kotlin.Logger
@@ -35,11 +40,13 @@ import java.util.*
 import java.util.concurrent.*
 import kotlin.math.max
 import kotlin.math.roundToInt
+import kotlin.random.Random
 
 /**
  * Implements the main screen for rendering the simulation
  *
  * @author Matt Young
+ * @author Henry Batt
  */
 class SimulationScreen(private val game: Game) : ScreenAdapter() {
     private val graphics = GraphicsPresets.getSavedGraphicsPreset()
@@ -86,6 +93,12 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
     /** Debug shape renderer */
     private val shapeRender = ShapeRenderer()
 
+    /** Vehicles for benchmark, in future this will be from Hermes */
+    private val vehicles = mutableListOf<AtlasVehicle>()
+
+    /** Counter for when to move vehicles */
+    private var debugCounter = 0.0f
+
     /** True if vehicles should move in benchmark */
     private var shouldVehiclesMove = true
 
@@ -97,11 +110,15 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
         ThreadFactoryBuilder().setNameFormat("Hermes").build()
     )
 
-    private val atlasTileManager = AtlasTileManager()
+    private val tileManager = TileManager()
+
+    private val buildingManager = BuildingManager()
+
+    private val skin = ASSETS["ui/uiskin.json", Skin::class.java]
+
+    private val batch = SpriteBatch()
 
     private fun createTextUI() {
-        val skin = ASSETS["ui/uiskin.json", Skin::class.java]
-
         // hack to use linear scaling instead of nearest neighbour for text
         // makes the text slightly less ugly, but ideally we should use FreeType
         // https://stackoverflow.com/a/33633682/5007892
@@ -128,7 +145,7 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
         container.pad(10f)
         container.add(debugLabel)
         container.setFillParent(true)
-        container.bottom().left()
+        container.top().left()
         container.pack()
 
         // add a label saying "(c) OpenStreetMap contributors" in the bottom right corner to comply with
@@ -177,7 +194,8 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
         sceneManager.skyBox = SceneSkybox(environmentCubemap)
 
         // setup ground plane tile manager
-        sceneManager.setAtlasTileManager(atlasTileManager)
+        sceneManager.setTileManager(tileManager)
+        sceneManager.setBuildingManager(buildingManager)
 
         // setup decal batch for rendering
         sceneManager.decalBatch = DecalBatch(CameraGroupStrategy(cam))
@@ -190,10 +208,25 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
         Logger.info("GL version: ${v.majorVersion}.${v.minorVersion}.${v.releaseVersion} vendor: ${v.vendorString} renderer: ${v.rendererString}")
     }
 
+    private fun constructBenchmarkScene() {
+        Logger.debug("Construct test scene")
+        vehicles.clear()
+        for (i in 0..200) {
+            val modelName = listOf("bus", "train", "ferry").random()
+            val modelLow = ASSETS["atlas/${modelName}_low.glb", SceneAsset::class.java]
+            val modelHigh = ASSETS["atlas/${modelName}_high.glb", SceneAsset::class.java]
+            val vehicle = AtlasVehicle(modelHigh, modelLow, if (modelName == "train") VehicleType.TRAIN else VehicleType.BUS)
+            vehicle.updateTransform(Vector3.Zero)
+            vehicles.add(vehicle)
+        }
+    }
+
     private fun initialiseHermes() {
+        // Hermes.init()
+
         // tell Hermes to tick every 100 ms, in its own thread asynchronously, so we don't block the renderer
         hermesExecutor.scheduleAtFixedRate({
-             HermesSim.tick()
+            // HermesSim.tick()
         }, 0L, 100L, TimeUnit.MILLISECONDS)
     }
 
@@ -205,7 +238,7 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
 
         createTextUI()
         initialise3D()
-//        constructBenchmarkScene()
+        constructBenchmarkScene()
         initialiseHermes()
 
         mux.addProcessor(camController)
@@ -217,21 +250,21 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
         clearScreen(0.0f, 0.0f, 0.0f)
 
         // first, handle work queue emergency situations to prevent your RAM from filling up
-        if (TEX_WORK_QUEUE.size >= WORK_QUEUE_ABSOLUTE_MAX) {
-            Logger.error("PANIC: Work queue emergency!! Size: ${TEX_WORK_QUEUE.size}")
+        if (WORK_QUEUE.size >= WORK_QUEUE_ABSOLUTE_MAX) {
+            Logger.error("PANIC: Work queue emergency!! Size: ${WORK_QUEUE.size}")
             Logger.error("Stats: ${GCTileCache.getStats()}")
-            TEX_WORK_QUEUE.clear()
+            WORK_QUEUE.clear()
             GCTileCache.dispose()
             throw OutOfMemoryError("PANIC: Work queue emergency!")
         }
 
         // try and take up to WORK_PER_FRAME items from the work queue and run them
         var workIdx = 0
-        synchronized(TEX_WORK_QUEUE) {
-            var item = TEX_WORK_QUEUE.poll()
-            while (item != null && workIdx < WORK_PER_FRAME) {
+        synchronized(WORK_QUEUE) {
+            var item = WORK_QUEUE.poll()
+            while (item != null && workIdx < graphics.workPerFrame) {
                 item.run()
-                item = TEX_WORK_QUEUE.poll()
+                item = WORK_QUEUE.poll()
                 workIdx++
             }
         }
@@ -245,7 +278,7 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
             isDebugDraw = !isDebugDraw
         } else if (Gdx.input.isKeyJustPressed(Input.Keys.RIGHT_BRACKET)) {
             // forces tile cache GC
-            GCTileCache.garbageCollect(true)
+            GCTileCache.gcNextFrame()
         } else if (Gdx.input.isKeyJustPressed(Input.Keys.ENTER)) {
             // toggle fullscreen
             if (Gdx.graphics.isFullscreen) {
@@ -261,12 +294,25 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
             shouldVehiclesMove = !shouldVehiclesMove
         } else if (Gdx.input.isKeyJustPressed(Input.Keys.P)) {
             // debug camera pose and frustum culling
-            //Logger.debug("Camera pose:\npos: ${cam.position}\ndirection: ${cam.direction}")
-            Logger.debug("Toggling usingDebugCam")
-            isUsingDebugCam = !isUsingDebugCam
+            Logger.debug("Camera pose:\npos: ${cam.position}\ndirection: ${cam.direction}")
+//            Logger.debug("Toggling usingDebugCam")
+//            isUsingDebugCam = !isUsingDebugCam
         } else if (Gdx.input.isKeyJustPressed(Input.Keys.R)) {
             Logger.debug("Reset camera")
             cam.position.set(0f, 200f, 0f)
+        }
+
+        // update benchmark
+        debugCounter += delta
+        if (debugCounter >= 0.5f && shouldVehiclesMove) {
+            debugCounter = 0f
+            for (vehicle in vehicles) {
+                // x, y, theta degrees
+                val x = Random.nextDouble(-50.0, 50.0).toFloat()
+                val y = Random.nextDouble(-50.0, 50.0).toFloat()
+                val pos = Vector3(x, y, 0f)
+                vehicle.updateTransform(pos)
+            }
         }
 
         // render 3D
@@ -281,9 +327,10 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
         } else {
             cam.update()
         }
-        sceneManager.update(delta, HermesSim.vehicleMap.values)
+        sceneManager.update(delta, vehicles)
         sceneManager.render()
         GCTileCache.nextFrame()
+        GCBuildingCache.nextFrame()
 
         // render debug UI
         if (isDebugDraw) {
@@ -292,41 +339,48 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
             debugLabel.setText(
             """FPS: ${Gdx.graphics.framesPerSecond} (${deltaMs} ms)    Draw calls: ${profiler.drawCalls}    Memory: $mem MB
             |${GCTileCache.getStats()}
+            |${GCBuildingCache.getStats()}
             |Vehicles    culled: ${sceneManager.cullRate}%    low LoD: ${sceneManager.lowLodRate}%    full: ${sceneManager.fullRenderRate}%    total: ${sceneManager.totalVehicles}
-            |Tiles on screen: ${atlasTileManager.numRetrievedTiles}
-            |Texture work queue    done: $workIdx    left: ${TEX_WORK_QUEUE.size}
+            |Tiles on screen: ${tileManager.numRetrievedTiles}
+            |Work queue    done: $workIdx    left: ${WORK_QUEUE.size}
             |Graphics preset: ${graphics.name}
             |pitch: ${camController.quat.pitch}, roll: ${camController.quat.roll}, yaw: ${camController.quat.yaw}
             |x: ${cam.position.x}, y: ${cam.position.y}, z: ${cam.position.z}
             """.trimMargin())
         } else {
-            debugLabel.setText("FPS: ${Gdx.graphics.framesPerSecond}    Draw calls: ${profiler.drawCalls}")
+            debugLabel.setText("FPS: ${Gdx.graphics.framesPerSecond}    Draw calls: ${profiler.drawCalls}\n${GCTileCache.getStats()}")
         }
 
         // draw bounding boxes for vehicles
         if (isDebugDraw) {
             shapeRender.projectionMatrix = cam.combined
             shapeRender.begin(ShapeRenderer.ShapeType.Line)
-            for (vehicle in HermesSim.vehicleMap.values) {
+            for (vehicle in vehicles) {
                 vehicle.debug(shapeRender)
             }
 
-            for (tile in atlasTileManager.getTilesCulled(cam, graphics)) {
+            val tiles = tileManager.getTilesCulled(cam, graphics)
+            for (tile in tiles) {
                 tile.debug(shapeRender)
             }
 
+            val buildingChunks = buildingManager.getBuildingChunksCulled(cam, graphics)
+            for (buildingChunk in buildingChunks) {
+                buildingChunk.debugBBox(shapeRender)
+            }
+
             shapeRender.end()
+
+//            batch.begin()
+//            for (tile in tiles) {
+//                tile.debugText(batch, skin.getFont("window"), cam)
+//            }
+//            batch.end()
 
 //            shapeRender.begin(ShapeRenderer.ShapeType.Filled)
 //            shapeRender.point(camController.target.x, camController.target.y, camController.target.z)
 //            shapeRender.end()
         }
-
-//        shapeRender.projectionMatrix = stage.camera.combined
-//        shapeRender.begin(ShapeRenderer.ShapeType.Filled)
-//        shapeRender.color = Color.BLACK
-//        shapeRender.circle(Gdx.graphics.width / 2f, Gdx.graphics.height / 2f, 4f)
-//        shapeRender.end()
 
         stage.act()
         stage.draw()
@@ -348,8 +402,10 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
     override fun dispose() {
         stage.dispose()
         GCTileCache.dispose()
+        GCBuildingCache.dispose()
         profiler.disable()
         shapeRender.dispose()
+        batch.dispose()
         Logger.debug("Shutting down Hermes executor")
         hermesExecutor.shutdownNow()
         // we should no longer need assets since we quit the game
@@ -364,12 +420,15 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
          * **IMPORTANT:** MUST BE SYNCHRONISED USING A `synchronized` BLOCK! This is not concurrent
          * by default due to the stupid way in which I pull items off the queue.
          */
-        val TEX_WORK_QUEUE = LinkedList<Runnable>()
-
-        /** Number of items from [TEX_WORK_QUEUE] to process per frame */
-        private const val WORK_PER_FRAME = 50
+        private val WORK_QUEUE = LinkedList<Runnable>()
 
         /** Absolute max number of items in the work queue to prevent RAM from filling up */
         private const val WORK_QUEUE_ABSOLUTE_MAX = 8192
+
+        fun addWork(runnable: Runnable) {
+            synchronized (WORK_QUEUE) {
+                WORK_QUEUE.add(runnable)
+            }
+        }
     }
 }
