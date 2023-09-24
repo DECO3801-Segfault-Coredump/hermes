@@ -2,27 +2,22 @@ package com.decosegfault.atlas.map
 
 import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.GL20
-import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.graphics.VertexAttributes
 import com.badlogic.gdx.graphics.g3d.Material
 import com.badlogic.gdx.graphics.g3d.Model
 import com.badlogic.gdx.graphics.g3d.ModelCache
 import com.badlogic.gdx.graphics.g3d.ModelInstance
+import com.badlogic.gdx.graphics.g3d.Renderable
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder
-import com.badlogic.gdx.graphics.g3d.utils.shapebuilders.BoxShapeBuilder
 import com.badlogic.gdx.math.MathUtils
 import com.badlogic.gdx.math.Vector2
-import com.badlogic.gdx.math.Vector3
 import com.badlogic.gdx.utils.Disposable
 import com.decosegfault.atlas.screens.SimulationScreen
-import com.decosegfault.atlas.util.Assets.ASSETS
 import com.decosegfault.atlas.util.AtlasUtils
 import com.decosegfault.atlas.util.Triangle
-import io.github.sebasbaumh.postgis.MultiPolygon
 import io.github.sebasbaumh.postgis.PGgeometry
 import io.github.sebasbaumh.postgis.Polygon
 import net.mgsx.gltf.scene3d.attributes.PBRColorAttribute
-import net.mgsx.gltf.scene3d.attributes.PBRTextureAttribute
 import org.postgresql.PGConnection
 import org.postgresql.geometric.PGpolygon
 import org.tinylog.kotlin.Logger
@@ -66,7 +61,7 @@ class BuildingGenerator : Disposable {
 //        Logger.debug("Min Atlas: $min, Min WGS84: $minWGS84 (lat/long)")
 //        Logger.debug("Max Atlas: $max, Max WGS84: $maxWGS84 (lat/long)")
 
-        // PostGIS requires lon/lat order, but we have lat/lon
+        // PostGIS requires lon/lat order, but we have lat/lon, hence we supply y,x
         statement.setFloat(1, minWGS84.y)
         statement.setFloat(2, minWGS84.x)
         statement.setFloat(3, maxWGS84.y)
@@ -112,11 +107,11 @@ class BuildingGenerator : Disposable {
      * Extrudes the given triangulated base of a building into a 3D model
      * @param height height in metres
      */
-    private fun extrudeToModel(building: Building, tris: List<Triangle>, height: Float): Model {
-        val modelBuilder = ModelBuilder()
-        modelBuilder.begin()
+    private fun extrudeToModel(modelBuilder: ModelBuilder, tris: List<Triangle>, height: Float) {
+        // by this point, modelBuilder should have already called begin(), so we are OK to just add parts
+
         val mpb = modelBuilder.part(
-            "building", GL20.GL_TRIANGLES,
+            "building${tris.hashCode()}${height}", GL20.GL_TRIANGLES,
             VertexAttributes.Usage.Position.toLong() or VertexAttributes.Usage.Normal.toLong()
             or VertexAttributes.Usage.TextureCoordinates.toLong(),
             BUILDING_MATERIAL
@@ -127,18 +122,6 @@ class BuildingGenerator : Disposable {
             tri.extrudeUpToPrismMesh(mpb, height)
 //            println(tri.dumpAsWgs84Wkt())
         }
-
-        // we need to send this work (modelBuilder.end()) back to the main thread
-        val future = CompletableFuture<Model>()
-        val runnable = Runnable {
-            // testing only (draw as bounding rectangle instead of polygon)
-//            val rect = building.polygon.boundingRectangle
-//            BoxShapeBuilder.build(mpb, rect.x, 0f, rect.y, rect.width, height, rect.height)
-            future.complete(modelBuilder.end())
-        }
-        SimulationScreen.addWork(runnable)
-        // wait for the future to get back to us
-        return future.get()
     }
 
     /**
@@ -149,8 +132,14 @@ class BuildingGenerator : Disposable {
         val cache = ModelCache()
         cache.begin()
 
+        // each chunk actually only consists of one model with multiple parts; each building is a part
+        // we do it this way to reduce the number of times we have to block the main thread
+        val modelBuilder = ModelBuilder()
+        modelBuilder.begin()
+
         for (building in buildings) {
             // calculate the triangulation of the floor plan
+            // note DON'T translate the building, we centre it about the origin and translate the VERTICES
             val triangles = building.triangulate()
 
             // limit the height of buildings in case of errors, and if a height is missing give a default
@@ -158,36 +147,30 @@ class BuildingGenerator : Disposable {
             val height = MathUtils.clamp(building.floors.toFloat(), 1f, MAX_STOREYS) * STOREY_HEIGHT
 
             // extrude the triangulation into a 3D model and insert into cache
-            val model = extrudeToModel(building, triangles, height) // FIXME: memory leak here (need to free model)
-
-            // once again, we have to call back to the main thread
-            val future = CompletableFuture<ModelInstance>()
-            val runnable = Runnable {
-                future.complete(ModelInstance(model))
-            }
-            SimulationScreen.addWork(runnable)
-            val instance = future.get()
-
-            // we DON'T translate the building, we centre it about the origin and translate the VERTICES
-            // this is kind of stupid, but it ensures accurate positioning
-
-            // testing ONLY
-//            val centroid = triangles[0].centroid()
-//            instance.transform.translate(centroid.x, 0f, centroid.y)
-//            instance.calculateTransforms()
-
-//            Logger.debug("Adding building ${building.osmId} at centroid ${building.polygon.getCentroid(Vector2())}")
-            cache.add(instance)
+            extrudeToModel(modelBuilder, triangles, height)
         }
+
+        // we have to call back to the main thread to upload the model and model instance to the GPU
+        val modelFuture = CompletableFuture<ModelInstance>()
+        val modelRunnable = Runnable {
+            val model = modelBuilder.end() // FIXME: memory leak here (need to free model)
+            modelFuture.complete(ModelInstance(model))
+        }
+        SimulationScreen.addWork(modelRunnable)
+        // wait for the future to get back to us, and add it to the cache
+        val instance = modelFuture.get()
+        cache.add(instance)
 
         // we need to send this work (cache.end()) back to the main thread
-        val future = CompletableFuture<Boolean>()
-        val runnable = Runnable {
+        val cacheFuture = CompletableFuture<Boolean>()
+        val cacheRunnable = Runnable {
             cache.end()
-            future.complete(true)
+            cacheFuture.complete(true)
         }
-        SimulationScreen.addWork(runnable)
-        future.get()
+        SimulationScreen.addWork(cacheRunnable)
+        // wait for the cache to generate
+        cacheFuture.get()
+
         Logger.debug("Processing buildings ${buildings.hashCode()} took ${(System.nanoTime() - begin) / 1e6} ms")
         return cache
     }
