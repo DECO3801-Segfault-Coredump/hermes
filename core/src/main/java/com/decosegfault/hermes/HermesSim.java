@@ -49,21 +49,20 @@ public class HermesSim {
                 //trip.vehicle.tick(*position vector, z can be whatever*)
                 //uhhh set the live data here lol
             } else if(RouteHandler.simType == SimType.HISTORY) {
-                for (TripData trip2LachlanEllisFixYourCode : RouteHandler.tripsByShape.values()) {
-	                trip2LachlanEllisFixYourCode.vehicle.tick(trip.routeMap.get(0));
-                }
+//                for (TripData trip2LachlanEllisFixYourCode : RouteHandler.tripsByShape.values()) {
+                trip.vehicle.tick(trip.routeMap.get(0));
+//                }
             }
             //apply coordinate conversion function here
-            vehicleMap.get(trip.routeID).updateTransform(trip.vehicle.position);
-
+            vehicleMap.get(trip.routeID).updateTransformFromHermes(trip.vehicle.position);
         }
 
-        for (Map.Entry<String, AtlasVehicle> pair : vehicleMap.entrySet()) {
-            // TODO @Lachlan Ellis lookup vehicle position
-
-            var lakes = new Vector3(-27.499593094511493f, 153.01620933407332f, 0f);
-            pair.getValue().updateTransformFromHermes(lakes);
-        }
+//        for (Map.Entry<String, AtlasVehicle> pair : vehicleMap.entrySet()) {
+//            // TODO @Lachlan Ellis lookup vehicle position
+//
+//            var lakes = new Vector3(-27.499593094511493f, 153.01620933407332f, 0f);
+//            pair.getValue().updateTransformFromHermes(lakes);
+//        }
     }
 
     /**
@@ -101,7 +100,7 @@ public class HermesSim {
             FileHandle tmpPath = Gdx.files.absolute(System.getProperty("java.io.tmpdir") + "/DECOSegfault_hermes_gtfs.zip");
             Logger.info("Copying Hermes gtfs.zip to " + tmpPath.path() + "..." + System.getProperty("java.io.tmpdir"));
 
-            FileHandle gtfsZip = Gdx.files.internal("assets/hermes/gtfs.zip");
+            FileHandle gtfsZip = Gdx.files.internal("hermes/gtfs.zip");
             Logger.info("Copying Hermes gtfs.zip 2 to " + gtfsZip.file().getAbsolutePath());
             gtfsZip.copyTo(tmpPath);
 

@@ -25,7 +25,7 @@ The extract I used for Brisbane is: https://app.protomaps.com/downloads/osm/ed67
 ## Serving tiles
 1. Create data volume: `docker volume create osm-data`
 2. Create tile cache volume: `docker volume create osm-tiles`
-3. Import data: `docker run -v <PATH_TO_DOWNLOADED_EXTRACT>/brisbane.osm.pbf:/data/region.osm.pbf -v osm-data:/data/database/ overv/openstreetmap-tile-server import`
+3. Import data: `docker run -v C:/Users/ellis/Documents/brisbane.osm.pbf:/data/region.osm.pbf -v osm-data:/data/database/ overv/openstreetmap-tile-server import`
    (you'll need to change paths for wherever you saved "brisbane.osm.pbf")
 4. Serve tiles: `docker run --name atlas-tileserver -p 8080:80 -p 5432:5432 -e THREADS=$(nproc) -v osm-data:/data/database -v osm-tiles:/data/tiles -d overv/openstreetmap-tile-server run`
    (just run this once)

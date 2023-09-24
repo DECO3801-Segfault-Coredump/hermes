@@ -34,6 +34,7 @@ public class TripData {
     }
 
     public void tick() {
-
+        //test input
+        vehicle.position = routeMap.get(0);
     }
 }
