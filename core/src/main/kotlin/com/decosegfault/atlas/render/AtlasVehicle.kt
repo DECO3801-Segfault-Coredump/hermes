@@ -24,7 +24,7 @@ import net.mgsx.gltf.scene3d.scene.SceneAsset
  */
 class AtlasVehicle(private val modelHigh: SceneAsset, private val modelLow: SceneAsset) {
     /** actual transform of the vehicle shared between model instances */
-    private val transform = Matrix4()
+    val transform = Matrix4()
     /** original bbox for the model itself */
     private val bboxOrig = BoundingBox()
     /** transformed bbox for current model */

@@ -9,6 +9,7 @@ import com.badlogic.gdx.graphics.g3d.decals.CameraGroupStrategy
 import com.badlogic.gdx.graphics.g3d.decals.DecalBatch
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import com.badlogic.gdx.graphics.profiling.GLProfiler
+import com.badlogic.gdx.math.Vector3
 import com.badlogic.gdx.scenes.scene2d.Stage
 import com.badlogic.gdx.scenes.scene2d.ui.Image
 import com.badlogic.gdx.scenes.scene2d.ui.Label
@@ -34,6 +35,7 @@ import net.mgsx.gltf.scene3d.lights.DirectionalShadowLight
 import net.mgsx.gltf.scene3d.scene.SceneSkybox
 import net.mgsx.gltf.scene3d.utils.IBLBuilder
 import org.tinylog.kotlin.Logger
+import java.lang.Exception
 import java.util.*
 import java.util.concurrent.*
 import kotlin.math.max
@@ -202,7 +204,12 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
     private fun initialiseHermes() {
         // tell Hermes to tick every 100 ms, in its own thread asynchronously, so we don't block the renderer
         hermesExecutor.scheduleAtFixedRate({
-             HermesSim.tick()
+            try {
+                HermesSim.tick()
+            } catch (e: Exception) {
+                Logger.error("Hermes exception: $e")
+                Logger.error(e)
+            }
         }, 0L, 100L, TimeUnit.MILLISECONDS)
     }
 
@@ -276,6 +283,12 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
         } else if (Gdx.input.isKeyJustPressed(Input.Keys.R)) {
             Logger.debug("Reset camera")
             cam.position.set(0f, 200f, 0f)
+        } else if (Gdx.input.isKeyJustPressed(Input.Keys.B)) {
+            Logger.debug("Going to random vehicle")
+            val vehicle = HermesSim.vehicleMap.values.random()
+            Logger.debug("Chosen vehicle: $vehicle")
+            val position = vehicle.transform.getTranslation(Vector3())
+            cam.position.set(position.x, 200f, position.y)
         }
 
         // render 3D

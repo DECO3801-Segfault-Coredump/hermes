@@ -60,12 +60,12 @@ public class HermesSim {
 
         }
 
-        for (Map.Entry<String, AtlasVehicle> pair : vehicleMap.entrySet()) {
-            // TODO @Lachlan Ellis lookup vehicle position
-
-            var lakes = new Vector3(-27.499593094511493f, 153.01620933407332f, 0f);
-            pair.getValue().updateTransformFromHermes(lakes);
-        }
+//        for (Map.Entry<String, AtlasVehicle> pair : vehicleMap.entrySet()) {
+//            // TODO @Lachlan Ellis lookup vehicle position
+//
+//            var lakes = new Vector3(-27.499593094511493f, 153.01620933407332f, 0f);
+//            pair.getValue().updateTransformFromHermes(lakes);
+//        }
     }
 
     /**
