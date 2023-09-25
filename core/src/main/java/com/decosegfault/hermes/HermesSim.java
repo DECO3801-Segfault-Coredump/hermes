@@ -96,7 +96,6 @@ public class HermesSim {
             }
             var vehicle = AtlasVehicle.Companion.createFromHermes(trip.vehicle.vehicleType);
             vehicleMap.put(trip.routeID, vehicle);
-            Logger.warn("Null trip vehicle! {} {}", trip.routeName, trip.routeMap.get(0));
 
         }
         Logger.info("GTFS Data Loaded");
