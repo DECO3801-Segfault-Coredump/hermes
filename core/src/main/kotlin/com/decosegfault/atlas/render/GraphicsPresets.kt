@@ -44,13 +44,13 @@ object GraphicsPresets {
     private val itRunsCrysis = GraphicsPreset(
         name="It Runs Crysis",
         description="High settings for powerful gaming PCs or workstations",
-        vehicleDrawDist=900.0f,
-        vehicleLodDist=300.0f,
+        vehicleDrawDist=1500.0f,
+        vehicleLodDist=500.0f,
         tileDrawDist=15000.0f,
         anisotropic=16.0f,
         msaa=8,
         shadows=false,
-        workPerFrame=50,
+        workPerFrame=20,
     )
 
     private val nasaSupercomputer = GraphicsPreset(
