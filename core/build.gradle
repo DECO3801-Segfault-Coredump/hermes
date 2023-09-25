@@ -36,6 +36,16 @@ dependencies {
   api 'com.google.guava:guava:32.1.2-jre'
   api 'io.github.sebasbaumh:postgis-java-ng:23.2.0'
   api 'org.postgresql:postgresql:42.6.0'
+  api 'org.onebusaway:onebusaway-gtfs-realtime-api:1.2.0'
+  api 'io.socket:engine.io-server:6.2.1'
+  api 'com.google.code.gson:gson:2.10.1'
+  api 'jakarta.websocket:jakarta.websocket-api:2.1.1'
+  api 'org.eclipse.jetty.websocket:javax-websocket-server-impl:9.4.52.v20230823'
+  api 'org.eclipse.jetty.websocket:websocket-javax-server:10.0.16'
+
+
+
+//  api "com.esotericsoftware.yamlbeans:yamlbeans:1.15"
 
   // this is just for the GL profiler
   api "com.badlogicgames.gdx:gdx-backend-lwjgl3:$gdxVersion"

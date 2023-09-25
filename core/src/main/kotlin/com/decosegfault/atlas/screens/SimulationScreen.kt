@@ -401,6 +401,7 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
     }
 
     override fun dispose() {
+        HermesSim.shutdown()
         stage.dispose()
         GCTileCache.dispose()
         GCBuildingCache.dispose()

@@ -2,9 +2,9 @@ package com.decosegfault.hermes.data;
 
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
+import com.decosegfault.hermes.LiveDataFeed;
 import com.decosegfault.hermes.types.VehicleType;
-
-import java.util.ArrayList;
+import com.google.transit.realtime.GtfsRealtime;
 import java.util.Objects;
 
 /**
