@@ -28,7 +28,7 @@ import kotlin.math.roundToInt
  *
  * @author Matt Young
  */
-abstract class AbstractGarbageCollectedCache<K, V>(
+abstract class AbstractGarbageCollectedCache<K, V : Disposable>(
     private val name: String,
     private val maxItems: Double,
     private val startGcThreshold: Double,
@@ -156,9 +156,7 @@ abstract class AbstractGarbageCollectedCache<K, V>(
 
     /** Evict an item, **must be on the main thread** */
     open fun evict(key: K) {
-        if (cache[key] is Disposable) {
-            (cache[key] as Disposable).disposeSafely()
-        }
+        cache[key].disposeSafely()
         cache.remove(key)
     }
 

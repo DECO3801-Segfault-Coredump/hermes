@@ -1,9 +1,6 @@
 package com.decosegfault.atlas.map
 
-import com.badlogic.gdx.graphics.g3d.Model
 import com.badlogic.gdx.graphics.g3d.ModelCache
-import com.badlogic.gdx.graphics.g3d.ModelInstance
-import com.badlogic.gdx.graphics.g3d.Renderable
 import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.math.Vector3
 import com.decosegfault.atlas.util.AbstractGarbageCollectedCache

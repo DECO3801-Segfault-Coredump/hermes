@@ -62,7 +62,7 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
 
     private val cam = PerspectiveCamera().apply {
         fieldOfView = 75f
-        near = 0.5f
+        near = 0.1f
         far = max(graphics.tileDrawDist, graphics.vehicleDrawDist) * 10
 //        rotate(Vector3.X, -90f)
         translate(0f, 300f, 0f)
