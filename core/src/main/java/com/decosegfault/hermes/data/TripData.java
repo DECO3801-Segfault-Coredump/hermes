@@ -10,7 +10,7 @@ import com.decosegfault.hermes.types.VehicleType;
  * @author Lachlan Ellis
  */
 public class TripData {
-    VehicleType routeType;
+    public VehicleType routeType;
     public String routeID;
     public String routeName;
     public List<Vector3> routeMap =  new ArrayList<>();
