@@ -243,13 +243,11 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
 
         // try and take up to WORK_PER_FRAME items from the work queue and run them
         var workIdx = 0
-        synchronized(WORK_QUEUE) {
-            var item = WORK_QUEUE.poll()
-            while (item != null && workIdx < graphics.workPerFrame) {
-                item.run()
-                item = WORK_QUEUE.poll()
-                workIdx++
-            }
+        val iterator = WORK_QUEUE.iterator()
+        while (iterator.hasNext() && workIdx < graphics.workPerFrame) {
+            iterator.next().run()
+            iterator.remove()
+            workIdx++
         }
 
         if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
@@ -396,15 +394,13 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
          * **IMPORTANT:** MUST BE SYNCHRONISED USING A `synchronized` BLOCK! This is not concurrent
          * by default due to the stupid way in which I pull items off the queue.
          */
-        private val WORK_QUEUE = LinkedList<Runnable>()
+        private val WORK_QUEUE = ConcurrentLinkedQueue<Runnable>()
 
         /** Absolute max number of items in the work queue to prevent RAM from filling up */
         private const val WORK_QUEUE_ABSOLUTE_MAX = 8192
 
         fun addWork(runnable: Runnable) {
-            synchronized (WORK_QUEUE) {
-                WORK_QUEUE.add(runnable)
-            }
+            WORK_QUEUE.add(runnable)
         }
     }
 }

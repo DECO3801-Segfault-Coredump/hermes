@@ -38,7 +38,7 @@ object GraphicsPresets {
         anisotropic=8.0f,
         msaa=4,
         shadows=false,
-        workPerFrame=20,
+        workPerFrame=10,
     )
 
     private val itRunsCrysis = GraphicsPreset(
