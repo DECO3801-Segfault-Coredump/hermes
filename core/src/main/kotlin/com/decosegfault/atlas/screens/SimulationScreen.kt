@@ -25,6 +25,7 @@ import com.decosegfault.atlas.render.*
 import com.decosegfault.atlas.util.Assets
 import com.decosegfault.atlas.util.Assets.ASSETS
 import com.decosegfault.atlas.util.FirstPersonCamController
+import com.decosegfault.hermes.HermesSim
 import com.decosegfault.hermes.types.VehicleType
 import com.google.common.util.concurrent.ThreadFactoryBuilder
 import ktx.app.clearScreen
