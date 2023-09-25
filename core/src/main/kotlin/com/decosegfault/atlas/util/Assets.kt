@@ -33,6 +33,7 @@ object Assets {
         assets.load("net/mgsx/gltf/shaders/brdfLUT.png", Texture::class.java)
         assets.load("debug/debug.fnt", BitmapFont::class.java)
         assets.load("ui/uiskin.json", Skin::class.java)
+        assets.load("sprite/blocks1.jpg", Texture::class.java)
 
         // load vehicle 3D models
         val vehicles = listOf("bus", "train", "ferry")

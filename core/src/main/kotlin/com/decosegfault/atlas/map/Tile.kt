@@ -2,6 +2,9 @@ package com.decosegfault.atlas.map
 
 import com.badlogic.gdx.graphics.Camera
 import com.badlogic.gdx.graphics.Color
+import com.badlogic.gdx.graphics.PerspectiveCamera
+import com.badlogic.gdx.graphics.g2d.BitmapFont
+import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.gdx.graphics.g2d.TextureRegion
 import com.badlogic.gdx.graphics.g3d.decals.Decal
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
@@ -15,12 +18,13 @@ import kotlin.math.pow
 /**
  * A square planar tile with recursive sub-tiles, and image decal for texturing.
  *
- * @author Henry Batt
  * @param x     X-coordinate of tile centre
  * @param z     Z-coordinate of the tile centre
  * @param size  The size of the square tile
  *
  * The basic framework and culling behaviour is based upon AtlasVehicle by Matt Young
+ *
+ * @author Henry Batt
  */
 data class Tile(val x: Float, val z: Float, val size: Float, val tileLookup : Vector3, val parent : Tile? = null) : Disposable {
 
@@ -46,7 +50,7 @@ data class Tile(val x: Float, val z: Float, val size: Float, val tileLookup : Ve
     init {
         val minX = x
         val minZ = z
-        bbox = BoundingBox(Vector3(minX, 0f, minZ), Vector3(minX + size, 0f, minZ + size))
+        bbox = BoundingBox(Vector3(minX - 64, 0f, minZ - 64), Vector3(minX + size + 64, 0f, minZ + size + 64))
     }
 
     /**
@@ -312,5 +316,11 @@ data class Tile(val x: Float, val z: Float, val size: Float, val tileLookup : Ve
         if (didCull) return
         render.color = if (didUseSubTiles) Color.GREEN else Color.RED
         render.box(bbox.min.x, bbox.min.y, bbox.max.z, bbox.width, bbox.height, bbox.depth)
+    }
+
+    fun debugText(batch: SpriteBatch, font: BitmapFont, cam: PerspectiveCamera) {
+        val pos = cam.project(bbox.getCenter(Vector3()))
+        font.color = Color.BLACK
+        font.draw(batch, "${tileLookup.x.toInt()},${tileLookup.y.toInt()},${tileLookup.z.toInt()}", pos.x, pos.y)
     }
 }

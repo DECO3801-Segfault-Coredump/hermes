@@ -28,7 +28,7 @@ import kotlin.math.roundToInt
  *
  * @author Matt Young
  */
-abstract class AbstractGarbageCollectedCache<K, V : Disposable>(
+abstract class AbstractGarbageCollectedCache<K, V>(
     private val name: String,
     private val maxItems: Double,
     private val startGcThreshold: Double,
@@ -50,11 +50,14 @@ abstract class AbstractGarbageCollectedCache<K, V : Disposable>(
      * Executor used for HTTP requests.
      * This is the exact same as `Executors.newFixedThreadPool`, but we control the queue.
      */
-    private val executor = ThreadPoolExecutor(
+    private val executor = ThrowingThreadExecutor(
         threadPoolSize, threadPoolSize,
         0L, TimeUnit.MILLISECONDS,
         executorQueue,
-        ThreadFactoryBuilder().setNameFormat("$name-%d").build()
+        ThreadFactoryBuilder()
+            .setNameFormat("$name-%d")
+            .setDaemon(true)
+            .build()
     )
 
     private val fetchTimes = WindowedMean(50)
@@ -62,6 +65,7 @@ abstract class AbstractGarbageCollectedCache<K, V : Disposable>(
     private var hits = 0
     private var misses = 0
     private var total = 0
+    private var shouldGcNextFrame = false
 
     /** Implementers should override this function to instantiate a new item. Can block for as long as you want. */
     abstract fun newItem(key: K): V
@@ -72,7 +76,6 @@ abstract class AbstractGarbageCollectedCache<K, V : Disposable>(
      */
     fun retrieve(item: K, onRetrieved: (V) -> Unit) {
         val begin = System.nanoTime()
-        garbageCollect()
         val maybeItem = cache[item]
         if (maybeItem != null) {
             // tile was already in cache
@@ -129,9 +132,21 @@ abstract class AbstractGarbageCollectedCache<K, V : Disposable>(
         }
     }
 
-    /** Clears items in use for the next frame */
+    /** Performs garbage collection and clears items in use for next frame */
     fun nextFrame() {
+        if (shouldGcNextFrame) {
+            Logger.debug("Forcing GC this frame")
+            garbageCollect(true)
+            shouldGcNextFrame = false
+        } else {
+            garbageCollect()
+        }
         itemsInUse.clear()
+    }
+
+    /** Tells the garbage collector to GC on the next frame */
+    fun gcNextFrame() {
+        shouldGcNextFrame = true
     }
 
     /** Tells the cache that the item is in use and should not be GCd */
@@ -140,8 +155,10 @@ abstract class AbstractGarbageCollectedCache<K, V : Disposable>(
     }
 
     /** Evict an item, **must be on the main thread** */
-    private fun evict(key: K) {
-        cache[key].disposeSafely()
+    open fun evict(key: K) {
+        if (cache[key] is Disposable) {
+            (cache[key] as Disposable).disposeSafely()
+        }
         cache.remove(key)
     }
 
@@ -161,10 +178,6 @@ abstract class AbstractGarbageCollectedCache<K, V : Disposable>(
 
     /** @return cache hit rate stats for displaying */
     fun getStats(): String {
-        var hitRate = ((hits / (hits + misses).toDouble()) * 100.0)
-        if (hitRate.isNaN()) {
-            hitRate = 0.0
-        }
         return "$name    size: ${cache.size}     GCs: $gcs    executor: ${executorQueue.size}    " +
                 "pending: ${pendingFetches.size}    " +
                 "fetch: ${fetchTimes.mean.roundToInt()} ms"

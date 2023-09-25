@@ -2,11 +2,15 @@ package com.decosegfault.atlas.util
 
 import com.badlogic.gdx.math.*
 import com.badlogic.gdx.math.collision.BoundingBox
-import com.decosegfault.hermes.types.SimType
 import org.tinylog.kotlin.Logger
+import java.nio.file.Paths
+import kotlin.io.path.createFile
+import kotlin.io.path.exists
+import kotlin.io.path.writeText
+import kotlin.math.*
+import com.decosegfault.hermes.types.SimType
 import java.io.IOException
 import java.lang.IllegalArgumentException
-import java.nio.file.Paths
 import kotlin.io.path.createFile
 import kotlin.io.path.exists
 import kotlin.io.path.readText
@@ -94,8 +98,7 @@ object AtlasUtils {
     }
 
     /**
-     * Converts the given latitude, longitude and zoom level into Slippy Tile Map lookup.
-     * Inverse of latLongZoomToSlippyCoord method.
+     * Converts the given latitude, longitude and zoom level into Slippy Tile Map lookup
      *
      * @param latLongZoom   Vector containing the latitude, longitude, and zoom level to find.
      * @return A vector containing the x, y, zoom values for the tile.
@@ -136,5 +139,36 @@ object AtlasUtils {
         val coords = latLongZoomToSlippyCoord(Vector3(latLong.x, latLong.y, PIXEL_ZOOM))
         coords.z = latLong.z
         return coords.sub(MAP_CENTRE_SLIPPY)
+    }
+
+    /**
+     * @see [latLongToAtlas]
+     */
+    fun latLongToAtlas(latLong: Vector2): Vector2 {
+        val coords = latLongZoomToSlippyCoord(Vector3(latLong.x, latLong.y, PIXEL_ZOOM))
+        coords.sub(MAP_CENTRE_SLIPPY)
+        return Vector2(coords.x, coords.y)
+    }
+
+    /**
+     * Converts Atlas coords into lat/long coords.
+     *
+     * @param atlasCoords   Vector with x,y pixel coords for latLong, with z same as latLong param.
+     * @return Vector containing latitude, longitude to find x,y pixel coords for.
+     */
+    fun atlasToLatLong(atlasCoords: Vector3): Vector3 {
+        val coords = Vector3(atlasCoords).add(MAP_CENTRE_SLIPPY)
+        val latLong = slippyCoordToLatLongZoom(Vector3(coords.x, coords.y, PIXEL_ZOOM))
+        latLong.z = coords.z
+        return latLong
+    }
+
+    /**
+     * @see [atlasToLatLong]
+     */
+    fun atlasToLatLong(atlasCoords: Vector2): Vector2 {
+        val coords = Vector2(atlasCoords).add(Vector2(MAP_CENTRE_SLIPPY.x, MAP_CENTRE_SLIPPY.y))
+        val latLong = slippyCoordToLatLongZoom(Vector3(coords.x, coords.y, PIXEL_ZOOM))
+        return Vector2(latLong.x, latLong.y)
     }
 }

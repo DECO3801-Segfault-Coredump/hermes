@@ -1,19 +1,14 @@
 package com.decosegfault.atlas.map
 
 import com.badlogic.gdx.Gdx
-import com.badlogic.gdx.graphics.Pixmap
 import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.graphics.Texture.TextureFilter
 import com.badlogic.gdx.math.Vector3
-import com.badlogic.gdx.math.WindowedMean
-import com.badlogic.gdx.utils.Disposable
 import com.decosegfault.atlas.screens.SimulationScreen
 import com.decosegfault.atlas.util.AbstractGarbageCollectedCache
-import com.google.common.util.concurrent.ThreadFactoryBuilder
 import ktx.assets.disposeSafely
 import org.tinylog.kotlin.Logger
 import java.util.concurrent.*
-import kotlin.math.roundToInt
 
 /** **Soft** limit of tiles in VRAM, size will be approx 100 KiB * this */
 private const val MAX_TILES_RAM = 4096.0
@@ -59,9 +54,7 @@ object GCTileCache : AbstractGarbageCollectedCache<Vector3, Texture>(
             tex.setFilter(TextureFilter.Linear, TextureFilter.Linear)
             future.complete(tex)
         }
-        synchronized (SimulationScreen.TEX_WORK_QUEUE) {
-            SimulationScreen.TEX_WORK_QUEUE.add(runnable)
-        }
+        SimulationScreen.addWork(runnable)
 
         // now wait for the future to get back to us
         val texture = future.get()

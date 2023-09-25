@@ -9,8 +9,6 @@ dependencies {
   api "com.badlogicgames.gdx:gdx-ai:$aiVersion"
   api "com.badlogicgames.gdx:gdx-freetype:$gdxVersion"
   api "com.badlogicgames.gdx:gdx:$gdxVersion"
-  api "com.github.lyze237:gdx-FlexBox:$gdxFlexBoxVersion"
-  api "com.github.mgsx-dev.gdx-gltf:gltf:$gdxGltfVersion"
   api "com.strongjoshua:libgdx-inGameConsole:$inGameConsoleVersion"
   api "io.github.libktx:ktx-actors:$ktxVersion"
   api "io.github.libktx:ktx-app:$ktxVersion"
