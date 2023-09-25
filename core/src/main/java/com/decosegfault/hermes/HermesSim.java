@@ -43,15 +43,17 @@ public class HermesSim {
      * in sim mode, moves vehicles at a set speed based on tick speed.
      */
     public static void tick() {
-
+//        Logger.warn("tell me your mf length {}", vehicleMap.size());
         for (TripData trip : RouteHandler.tripsByShape.values()) {
             if(RouteHandler.simType == SimType.LIVE) {
                 //trip.vehicle.tick(*position vector, z can be whatever*)
                 //uhhh set the live data here lol
             } else if(RouteHandler.simType == SimType.HISTORY) {
-                for (TripData trip2LachlanEllisFixYourCode : RouteHandler.tripsByShape.values()) {
-	                trip2LachlanEllisFixYourCode.vehicle.tick(trip.routeMap.get(0));
-                }
+//                for (TripData trip2LachlanEllisFixYourCode : RouteHandler.tripsByShape.values()) {
+//	                trip2LachlanEllisFixYourCode.vehicle.tick(trip.routeMap.get(0));
+//                }
+//                Logger.warn("gimme your fuckin picec sejfbahjifbdiabdhs avjuo {} {}", trip.routeMap.get(0).x, trip.routeMap.get(0).y);
+                trip.vehicle.tick(trip.routeMap.get(0));
             }
             //apply coordinate conversion function here
             vehicleMap.get(trip.routeID).updateTransform(trip.vehicle.position);
@@ -80,7 +82,7 @@ public class HermesSim {
         //placeholder
         RouteHandler.sortShapes();
         //RouteHandler.logRoutes();
-        //RouteHandler.logTrips();
+//        RouteHandler.logTrips();
         //RouteHandler.logShapes();
         Logger.info("Linking Hermes-Atlas vehicles");
 	    for (TripData trip : RouteHandler.tripsByShape.values()) {
@@ -90,6 +92,7 @@ public class HermesSim {
             }
 	        var vehicle = AtlasVehicle.Companion.createFromHermes(trip.vehicle.vehicleType);
 	        vehicleMap.put(trip.routeID, vehicle);
+
         }
         Logger.info("GTFS Data Loaded");
     }
