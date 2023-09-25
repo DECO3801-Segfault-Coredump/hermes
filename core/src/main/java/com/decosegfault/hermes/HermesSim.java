@@ -56,7 +56,7 @@ public class HermesSim {
                 trip.vehicle.tick(trip.routeMap.get(0));
             }
             //apply coordinate conversion function here
-            vehicleMap.get(trip.routeID).updateTransform(trip.vehicle.position);
+            vehicleMap.get(trip.routeID).updateTransformFromHermes(trip.vehicle.position);
 
         }
 
