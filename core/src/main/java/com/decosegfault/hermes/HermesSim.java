@@ -9,6 +9,7 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.Vector3;
 import com.decosegfault.hermes.data.VehicleData;
 import com.decosegfault.hermes.types.SimType;
+import com.decosegfault.hermes.types.VehicleType;
 import org.onebusaway.gtfs.impl.GtfsDaoImpl;
 import org.onebusaway.gtfs.model.*;
 import org.tinylog.Logger;
@@ -35,6 +36,8 @@ public class HermesSim {
     /** time of day will be in seconds, max 86400 (one day) before looping back to 0 */
     static int time;
 
+    static int tickCount = 0;
+
     /**
      * ticks time by x seconds.
      * tick speed set by end user.
@@ -43,6 +46,7 @@ public class HermesSim {
      * in sim mode, moves vehicles at a set speed based on tick speed.
      */
     public static void tick() {
+        tickCount += 1;
 //        Logger.warn("tell me your mf length {}", vehicleMap.size());
         for (TripData trip : RouteHandler.tripsByShape.values()) {
             if(RouteHandler.simType == SimType.LIVE) {
@@ -53,11 +57,11 @@ public class HermesSim {
 //	                trip2LachlanEllisFixYourCode.vehicle.tick(trip.routeMap.get(0));
 //                }
 //                Logger.warn("gimme your fuckin picec sejfbahjifbdiabdhs avjuo {} {}", trip.routeMap.get(0).x, trip.routeMap.get(0).y);
-                trip.vehicle.tick(trip.routeMap.get(0));
+
+                trip.vehicle.tick(trip.routeMap.get(tickCount%trip.routeMap.size()));
             }
             //apply coordinate conversion function here
             vehicleMap.get(trip.routeID).updateTransformFromHermes(trip.vehicle.position);
-
         }
 
 //        for (Map.Entry<String, AtlasVehicle> pair : vehicleMap.entrySet()) {
@@ -90,8 +94,9 @@ public class HermesSim {
                 Logger.warn("Null trip vehicle! {} {}", trip.routeName, trip.routeID);
                 continue;
             }
-	        var vehicle = AtlasVehicle.Companion.createFromHermes(trip.vehicle.vehicleType);
-	        vehicleMap.put(trip.routeID, vehicle);
+            var vehicle = AtlasVehicle.Companion.createFromHermes(trip.vehicle.vehicleType);
+            vehicleMap.put(trip.routeID, vehicle);
+            Logger.warn("Null trip vehicle! {} {}", trip.routeName, trip.routeMap.get(0));
 
         }
         Logger.info("GTFS Data Loaded");
