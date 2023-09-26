@@ -34,9 +34,9 @@ public class HermesSim {
     public static Map<String, AtlasVehicle> vehicleMap = new HashMap<>();
 
     /** time of day will be in seconds, max 86400 (one day) before looping back to 0 */
-    static int time;
+    public static int time = 52740;
 
-    static int tickCount = 0;
+//    static int tickCount = 0;
 
     /**
      * ticks time by x seconds.
@@ -46,30 +46,18 @@ public class HermesSim {
      * in sim mode, moves vehicles at a set speed based on tick speed.
      */
     public static void tick() {
-        tickCount += 1;
+        time += 1;
 //        Logger.warn("tell me your mf length {}", vehicleMap.size());
         for (TripData trip : RouteHandler.tripsByShape.values()) {
             if(RouteHandler.simType == SimType.LIVE) {
                 //trip.vehicle.tick(*position vector, z can be whatever*)
                 //uhhh set the live data here lol
-            } else if(RouteHandler.simType == SimType.HISTORY) {
-//                for (TripData trip2LachlanEllisFixYourCode : RouteHandler.tripsByShape.values()) {
-//	                trip2LachlanEllisFixYourCode.vehicle.tick(trip.routeMap.get(0));
-//                }
-//                Logger.warn("gimme your fuckin picec sejfbahjifbdiabdhs avjuo {} {}", trip.routeMap.get(0).x, trip.routeMap.get(0).y);
-
-                trip.vehicle.tick(trip.routeMap.get(tickCount%trip.routeMap.size()));
+            } else {
+                trip.tick();
             }
             //apply coordinate conversion function here
             vehicleMap.get(trip.routeID).updateTransformFromHermes(trip.vehicle.position);
         }
-
-//        for (Map.Entry<String, AtlasVehicle> pair : vehicleMap.entrySet()) {
-//            // TODO @Lachlan Ellis lookup vehicle position
-//
-//            var lakes = new Vector3(-27.499593094511493f, 153.01620933407332f, 0f);
-//            pair.getValue().updateTransformFromHermes(lakes);
-//        }
     }
 
     /**
@@ -85,6 +73,7 @@ public class HermesSim {
         }
         //placeholder
         RouteHandler.sortShapes();
+        RouteHandler.initTrips();
         //RouteHandler.logRoutes();
 //        RouteHandler.logTrips();
         //RouteHandler.logShapes();
@@ -147,6 +136,9 @@ public class HermesSim {
         Map<AgencyAndId, ShapePoint> shapesById = store.getEntitiesByIdForEntityType(
             AgencyAndId.class, ShapePoint.class);
 
+        Map<AgencyAndId, StopTime> stopTimesById = store.getEntitiesByIdForEntityType(
+            AgencyAndId.class, StopTime.class);
+
         for (Route element : routesById.values()) {
             RouteHandler.addRoute(element);
         }
@@ -158,6 +150,12 @@ public class HermesSim {
         for (ShapePoint element : shapesById.values()) {
             RouteHandler.addShape(element);
         }
+
+        for (StopTime element : stopTimesById.values()) {
+            RouteHandler.handleTime(element);
+        }
+
+
 
     }
 

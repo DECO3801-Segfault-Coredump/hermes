@@ -210,7 +210,7 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
                 Logger.error("Hermes exception: $e")
                 Logger.error(e)
             }
-        }, 0L, 100L, TimeUnit.MILLISECONDS)
+        }, 0L, 50L, TimeUnit.MILLISECONDS)
     }
 
     override fun show() {
