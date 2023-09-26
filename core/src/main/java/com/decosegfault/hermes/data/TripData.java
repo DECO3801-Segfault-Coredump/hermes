@@ -5,10 +5,13 @@ import java.util.List;
 
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
+import com.decosegfault.atlas.util.AtlasUtils;
+import com.decosegfault.atlas.util.HPVector2;
 import com.decosegfault.hermes.HermesSim;
 import com.decosegfault.hermes.RouteHandler;
 import com.decosegfault.hermes.types.SimType;
 import com.decosegfault.hermes.types.VehicleType;
+import com.decosegfault.atlas.util.HPVector3;
 import org.tinylog.Logger;
 
 /**
@@ -18,10 +21,10 @@ public class TripData {
     public VehicleType routeType;
     public String routeID;
     public String routeName;
-    public List<Vector3> routeMap =  new ArrayList<>();
+    public List<HPVector3> routeMap =  new ArrayList<>();
     public VehicleData vehicle;
 
-    public float pathLength = 0;
+    public double pathLength = 0;
     List<StopData> stopList = new ArrayList<>();
     public int startTime = 0;
     /** optional, only used in history mode */
@@ -61,10 +64,10 @@ public class TripData {
         if (startTime <= HermesSim.time && endTime >= HermesSim.time) {
 //            Logger.warn("Currently Running: {}", routeName);
             vehicle.hidden = false;
-            Vector3 newPosition = new Vector3();
+            HPVector2 newPosition = new HPVector2(0, 0);
             int shapeIndex = 0;
             if (RouteHandler.simType == SimType.HISTORY) {
-                double traversedPercent = ( (HermesSim.time - startTime)) / (float) (endTime - startTime);
+                double traversedPercent = (HermesSim.time - startTime) /  (endTime - startTime);
                 double traversedDist = traversedPercent * pathLength;
                 double recordedDist = 0;
 //                Logger.warn("Traversed: {}%, {}m.", traversedPercent*100, traversedDist);
@@ -72,15 +75,16 @@ public class TripData {
 //                Logger.warn("Perc Calc: {}, {}.", HermesSim.time - startTime, endTime - startTime);
                 if (routeMap.size() > 1) {
                     for (int i = 1; i < routeMap.size(); i++) {
-                        Vector3 tempLastVect = new Vector3(routeMap.get(i - 1).x, routeMap.get(i - 1).y, 0);
-                        Vector3 tempCurVect = new Vector3(routeMap.get(i).x, routeMap.get(i).y, 0);
+//                        Vector3 tempLastVect = new Vector3(routeMap.get(i - 1).x, routeMap.get(i - 1).y, 0);
+                        HPVector2 tempLastVect = new HPVector2(routeMap.get(i - 1).getX(), routeMap.get(i - 1).getY());
+                        HPVector2 tempCurVect = new HPVector2(routeMap.get(i).getX(), routeMap.get(i).getY());
 //                    Logger.warn("Checking at: {}", recordedDist);
 //                    Logger.warn("Checking using Vectors on count: {} {}, {} {}. {}",
 //                        tempLastVect.x, tempLastVect.y, tempCurVect.x, tempCurVect.y, tickCount);
                         if (recordedDist + Math.abs(routeMap.get(i).dst(routeMap.get(i - 1))) >= traversedDist) {
                             shapeIndex = i;
-                            newPosition = tempLastVect.add((tempCurVect.sub(routeMap.get(i - 1)))
-                                .scl((float) (Math.abs(traversedDist - recordedDist)
+                            newPosition = tempLastVect.add((tempCurVect.sub(tempLastVect))
+                                .scl( (Math.abs(traversedDist - recordedDist)
                                                                     / Math.abs(routeMap.get(i).dst(routeMap.get(i - 1))))));
 //                        Logger.warn("Found! at: {}", recordedDist);
 //                        Logger.warn("Scaled to: {}%", Math.abs(traversedDist-recordedDist)
@@ -99,15 +103,19 @@ public class TripData {
             } else {
 
             }
-            vehicle.position.set(newPosition.x, newPosition.y,
-                    new Vector2(routeMap.get(shapeIndex).x - routeMap.get(shapeIndex-1).x,
-                        routeMap.get(shapeIndex).y - routeMap.get(shapeIndex-1).y).angleDeg());
+            vehicle.position.set(newPosition.getX(), newPosition.getY(),
+                (-1 * new HPVector2(routeMap.get(shapeIndex).getX() - routeMap.get(shapeIndex - 1).getX(),
+                        routeMap.get(shapeIndex).getY() - routeMap.get(shapeIndex - 1).getY()).angleDeg())%360);
 //            vehicle.position.set(newPosition.x, newPosition.y, (float) ((HermesSim.time*1000)%360));
-            vehicle.oldPosition = new Vector3(vehicle.position.x, vehicle.position.y, vehicle.position.z);
-//            Logger.warn("Angle: {} .", new Vector2(routeMap.get(shapeIndex).x -routeMap.get(shapeIndex-1).x,
-//                routeMap.get(shapeIndex).y - routeMap.get(shapeIndex-1).x).angleDeg());
+            vehicle.oldPosition = new HPVector3(vehicle.position.getX(), vehicle.position.getY(), vehicle.position.getZ());
+//            Logger.warn("Angle: {} .", new HPVector2(routeMap.get(shapeIndex).getX() - routeMap.get(shapeIndex - 1).getX(),
+//                routeMap.get(shapeIndex).getY() - routeMap.get(shapeIndex - 1).getY()).angleDeg());
+            Vector3 testVector = AtlasUtils.INSTANCE.latLongZoomToSlippyCoord(vehicle.position.getX(), vehicle.position.getY());
+//            Logger.warn("Vehicle position: {}x, {}y", vehicle.position.getX(), vehicle.position.getY());
+//            Logger.warn("Equivalent: {}x, {}y", testVector.x, testVector.y);
+//            Logger.warn("Equivalent2: {}x, {}y", (float)vehicle.position.getX(), (float)vehicle.position.getY());
         } else {
-            vehicle.position.set(new Vector3(-27.499593094511493f, 153.01620933407332f, 0f));
+            vehicle.position.set(-27.499593094511493, 153.01620933407332, 0);
             vehicle.hidden = true;
         }
     }

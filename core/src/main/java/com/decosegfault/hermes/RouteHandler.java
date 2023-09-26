@@ -1,15 +1,15 @@
 package com.decosegfault.hermes;
 
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
+import com.decosegfault.atlas.util.AtlasUtils;
+import com.decosegfault.atlas.util.HPVector3;
 import com.decosegfault.hermes.data.RouteData;
 import com.decosegfault.hermes.data.TripData;
 import com.decosegfault.hermes.types.SimType;
+import com.decosegfault.hermes.types.VehicleType;
 import org.onebusaway.gtfs.model.Route;
 import org.onebusaway.gtfs.model.StopTime;
 import org.onebusaway.gtfs.model.Trip;
@@ -46,8 +46,8 @@ public class RouteHandler {
     static boolean added = false;
     public static void addTrip(Trip trip) {
         //debug
-        if(!added) {
-            added = true;
+//        if(!added) {
+//            added = true;
             TripData newTrip = new TripData(routes.get(trip.getRoute().getId().getId()).routeType);
             newTrip.routeID = trip.getId().getId();
             newTrip.routeName = trip.getTripHeadsign();
@@ -58,13 +58,17 @@ public class RouteHandler {
             tripsByRoute.put(trip.getRoute().getId().getId(), newTrip);
             tripsbyID.put(trip.getId().getId(), newTrip);
 //            Logger.warn("Added at: {}", trip.getId().getId());
-        }
+//        }
     }
 
     public static void addShape(ShapePoint point) {
         if(tripsByShape.containsKey(point.getShapeId().getId())) {
+            Vector3 tempVector2 = new Vector3((float) point.getLat(), (float) point.getLon(), 0);
+            Vector3 tempVector = AtlasUtils.INSTANCE.latLongToAtlas(tempVector2);
+//            Logger.warn("Shape added: {}x {}y {}s", tempVector.x, tempVector.y, tempVector.z);
+//            Logger.warn("original: {}x {}y", point.getLat(), point.getLon());
             tripsByShape.get(point.getShapeId().getId()).routeMap.add(
-                new Vector3((float) point.getLat(), (float) point.getLon(), point.getSequence()));
+                new HPVector3(tempVector.x, tempVector.y, point.getSequence()));
         }
 
     }
@@ -75,7 +79,7 @@ public class RouteHandler {
 //            Logger.warn("Editing trip ID: {}", time.getTrip().getId().getId());
             if(time.getStopSequence() == 1) {
                 trip.startTime = time.getDepartureTime();
-                Logger.warn("Start time: {}", time.getDepartureTime());
+//                Logger.warn("Start time: {}", time.getDepartureTime());
             }
             if(time.getArrivalTime() > trip.endTime) {
                 trip.endTime = time.getArrivalTime();
@@ -86,9 +90,9 @@ public class RouteHandler {
 
     public static void sortShapes() {
         for (TripData element : tripsByShape.values()) {
-            element.routeMap.sort((a, b) -> Float.compare(a.z, b.z));
+            element.routeMap.sort(Comparator.comparingDouble(HPVector3::getZ));
             for(int i = 0; i < element.routeMap.size(); i++) {
-                element.routeMap.get(i).z = 0;
+                element.routeMap.get(i).setZ(0);
             }
         }
     }
@@ -108,8 +112,8 @@ public class RouteHandler {
 
     public static void logShapes() {
         for (TripData trip : tripsByShape.values()) {
-            for (Vector3 vector : trip.routeMap) {
-                Logger.info(vector.x + "+" + vector.y + " : " + vector.z + " : " + trip.routeName);
+            for (HPVector3 vector : trip.routeMap) {
+                Logger.info(vector.getX() + "+" + vector.getY() + " : " + vector.getZ() + " : " + trip.routeName);
             }
         }
     }
