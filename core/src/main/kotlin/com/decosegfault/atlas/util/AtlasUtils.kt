@@ -113,6 +113,18 @@ object AtlasUtils {
     }
 
     /**
+     * See [latLongZoomToSlippyCoord]
+     */
+    fun latLongZoomToSlippyCoord(lat: Double, long: Double) : Vector3 {
+        // Tile lookup calculation from Open Street Map Wiki
+        // [https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames]
+        val n = 1 shl PIXEL_ZOOM.toInt()
+        val xTile = ((long + 180.0) / 360.0 * n)
+        val yTile = ((1.0 - asinh(tan(lat * PI / 180)) / PI) / 2.0 * n)
+        return Vector3(xTile.toFloat(), yTile.toFloat(), 0f)
+    }
+
+    /**
      * Converts a given x, y, and zoom level for a slippy tile into a latitude, and longitude.
      * Inverse of latLongZoomToSlippyCoord method.
      *
@@ -138,6 +150,15 @@ object AtlasUtils {
     fun latLongToAtlas(latLong: Vector3): Vector3 {
         val coords = latLongZoomToSlippyCoord(Vector3(latLong.x, latLong.y, PIXEL_ZOOM))
         coords.z = latLong.z
+        return coords.sub(MAP_CENTRE_SLIPPY)
+    }
+
+    /**
+     * See [latLongToAtlas]
+     */
+    fun latLongToAtlas(lat: Double, long: Double, theta: Double): Vector3 {
+        val coords = latLongZoomToSlippyCoord(lat, long)
+        coords.z = theta.toFloat()
         return coords.sub(MAP_CENTRE_SLIPPY)
     }
 
