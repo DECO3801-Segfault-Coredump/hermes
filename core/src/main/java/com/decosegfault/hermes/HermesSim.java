@@ -66,6 +66,7 @@ public class HermesSim {
             }
             //apply coordinate conversion function here
             vehicleMap.get(trip.routeID).updateTransformFromHermes(trip.vehicle.position.x, trip.vehicle.position.y, trip.vehicle.position.z);
+            vehicleMap.get(trip.routeID).setHidden(trip.vehicle.hidden);
         }
     }
 
