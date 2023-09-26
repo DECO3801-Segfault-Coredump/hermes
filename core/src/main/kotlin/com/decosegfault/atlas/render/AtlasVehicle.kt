@@ -73,6 +73,7 @@ class AtlasVehicle(private val modelHigh: SceneAsset, private val modelLow: Scen
      */
     fun updateTransformFromHermes(transLat: Double, transLong: Double, theta: Double) {
         val atlasPos = AtlasUtils.latLongToAtlas(transLat, transLong, theta)
+//        val atlasPos = Vector3(transLat, transLong, theta)
 //        Logger.debug("updateTformFromHermes: lat/long $trans atlas: $atlasPos for vehicle $this")
         updateTransform(atlasPos)
     }

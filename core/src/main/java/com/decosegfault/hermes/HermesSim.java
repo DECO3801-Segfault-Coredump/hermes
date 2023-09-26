@@ -37,10 +37,10 @@ public class HermesSim {
     /** time of day will be in seconds, max 86400 (one day) before looping back to 0 */
     public static double time = 0f;
 
-    static float baseTime = 52740f;
+    static float baseTime = 44100;
 
-    static float speed = 50f;
-    static float floatTime = 0;
+    static float speed = 180f;
+    public static float floatTime = 0;
 
 //    static int tickCount = 0;
 
@@ -65,7 +65,8 @@ public class HermesSim {
                 trip.tick();
             }
             //apply coordinate conversion function here
-            vehicleMap.get(trip.routeID).updateTransformFromHermes(trip.vehicle.position.x, trip.vehicle.position.y, trip.vehicle.position.z);
+            vehicleMap.get(trip.routeID).updateTransform(
+                new Vector3((float) trip.vehicle.position.getX(), (float) trip.vehicle.position.getY(), (float) trip.vehicle.position.getZ()));
             vehicleMap.get(trip.routeID).setHidden(trip.vehicle.hidden);
         }
     }
@@ -162,16 +163,13 @@ public class HermesSim {
             RouteHandler.addTrip(element);
         }
 
-        for (ShapePoint element : shapesById.values()) {
-            RouteHandler.addShape(element);
-        }
-
         for (StopTime element : stopTimesById.values()) {
             RouteHandler.handleTime(element);
         }
 
-
-
+        for (ShapePoint element : shapesById.values()) {
+            RouteHandler.addShape(element);
+        }
     }
 
 //    private static class GtfsEntityHandler implements EntityHandler {
