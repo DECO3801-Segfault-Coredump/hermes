@@ -211,9 +211,10 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
 
     private fun initialiseHermes() {
         // tell Hermes to tick every 100 ms, in its own thread asynchronously, so we don't block the renderer
+        Logger.info("Hermes tick rate: $HERMES_TICK_RATE ms (delta: $HERMES_DELTA s)")
         hermesExecutor.scheduleAtFixedRate({
             try {
-                hermesDelta = measureNanoTime { HermesSim.tick(Gdx.graphics.deltaTime) } / 1e6f
+                hermesDelta = measureNanoTime { HermesSim.tick(HERMES_DELTA) } / 1e6f
             } catch (e: Exception) {
                 Logger.error("Hermes exception: $e")
                 Logger.error(e)
@@ -404,6 +405,12 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
 
         /** Absolute max number of items in the work queue to prevent RAM from filling up */
         private const val WORK_QUEUE_ABSOLUTE_MAX = 8192
+
+        /** Hermes ticks every this many milliseconds */
+        private const val HERMES_TICK_RATE = 100f
+
+        /** Hermes tick delta */
+        private const val HERMES_DELTA = HERMES_TICK_RATE / 1000f
 
         fun addWork(runnable: Runnable) {
             WORK_QUEUE.add(runnable)
