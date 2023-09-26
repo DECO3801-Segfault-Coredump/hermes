@@ -291,11 +291,10 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
             Logger.debug("Reset camera")
             cam.position.set(0f, 200f, 0f)
         } else if (Gdx.input.isKeyJustPressed(Input.Keys.B)) {
-            Logger.debug("Going to random vehicle")
-            val vehicle = HermesSim.vehicleMap.values.random()
-            Logger.debug("Chosen vehicle: $vehicle")
+            val vehicle = HermesSim.vehicleMap.values.filter { !it.hidden }.random()
+            Logger.debug("Going to randomly selected vehicle: $vehicle")
             val position = vehicle.transform.getTranslation(Vector3())
-            cam.position.set(position.x, 200f, position.y)
+            cam.position.set(position.x, 200f, position.z)
         }
 
         // render 3D

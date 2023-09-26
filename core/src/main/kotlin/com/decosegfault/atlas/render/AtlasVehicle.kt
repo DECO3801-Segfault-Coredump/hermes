@@ -14,6 +14,7 @@ import com.decosegfault.atlas.util.Assets
 import com.decosegfault.atlas.util.AtlasUtils
 import com.decosegfault.hermes.types.VehicleType
 import net.mgsx.gltf.scene3d.scene.SceneAsset
+import org.tinylog.kotlin.Logger
 
 /**
  * Atlas's representation of a vehicle, includes gdx-gltf high detail and low detail models and bounding box.
@@ -71,7 +72,9 @@ class AtlasVehicle(private val modelHigh: SceneAsset, private val modelLow: Scen
      * @param trans new transform in hermes coords: x, y, theta (degrees)
      */
     fun updateTransformFromHermes(trans: Vector3) {
-        updateTransform(AtlasUtils.latLongToAtlas(trans))
+        val atlasPos = AtlasUtils.latLongToAtlas(trans)
+//        Logger.debug("updateTformFromHermes: lat/long $trans atlas: $atlasPos for vehicle $this")
+        updateTransform(atlasPos)
     }
 
     fun addTransform(trans: Vector3) {
@@ -132,6 +135,11 @@ class AtlasVehicle(private val modelHigh: SceneAsset, private val modelLow: Scen
     fun intersectRay(ray: Ray): Boolean {
         return Intersector.intersectRayBoundsFast(ray, bbox)
     }
+
+    override fun toString(): String {
+        return "AtlasVehicle(transform=${transform.getTranslation(Vector3())}, didCull=$didCull, didUseLowLod=$didUseLowLod, hidden=$hidden)"
+    }
+
 
     companion object {
         /** Creates a vehicle for a Hermes [VehicleType] */
