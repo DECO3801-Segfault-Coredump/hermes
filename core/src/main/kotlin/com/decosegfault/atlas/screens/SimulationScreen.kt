@@ -5,6 +5,7 @@ import com.badlogic.gdx.backends.lwjgl3.Lwjgl3ApplicationConfiguration
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Graphics
 import com.badlogic.gdx.graphics.*
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
+import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute
 import com.badlogic.gdx.graphics.g3d.decals.CameraGroupStrategy
 import com.badlogic.gdx.graphics.g3d.decals.DecalBatch
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
@@ -19,8 +20,8 @@ import com.badlogic.gdx.utils.viewport.ExtendViewport
 import com.badlogic.gdx.utils.viewport.FitViewport
 import com.decosegfault.atlas.map.BuildingManager
 import com.decosegfault.atlas.map.GCBuildingCache
-import com.decosegfault.atlas.map.TileManager
 import com.decosegfault.atlas.map.GCTileCache
+import com.decosegfault.atlas.map.TileManager
 import com.decosegfault.atlas.render.*
 import com.decosegfault.atlas.util.Assets
 import com.decosegfault.atlas.util.Assets.ASSETS
@@ -28,6 +29,7 @@ import com.decosegfault.atlas.util.FirstPersonCamController
 import com.decosegfault.hermes.HermesSim
 import com.google.common.util.concurrent.ThreadFactoryBuilder
 import ktx.app.clearScreen
+import net.mgsx.gltf.scene3d.attributes.FogAttribute
 import net.mgsx.gltf.scene3d.attributes.PBRCubemapAttribute
 import net.mgsx.gltf.scene3d.attributes.PBRTextureAttribute
 import net.mgsx.gltf.scene3d.lights.DirectionalLightEx
@@ -35,11 +37,13 @@ import net.mgsx.gltf.scene3d.lights.DirectionalShadowLight
 import net.mgsx.gltf.scene3d.scene.SceneSkybox
 import net.mgsx.gltf.scene3d.utils.IBLBuilder
 import org.tinylog.kotlin.Logger
-import java.lang.Exception
 import java.util.*
 import java.util.concurrent.*
 import kotlin.math.max
 import kotlin.math.roundToInt
+import kotlin.system.measureNanoTime
+import kotlin.time.Duration
+import kotlin.time.measureTime
 
 /**
  * Implements the main screen for rendering the simulation
@@ -110,6 +114,8 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
     private val skin = ASSETS["ui/uiskin.json", Skin::class.java]
 
     private val batch = SpriteBatch()
+
+    private var hermesDelta = 0f
 
     private fun createTextUI() {
         // hack to use linear scaling instead of nearest neighbour for text
@@ -182,6 +188,8 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
         sceneManager.environment.set(PBRTextureAttribute(PBRTextureAttribute.BRDFLUTTexture, brdfLut))
         sceneManager.environment.set(PBRCubemapAttribute.createSpecularEnv(specularCubemap))
         sceneManager.environment.set(PBRCubemapAttribute.createDiffuseEnv(diffuseCubemap))
+//        sceneManager.environment.set(ColorAttribute(ColorAttribute.Fog, Color.GRAY))
+//        sceneManager.environment.set(FogAttribute(FogAttribute.FogEquation).set(1f, 2000f, 8f))
 
         // setup skybox
         sceneManager.skyBox = SceneSkybox(environmentCubemap)
@@ -205,7 +213,7 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
         // tell Hermes to tick every 100 ms, in its own thread asynchronously, so we don't block the renderer
         hermesExecutor.scheduleAtFixedRate({
             try {
-                HermesSim.tick()
+                hermesDelta = measureNanoTime { HermesSim.tick() } / 1e6f
             } catch (e: Exception) {
                 Logger.error("Hermes exception: $e")
                 Logger.error(e)
@@ -318,6 +326,7 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
             |Tiles on screen: ${tileManager.numRetrievedTiles}
             |Work queue    done: $workIdx    left: ${WORK_QUEUE.size}
             |Graphics preset: ${graphics.name}
+            |Hermes delta: ${hermesDelta.roundToInt()} ms
             |pitch: ${camController.quat.pitch}, roll: ${camController.quat.roll}, yaw: ${camController.quat.yaw}
             |x: ${cam.position.x}, y: ${cam.position.y}, z: ${cam.position.z}
             """.trimMargin())
@@ -390,9 +399,6 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
         /**
          * List of work items to process per frame. Unlike Gdx.app.postRunnable, only [WORK_PER_FRAME] are
          * processed per frame.
-         *
-         * **IMPORTANT:** MUST BE SYNCHRONISED USING A `synchronized` BLOCK! This is not concurrent
-         * by default due to the stupid way in which I pull items off the queue.
          */
         private val WORK_QUEUE = ConcurrentLinkedQueue<Runnable>()
 

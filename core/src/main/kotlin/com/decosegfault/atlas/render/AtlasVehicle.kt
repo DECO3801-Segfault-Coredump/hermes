@@ -33,6 +33,8 @@ class AtlasVehicle(private val modelHigh: SceneAsset, private val modelLow: Scen
     var didCull = false
     /** true if the vehicle used low LoD model in the last render pass */
     var didUseLowLod = false
+    /** If true, force this vehicle to be hidden */
+    var hidden = false
 
     private val modelInstanceHigh = ModelInstance(modelHigh.scene.model)
     private val modelInstanceLow = ModelInstance(modelLow.scene.model)
@@ -79,7 +81,7 @@ class AtlasVehicle(private val modelHigh: SceneAsset, private val modelLow: Scen
     }
 
     fun debug(render: ShapeRenderer) {
-        if (didCull) return
+        if (didCull || hidden) return
         render.color = if (didUseLowLod) Color.GREEN else Color.RED
         render.box(bbox.min.x , bbox.min.y, bbox.max.z, bbox.width, bbox.height, bbox.depth)
 
@@ -96,6 +98,11 @@ class AtlasVehicle(private val modelHigh: SceneAsset, private val modelLow: Scen
     fun getRenderModel(cam: Camera, graphics: GraphicsPreset): RenderableProvider? {
         didCull = false
         didUseLowLod = false
+
+        if (hidden) {
+            didCull = true
+            return null
+        }
 
         // first do distance thresholding since it's cheap
         // distance thresholding we compute as distance to the dist from the camera to the closest point

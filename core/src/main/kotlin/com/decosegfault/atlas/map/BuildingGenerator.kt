@@ -2,6 +2,7 @@ package com.decosegfault.atlas.map
 
 import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.GL20
+import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.graphics.VertexAttributes
 import com.badlogic.gdx.graphics.g3d.Material
 import com.badlogic.gdx.graphics.g3d.Model
@@ -13,11 +14,13 @@ import com.badlogic.gdx.math.MathUtils
 import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.utils.Disposable
 import com.decosegfault.atlas.screens.SimulationScreen
+import com.decosegfault.atlas.util.Assets.ASSETS
 import com.decosegfault.atlas.util.AtlasUtils
 import com.decosegfault.atlas.util.Triangle
 import io.github.sebasbaumh.postgis.PGgeometry
 import io.github.sebasbaumh.postgis.Polygon
 import net.mgsx.gltf.scene3d.attributes.PBRColorAttribute
+import net.mgsx.gltf.scene3d.attributes.PBRTextureAttribute
 import org.postgresql.PGConnection
 import org.postgresql.geometric.PGpolygon
 import org.tinylog.kotlin.Logger
@@ -216,10 +219,9 @@ class BuildingGenerator : Disposable {
         |AND building IS NOT NULL;
         """.trimMargin()
 
-        private val BUILDING_COLOUR = Color.WHITE
-
         private val BUILDING_MATERIAL = Material().apply {
-            set(PBRColorAttribute.createBaseColorFactor(BUILDING_COLOUR))
+            set(PBRColorAttribute.createBaseColorFactor(Color.GRAY))
+//            set(PBRColorAttribute.createEmissive(Color.GREEN))
 //            set(PBRTextureAttribute.createBaseColorTexture(ASSETS["sprite/blocks1.jpg", Texture::class.java]))
         }
     }

@@ -46,6 +46,8 @@ public class HermesSim {
      * in sim mode, moves vehicles at a set speed based on tick speed.
      */
     public static void tick() {
+        if (System.getProperty("nohermes") != null) return;
+
         tickCount += 1;
 //        Logger.warn("tell me your mf length {}", vehicleMap.size());
         for (TripData trip : RouteHandler.tripsByShape.values()) {
@@ -79,6 +81,11 @@ public class HermesSim {
      * in sim mode, routes only use their first available start time.
      */
     public static void load(SimType simType) {
+        if (System.getProperty("nohermes") != null) {
+            Logger.warn("Skipping Hermes load, -Dnohermes=true");
+            return;
+        }
+
         RouteHandler.simType = simType;
         if(simType != SimType.LIVE) {
             read();

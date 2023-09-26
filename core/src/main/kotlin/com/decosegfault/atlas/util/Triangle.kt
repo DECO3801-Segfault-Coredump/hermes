@@ -49,12 +49,13 @@ data class Triangle(
         // generate vertices as per the article
         mpb.ensureVertices(7)
         mpb.ensureTriangleIndices(7)
-        val i1 = mpb.vertex(i1V, Vector3.Y, null, null)
-        val i2 = mpb.vertex(i2V, Vector3.Y, null, null)
-        val i3 = mpb.vertex(i3V, Vector3.Y, null, null)
-        val n1 = mpb.vertex(n1V, Vector3.Y, null, null)
-        val n2 = mpb.vertex(n2V, Vector3.Y, null, null)
-        val n3 = mpb.vertex(n3V, Vector3.Y, null, null)
+        // FIXME calculate proper UV coordinates (maybe export models then use blender?)
+        val i1 = mpb.vertex(i1V, null, null, null)
+        val i2 = mpb.vertex(i2V, null, null, null)
+        val i3 = mpb.vertex(i3V, null, null, null)
+        val n1 = mpb.vertex(n1V, null, null, null)
+        val n2 = mpb.vertex(n2V, null, null, null)
+        val n3 = mpb.vertex(n3V, null, null, null)
 
         // these are all the vertices from the blog
         // this actually seems all correct except for the roof
