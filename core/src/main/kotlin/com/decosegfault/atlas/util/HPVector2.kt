@@ -24,6 +24,12 @@ data class HPVector2(
         return this
     }
 
+    fun set(x: Double, y: Double): HPVector2 {
+        this.x = x
+        this.y = y
+        return this
+    }
+
     fun dst(other: HPVector2): Double {
         val x_d = other.x - x
         val y_d = other.y - y
