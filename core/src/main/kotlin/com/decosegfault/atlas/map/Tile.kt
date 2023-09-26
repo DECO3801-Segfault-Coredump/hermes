@@ -172,14 +172,15 @@ data class Tile(val x: Float, val z: Float, val size: Float, val tileLookup : Ve
     /**
      * Get all sub-tiles that make up tile at a given resolution,
      * but apply culling methods to reduce amount to only desired.
+     * Increases the viewing distance of tiles based on height.
      *
-     * @param size      The desired tile resolution to get.
+     * @param height    The height of the camera.
      * @param cam       Scene camera to cull in relation to.
      * @param graphics  Graphics preset to dictate culling amount.
      *
      * @return All the sub-tiles at given scale that haven't been culled
      */
-    fun getTilesCulled(size: Float, cam: Camera, graphics: GraphicsPreset):  MutableList<Tile>{
+    fun getTilesCulledHeightScaled(height: Float, cam: Camera, graphics: GraphicsPreset):  MutableList<Tile>{
         val allTiles = mutableListOf<Tile>()
         didCull = false
         didUseSubTiles = false
@@ -188,7 +189,7 @@ data class Tile(val x: Float, val z: Float, val size: Float, val tileLookup : Ve
         // Check iff tile can be culled
         val closestPoint = AtlasUtils.bboxClosestPoint(Vector3(cam.position.x, 0f, cam.position.z), bbox)
         val dist = cam.position.dst(closestPoint)
-        if (dist >= graphics.tileDrawDist || !cam.frustum.boundsInFrustum(bbox)) {
+        if (dist >= graphics.tileDrawDist * height || !cam.frustum.boundsInFrustum(bbox)) {
             didCull = true
             decal = null
             subTiles.clear()
@@ -224,7 +225,7 @@ data class Tile(val x: Float, val z: Float, val size: Float, val tileLookup : Ve
             // Add sub-tiles sub-tiles
             for (tile in subTiles) {
                 didUseSubTiles = true
-                for (subTile in tile.getTilesCulled(size, cam, graphics)) {
+                for (subTile in tile.getTilesCulledHeightScaled(height, cam, graphics)) {
                     allTiles.add(subTile)
                 }
             }
@@ -232,16 +233,16 @@ data class Tile(val x: Float, val z: Float, val size: Float, val tileLookup : Ve
         return allTiles
     }
 
-    /**
-     * Get all sub-tiles that make up tile at a given resolution,
-     * but apply culling methods to reduce amount to only desired.
-     *
-     * @param intersection  Position of camera ray with ground plane.
-     * @param cam           Scene camera to cull in relation to.
-     * @param graphics      Graphics preset to dictate culling amount.
-     *
-     * @return All the sub-tiles at given scale that haven't been culled
-     */
+//    /**
+//     * Get all sub-tiles that make up tile at a given resolution,
+//     * but apply culling methods to reduce amount to only desired.
+//     *
+//     * @param intersection  Position of camera ray with ground plane.
+//     * @param cam           Scene camera to cull in relation to.
+//     * @param graphics      Graphics preset to dictate culling amount.
+//     *
+//     * @return All the sub-tiles at given scale that haven't been culled
+//     */
 //    fun getTilesCulled(intersection: Vector3, cam: Camera, graphics: GraphicsPreset):  MutableList<Tile>{
 //        val allTiles = mutableListOf<Tile>()
 //        didCull = false

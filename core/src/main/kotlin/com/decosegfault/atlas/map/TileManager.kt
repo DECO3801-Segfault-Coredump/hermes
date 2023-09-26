@@ -115,7 +115,7 @@ class TileManager {
     fun getTilesCulled(size: Float, cam: Camera, graphics: GraphicsPreset): MutableList<Tile> {
         val tiles = mutableListOf<Tile>()
         for (tile in tileSurface) {
-            for (subTile in tile.getTilesCulled(size, cam, graphics)) {
+            for (subTile in tile.getTilesCulledHeightScaled(size, cam, graphics)) {
                 tiles.add(subTile)
             }
         }
@@ -132,10 +132,12 @@ class TileManager {
      *
      * @return  Collection of the tiles in the plane that satisfy conditions.
      */
-    fun getTilesCulled(cam: Camera, graphics: GraphicsPreset): MutableList<Tile> {
+    fun getTilesCulledHeightScaled(cam: Camera, graphics: GraphicsPreset): MutableList<Tile> {
         val tiles = mutableListOf<Tile>()
+        val height = max(cam.position.y/400, 1f)
+
         for (tile in tileSurface) {
-                for (subTile in tile.getTilesCulled(calculateSize(cam, tile), cam, graphics)) {
+                for (subTile in tile.getTilesCulledHeightScaled(height, cam, graphics)) {
                     tiles.add(subTile)
             }
         }

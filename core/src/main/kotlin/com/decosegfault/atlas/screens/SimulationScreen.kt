@@ -66,7 +66,7 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
     private val cam = PerspectiveCamera().apply {
         fieldOfView = 75f
         near = 0.5f
-        far = max(graphics.tileDrawDist, graphics.vehicleDrawDist) * 10
+        far = max(graphics.tileDrawDist, graphics.vehicleDrawDist) * 20
 //        rotate(Vector3.X, -90f)
         translate(0f, 300f, 0f)
         update()
@@ -213,7 +213,7 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
         // tell Hermes to tick every 100 ms, in its own thread asynchronously, so we don't block the renderer
         hermesExecutor.scheduleAtFixedRate({
             try {
-                hermesDelta = measureNanoTime { HermesSim.tick() } / 1e6f
+                hermesDelta = measureNanoTime { HermesSim.tick(Gdx.graphics.deltaTime) } / 1e6f
             } catch (e: Exception) {
                 Logger.error("Hermes exception: $e")
                 Logger.error(e)
@@ -342,7 +342,7 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
                 vehicle.debug(shapeRender)
             }
 
-            val tiles = tileManager.getTilesCulled(cam, graphics)
+            val tiles = tileManager.getTilesCulledHeightScaled(cam, graphics)
             for (tile in tiles) {
                 tile.debug(shapeRender)
             }

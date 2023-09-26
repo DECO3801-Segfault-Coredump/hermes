@@ -18,7 +18,6 @@ public class VehicleData {
         vehicleType = type;
     }
     public void tick(Vector3 newPosition) {
-        position.set(newPosition.x, newPosition.y, (new Vector2(newPosition.x, newPosition.y)).angleDeg(new Vector2(oldPosition.x, oldPosition.y)));
-        oldPosition = newPosition;
+
     }
 }

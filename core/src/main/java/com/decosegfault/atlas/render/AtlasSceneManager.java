@@ -37,8 +37,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import com.decosegfault.hermes.HermesSim;
-
 /**
  * This is the scene manager for Atlas, which is a fixed and re-implemented version of the default
  * SceneManager in gdx-gltf.
@@ -242,7 +240,7 @@ public class AtlasSceneManager implements Disposable {
 
         // Load ground plane tiles for rendering
         tileDecals.clear();
-        for (Tile tile : tileManager.getTilesCulled( camera, graphics)){
+        for (Tile tile : tileManager.getTilesCulledHeightScaled(camera, graphics)){
             var decal = tile.getDecal();
             if (decal != null) tileDecals.add(decal);
         }
