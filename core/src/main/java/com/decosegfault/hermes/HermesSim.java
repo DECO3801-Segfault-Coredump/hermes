@@ -172,6 +172,14 @@ public class HermesSim {
         }
     }
 
+    public static void increaseSpeed() {
+        speed *= 2;
+    }
+
+    public static void decreaseSpeed() {
+        speed /= 2;
+    }
+
 //    private static class GtfsEntityHandler implements EntityHandler {
 //
 //        public void handleEntity(Object bean) {
