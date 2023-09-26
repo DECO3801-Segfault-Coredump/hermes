@@ -38,8 +38,20 @@ data class HPVector2(
         return x * v.x + y * v.y
     }
 
+    fun scl(scalar: Double): HPVector2 {
+        x *= scalar
+        y *= scalar
+        return this
+    }
+
     fun angleDeg(reference: HPVector2): Double {
         var angle = atan2(reference.crs(this), reference.dot(this)) * MathUtils.radiansToDegrees
+        if (angle < 0) angle += 360f
+        return angle
+    }
+
+    fun angleDeg(): Double {
+        var angle = atan2(y, x) * MathUtils.radiansToDegrees
         if (angle < 0) angle += 360f
         return angle
     }

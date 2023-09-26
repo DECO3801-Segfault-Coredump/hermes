@@ -5,7 +5,9 @@ import kotlin.math.atan2
 import kotlin.math.sqrt
 
 /**
- * High precision version of Vector3 intended for WGS84 lat long coordinates
+ * High precision version of Vector3 intended for WGS84 lat long coordinates.
+ * Z is not considered as per Monsigneur Ellis' requirements.
+ * He only works in 2D. so true.
  * @author Matt Young
  */
 data class HPVector3(
@@ -16,14 +18,12 @@ data class HPVector3(
     fun add(v: HPVector3): HPVector3 {
         x += v.x
         y += v.y
-        z += v.z
         return this
     }
 
     fun sub(v: HPVector3): HPVector3 {
         x -= v.x
         y -= v.y
-        z -= v.z
         return this
     }
 
@@ -39,6 +39,12 @@ data class HPVector3(
 
     fun dot(v: HPVector3): Double {
         return x * v.x + y * v.y
+    }
+
+    fun scl(scalar: Double): HPVector3 {
+        x *= scalar
+        y *= scalar
+        return this
     }
 
     fun angleDeg(reference: HPVector3): Double {
