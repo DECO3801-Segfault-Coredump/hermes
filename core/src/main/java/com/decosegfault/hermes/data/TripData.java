@@ -59,7 +59,7 @@ public class TripData {
 
     public void tick() {
         if (startTime <= HermesSim.time && endTime >= HermesSim.time) {
-            Logger.warn("Currently Running: {}", routeName);
+//            Logger.warn("Currently Running: {}", routeName);
             Vector3 newPosition = new Vector3();
             if (RouteHandler.simType == SimType.HISTORY) {
                 float traversedPercent = ((float) (HermesSim.time - startTime)) / (float) (endTime - startTime);

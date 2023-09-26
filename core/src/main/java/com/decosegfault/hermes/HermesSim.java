@@ -34,7 +34,12 @@ public class HermesSim {
     public static Map<String, AtlasVehicle> vehicleMap = new HashMap<>();
 
     /** time of day will be in seconds, max 86400 (one day) before looping back to 0 */
-    public static int time = 52740;
+    public static int time = 0;
+
+    static int baseTime = 5000;
+
+    static float speed = 30f;
+    static float floatTime = 0;
 
 //    static int tickCount = 0;
 
@@ -45,8 +50,10 @@ public class HermesSim {
      * in live mode, tick does nothing.
      * in sim mode, moves vehicles at a set speed based on tick speed.
      */
-    public static void tick() {
-        time += 1;
+    public static void tick(float delta) {
+        floatTime += delta;
+        time = (int) (floatTime * speed) + baseTime;
+        Logger.warn("Time: {} {}", floatTime, time);
 //        Logger.warn("tell me your mf length {}", vehicleMap.size());
         for (TripData trip : RouteHandler.tripsByShape.values()) {
             if(RouteHandler.simType == SimType.LIVE) {

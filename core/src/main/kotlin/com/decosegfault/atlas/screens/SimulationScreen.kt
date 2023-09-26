@@ -205,12 +205,12 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
         // tell Hermes to tick every 100 ms, in its own thread asynchronously, so we don't block the renderer
         hermesExecutor.scheduleAtFixedRate({
             try {
-                HermesSim.tick()
+                HermesSim.tick(Gdx.graphics.deltaTime)
             } catch (e: Exception) {
                 Logger.error("Hermes exception: $e")
                 Logger.error(e)
             }
-        }, 0L, 50L, TimeUnit.MILLISECONDS)
+        }, 0L, 100L, TimeUnit.MILLISECONDS)
     }
 
     override fun show() {
