@@ -326,7 +326,7 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
             |Tiles on screen: ${tileManager.numRetrievedTiles}
             |Work queue    done: $workIdx    left: ${WORK_QUEUE.size}
             |Graphics preset: ${graphics.name}
-            |Hermes delta: ${hermesDelta.roundToInt()} ms
+            |Hermes compute time: ${hermesDelta.roundToInt()} ms
             |pitch: ${camController.quat.pitch}, roll: ${camController.quat.roll}, yaw: ${camController.quat.yaw}
             |x: ${cam.position.x}, y: ${cam.position.y}, z: ${cam.position.z}
             """.trimMargin())

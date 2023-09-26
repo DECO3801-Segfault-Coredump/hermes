@@ -24,6 +24,7 @@ import org.onebusaway.gtfs.model.Route;
 import org.onebusaway.gtfs.model.Trip;
 
 import java.io.IOException;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author Lachlan Ellis
@@ -31,7 +32,7 @@ import java.io.IOException;
  */
 public class HermesSim {
 
-    public static Map<String, AtlasVehicle> vehicleMap = new HashMap<>();
+    public static ConcurrentHashMap<String, AtlasVehicle> vehicleMap = new ConcurrentHashMap<>();
 
     /** time of day will be in seconds, max 86400 (one day) before looping back to 0 */
     public static int time = 0;
