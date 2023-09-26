@@ -62,11 +62,12 @@ public class TripData {
 //            Logger.warn("Currently Running: {}", routeName);
             Vector3 newPosition = new Vector3();
             if (RouteHandler.simType == SimType.HISTORY) {
-                float traversedPercent = ((float) (HermesSim.time - startTime)) / (float) (endTime - startTime);
-                float traversedDist = traversedPercent * pathLength;
-                float recordedDist = 0;
-//                Logger.warn("Traversed: {}%, {}m.", traversedPercent*100, traversedDist);
+                double traversedPercent = ( (HermesSim.time - startTime)) / (float) (endTime - startTime);
+                double traversedDist = traversedPercent * pathLength;
+                double recordedDist = 0;
+                Logger.warn("Traversed: {}%, {}m.", traversedPercent*100, traversedDist);
 //                Logger.warn("Timing: {}, {}, {}.", startTime, endTime, HermesSim.time);
+                Logger.warn("Perc Calc: {}, {}.", HermesSim.time - startTime, endTime - startTime);
                 if (routeMap.size() > 1) {
                     for (int i = 1; i < routeMap.size(); i++) {
                         Vector3 tempLastVect = new Vector3(routeMap.get(i - 1).x, routeMap.get(i - 1).y, 0);
@@ -76,11 +77,11 @@ public class TripData {
 //                        tempLastVect.x, tempLastVect.y, tempCurVect.x, tempCurVect.y, tickCount);
                         if (recordedDist + Math.abs(routeMap.get(i).dst(routeMap.get(i - 1))) >= traversedDist) {
                             newPosition = tempLastVect.add((tempCurVect.sub(routeMap.get(i - 1)))
-                                .scl(Math.abs(traversedDist - recordedDist)
-                                    / Math.abs(routeMap.get(i).dst(routeMap.get(i - 1)))));
-//                        Logger.warn("Found! at: {}", recordedDist);
-//                        Logger.warn("Scaled to: {}%", Math.abs(traversedDist-recordedDist)
-//                            /Math.abs(routeMap.get(i).dst(routeMap.get(i-1))) * 100);
+                                .scl((float) (Math.abs(traversedDist - recordedDist)
+                                                                    / Math.abs(routeMap.get(i).dst(routeMap.get(i - 1))))));
+                        Logger.warn("Found! at: {}", recordedDist);
+                        Logger.warn("Scaled to: {}%", Math.abs(traversedDist-recordedDist)
+                            /Math.abs(routeMap.get(i).dst(routeMap.get(i-1))) * 100);
 //                        Logger.warn("Scaling by: {} / {}", Math.abs(traversedDist-recordedDist),
 //                            Math.abs(routeMap.get(i).dst(routeMap.get(i-1))));
                             break;
@@ -97,8 +98,9 @@ public class TripData {
             }
             vehicle.position.set(newPosition.x, newPosition.y, (new Vector2(newPosition.x, newPosition.y)).angleDeg(
                 new Vector2(vehicle.oldPosition.x, vehicle.oldPosition.y)));
-            vehicle.oldPosition = newPosition;
-//        Logger.warn("Traversed to: {} {}.", newPosition.x, newPosition.y);
+//            vehicle.position.set(newPosition.x, newPosition.y, (float) (HermesSim.time%360));
+            vehicle.oldPosition = new Vector3(newPosition.x, newPosition.y, newPosition.z);
+        Logger.warn("Traversed to: {} {}.", newPosition.x, newPosition.y);
         } else {
             vehicle.position.set(new Vector3(-27.499593094511493f, 153.01620933407332f, 0f));
         }

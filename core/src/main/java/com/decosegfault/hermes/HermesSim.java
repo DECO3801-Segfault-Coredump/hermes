@@ -35,11 +35,11 @@ public class HermesSim {
     public static ConcurrentHashMap<String, AtlasVehicle> vehicleMap = new ConcurrentHashMap<>();
 
     /** time of day will be in seconds, max 86400 (one day) before looping back to 0 */
-    public static int time = 0;
+    public static double time = 0f;
 
-    static int baseTime = 5000;
+    static float baseTime = 52740f;
 
-    static float speed = 30f;
+    static float speed = 50f;
     static float floatTime = 0;
 
 //    static int tickCount = 0;
@@ -54,7 +54,7 @@ public class HermesSim {
     public static void tick(float delta) {
         if (System.getProperty("nohermes") != null) return;
         floatTime += delta;
-        time = (int) (floatTime * speed) + baseTime;
+        time = (floatTime * speed) + baseTime;
         Logger.warn("Time: {} {}", floatTime, time);
 //        Logger.warn("tell me your mf length {}", vehicleMap.size());
         for (TripData trip : RouteHandler.tripsByShape.values()) {

@@ -46,8 +46,8 @@ public class RouteHandler {
     static boolean added = false;
     public static void addTrip(Trip trip) {
         //debug
-//        if(!added) {
-//            added = true;
+        if(!added) {
+            added = true;
             TripData newTrip = new TripData(routes.get(trip.getRoute().getId().getId()).routeType);
             newTrip.routeID = trip.getId().getId();
             newTrip.routeName = trip.getTripHeadsign();
@@ -58,7 +58,7 @@ public class RouteHandler {
             tripsByRoute.put(trip.getRoute().getId().getId(), newTrip);
             tripsbyID.put(trip.getId().getId(), newTrip);
 //            Logger.warn("Added at: {}", trip.getId().getId());
-//        }
+        }
     }
 
     public static void addShape(ShapePoint point) {
@@ -75,7 +75,7 @@ public class RouteHandler {
 //            Logger.warn("Editing trip ID: {}", time.getTrip().getId().getId());
             if(time.getStopSequence() == 1) {
                 trip.startTime = time.getDepartureTime();
-//                Logger.warn("Start time: {}", time.getDepartureTime());
+                Logger.warn("Start time: {}", time.getDepartureTime());
             }
             if(time.getArrivalTime() > trip.endTime) {
                 trip.endTime = time.getArrivalTime();
