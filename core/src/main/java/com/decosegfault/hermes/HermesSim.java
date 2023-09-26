@@ -55,7 +55,7 @@ public class HermesSim {
         if (System.getProperty("nohermes") != null) return;
         floatTime += delta;
         time = (floatTime * speed) + baseTime;
-        Logger.warn("Time: {} {}", floatTime, time);
+//        Logger.warn("Time: {} {}", floatTime, time);
 //        Logger.warn("tell me your mf length {}", vehicleMap.size());
         for (TripData trip : RouteHandler.tripsByShape.values()) {
             if(RouteHandler.simType == SimType.LIVE) {

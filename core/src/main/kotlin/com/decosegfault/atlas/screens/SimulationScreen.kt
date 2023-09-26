@@ -295,6 +295,12 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
             Logger.debug("Going to randomly selected vehicle: $vehicle")
             val position = vehicle.transform.getTranslation(Vector3())
             cam.position.set(position.x, 200f, position.z)
+        } else if (Gdx.input.isKeyJustPressed(Input.Keys.PERIOD)) {
+            Logger.debug("Increment speed")
+            HermesSim.increaseSpeed()
+        } else if (Gdx.input.isKeyJustPressed(Input.Keys.COMMA)) {
+            Logger.debug("Decrement speed")
+            HermesSim.decreaseSpeed()
         }
 
         // render 3D
@@ -327,6 +333,7 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
             |Work queue    done: $workIdx    left: ${WORK_QUEUE.size}
             |Graphics preset: ${graphics.name}
             |Hermes compute time: ${hermesDelta.roundToInt()} ms
+            |Hermes sim time: ${HermesSim.time.roundToInt()}
             |pitch: ${camController.quat.pitch}, roll: ${camController.quat.roll}, yaw: ${camController.quat.yaw}
             |x: ${cam.position.x}, y: ${cam.position.y}, z: ${cam.position.z}
             """.trimMargin())
