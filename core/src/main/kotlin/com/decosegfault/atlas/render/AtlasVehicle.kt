@@ -2,6 +2,7 @@ package com.decosegfault.atlas.render
 
 import com.badlogic.gdx.graphics.Camera
 import com.badlogic.gdx.graphics.Color
+import com.badlogic.gdx.graphics.g3d.Model
 import com.badlogic.gdx.graphics.g3d.ModelInstance
 import com.badlogic.gdx.graphics.g3d.RenderableProvider
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
@@ -42,7 +43,18 @@ class AtlasVehicle(private val modelHigh: SceneAsset, private val modelLow: Scen
 
     init {
         // only calculate bbox once, then multiply it with transform (see update())
-        modelInstanceHigh.calculateBoundingBox(bboxOrig)
+        // also pull it from cache if we are able, since we only have 3 models
+
+        val maybeBbox = BBOX_CACHE[modelHigh.scene.model]
+        if (maybeBbox != null) {
+            // we hit the cache
+            bboxOrig.set(maybeBbox)
+        } else {
+            // didn't hit the cache, do the slow calculation
+            modelInstanceHigh.calculateBoundingBox(bboxOrig)
+            BBOX_CACHE[modelHigh.scene.model] = bboxOrig
+            Logger.debug("Calculate initial bounding box for model ${modelHigh.scene.model.hashCode()}")
+        }
     }
 
     /** Updates LoD transforms according to the shared [transform] */
@@ -152,5 +164,7 @@ class AtlasVehicle(private val modelHigh: SceneAsset, private val modelLow: Scen
             vehicle.updateTransform(Vector3.Zero)
             return vehicle
         }
+
+        private val BBOX_CACHE = mutableMapOf<Model, BoundingBox>()
     }
 }

@@ -57,8 +57,8 @@ data class HPVector2(
     }
 
     fun angleDeg(): Double {
-        var angle = atan2(y, x) * MathUtils.radiansToDegrees
+        var angle = MathUtils.atan2(y.toFloat(), x.toFloat()) * MathUtils.radiansToDegrees
         if (angle < 0) angle += 360f
-        return angle
+        return angle.toDouble()
     }
 }
