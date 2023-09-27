@@ -35,11 +35,11 @@ public class HermesSim {
     public static ConcurrentHashMap<String, AtlasVehicle> vehicleMap = new ConcurrentHashMap<>();
 
     /** time of day will be in seconds, max 86400 (one day) before looping back to 0 */
-    public static double time = 0;
+    public static double time = 44100;
 
 //    static float baseTime = 44100;
 
-    static float speed = 40f;
+    static float speed = 10f;
 
 
     /**
