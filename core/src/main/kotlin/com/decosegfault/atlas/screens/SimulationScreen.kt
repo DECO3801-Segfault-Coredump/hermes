@@ -413,7 +413,7 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
         private const val WORK_QUEUE_ABSOLUTE_MAX = 8192
 
         /** Hermes ticks every this many milliseconds */
-        private const val HERMES_TICK_RATE = 100f
+        private const val HERMES_TICK_RATE = 50f
 
         /** Hermes tick delta */
         private const val HERMES_DELTA = HERMES_TICK_RATE / 1000f
