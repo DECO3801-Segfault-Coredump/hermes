@@ -219,7 +219,7 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
                 Logger.error("Hermes exception: $e")
                 Logger.error(e)
             }
-        }, 0L, 100L, TimeUnit.MILLISECONDS)
+        }, 0L, HERMES_TICK_RATE.toLong(), TimeUnit.MILLISECONDS)
     }
 
     override fun show() {
@@ -292,7 +292,7 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
             cam.position.set(0f, 200f, 0f)
         } else if (Gdx.input.isKeyJustPressed(Input.Keys.B)) {
             val vehicle = HermesSim.vehicleMap.values.filter { !it.hidden }.random()
-            Logger.debug("Going to randomly selected vehicle: $vehicle")
+            Logger.debug("Going to randomly selected vehicle: $vehicle, ${vehicle.hashCode()}")
             val position = vehicle.transform.getTranslation(Vector3())
             cam.position.set(position.x, 200f, position.z)
         } else if (Gdx.input.isKeyJustPressed(Input.Keys.PERIOD)) {
@@ -413,7 +413,7 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
         private const val WORK_QUEUE_ABSOLUTE_MAX = 8192
 
         /** Hermes ticks every this many milliseconds */
-        private const val HERMES_TICK_RATE = 5f
+        private const val HERMES_TICK_RATE = 100f
 
         /** Hermes tick delta */
         private const val HERMES_DELTA = HERMES_TICK_RATE / 1000f

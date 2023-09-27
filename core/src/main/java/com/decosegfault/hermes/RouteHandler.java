@@ -25,8 +25,8 @@ public class RouteHandler {
 
     static Map<String, RouteData> routes = new HashMap<String, RouteData>();
 
-    static Map<String, TripData> tripsByRoute = new HashMap<String, TripData>();
-    static Map<String, TripData> tripsByShape = new HashMap<String, TripData>();
+//    static Map<String, TripData> tripsByRoute = new HashMap<String, TripData>();
+    static Map<String, List<TripData>> tripsByShape = new HashMap<>();
 
     static Map<String, TripData> tripsbyID = new HashMap<>();
 
@@ -48,29 +48,30 @@ public class RouteHandler {
         //debug
 //        if(!added) {
 //            added = true;
-            TripData newTrip = new TripData(routes.get(trip.getRoute().getId().getId()).routeType);
+            TripData newTrip = new TripData(routes.get(trip.getRoute().getId().getId()).routeType, trip.getDirectionId());
             newTrip.routeID = trip.getId().getId();
             newTrip.routeName = trip.getTripHeadsign();
 
 
             //check this later to make sure it's not a deep copy, if it is I will be sad
-            tripsByShape.put(trip.getShapeId().getId(), newTrip);
-            tripsByRoute.put(trip.getRoute().getId().getId(), newTrip);
+            if(!tripsByShape.containsKey(trip.getShapeId().getId())) {
+                tripsByShape.put(trip.getShapeId().getId(), new ArrayList<>());
+            }
+            tripsByShape.get(trip.getShapeId().getId()).add(newTrip);
+//            tripsByRoute.put(trip.getRoute().getId().getId(), newTrip);
             tripsbyID.put(trip.getId().getId(), newTrip);
 //            Logger.warn("Added at: {}", trip.getId().getId());
 //        }
     }
 
     public static void addShape(ShapePoint point) {
-        if(tripsByShape.containsKey(point.getShapeId().getId())) {
+        for(TripData trip : tripsByShape.get(point.getShapeId().getId())) {
             Vector3 tempVector2 = new Vector3((float) point.getLat(), (float) point.getLon(), 0);
             Vector3 tempVector = AtlasUtils.INSTANCE.latLongToAtlas(tempVector2);
 //            Logger.warn("Shape added: {}x {}y {}s", tempVector.x, tempVector.y, tempVector.z);
 //            Logger.warn("original: {}x {}y", point.getLat(), point.getLon());
-            tripsByShape.get(point.getShapeId().getId()).routeMap.add(
-                new HPVector3(tempVector.x, tempVector.y, point.getSequence()));
+            trip.routeMap.add(new HPVector3(tempVector.x, tempVector.y, point.getSequence()));
         }
-
     }
 
     public static void handleTime(StopTime time) {
@@ -89,7 +90,7 @@ public class RouteHandler {
     }
 
     public static void sortShapes() {
-        for (TripData element : tripsByShape.values()) {
+        for (TripData element : tripsbyID.values()) {
             element.routeMap.sort(Comparator.comparingDouble(HPVector3::getZ));
             for(int i = 0; i < element.routeMap.size(); i++) {
                 element.routeMap.get(i).setZ(0);
@@ -105,13 +106,13 @@ public class RouteHandler {
     }
 
     public static void logTrips() {
-        for (TripData trip : tripsByShape.values()) {
+        for (TripData trip : tripsbyID.values()) {
             Logger.info(trip.routeName + " : " + trip.routeID);
         }
     }
 
     public static void logShapes() {
-        for (TripData trip : tripsByShape.values()) {
+        for (TripData trip : tripsbyID.values()) {
             for (HPVector3 vector : trip.routeMap) {
                 Logger.info(vector.getX() + "+" + vector.getY() + " : " + vector.getZ() + " : " + trip.routeName);
             }
@@ -119,7 +120,7 @@ public class RouteHandler {
     }
 
     public static void initTrips() {
-        for (TripData trip : tripsByShape.values()) {
+        for (TripData trip : tripsbyID.values()) {
             trip.initTrip();
         }
     }

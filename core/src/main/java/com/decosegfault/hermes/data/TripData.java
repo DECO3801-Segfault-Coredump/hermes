@@ -2,6 +2,7 @@ package com.decosegfault.hermes.data;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
@@ -32,6 +33,8 @@ public class TripData {
     //debug
     int tickCount = 0;
 
+    String inBound;
+
     public TripData(int type) {
         switch (type) {
             case 2 -> routeType = VehicleType.TRAIN;
@@ -41,9 +44,10 @@ public class TripData {
         vehicle = new VehicleData(routeType);
     }
 
-    public TripData(VehicleType type) {
+    public TripData(VehicleType type, String in) {
         routeType = type;
         vehicle = new VehicleData(routeType);
+        inBound = in;
     }
 
     //
@@ -63,11 +67,16 @@ public class TripData {
     public void tick() {
         if (startTime <= HermesSim.time && endTime >= HermesSim.time) {
 //            Logger.warn("Currently Running: {}", routeName);
+//            Logger.warn("Running: {} {}", routeName, routeID);
             vehicle.hidden = false;
             HPVector2 newPosition = new HPVector2(0, 0);
             int shapeIndex = 0;
             if (RouteHandler.simType == SimType.HISTORY) {
                 double traversedPercent = (HermesSim.time - startTime) /  (endTime - startTime);
+//                if(Objects.equals(inBound, "1")) {
+//                    Logger.warn("inverted");
+//                    traversedPercent = 1 - traversedPercent;
+//                }
                 double traversedDist = traversedPercent * pathLength;
                 double recordedDist = 0;
 //                Logger.warn("Traversed: {}%, {}m.", traversedPercent*100, traversedDist);
@@ -103,15 +112,20 @@ public class TripData {
             } else {
 
             }
+            double angle = (-1 * new HPVector2(routeMap.get(shapeIndex).getX() - routeMap.get(shapeIndex - 1).getX(),
+                routeMap.get(shapeIndex).getY() - routeMap.get(shapeIndex - 1).getY()).angleDeg())%360;
+//            if(Objects.equals(inBound, "1")) {
+//                angle = (angle-180)%360;
+//            }
             vehicle.position.set(newPosition.getX(), newPosition.getY(),
-                (-1 * new HPVector2(routeMap.get(shapeIndex).getX() - routeMap.get(shapeIndex - 1).getX(),
-                        routeMap.get(shapeIndex).getY() - routeMap.get(shapeIndex - 1).getY()).angleDeg())%360);
+                angle);
 //            vehicle.position.set(newPosition.x, newPosition.y, (float) ((HermesSim.time*1000)%360));
             vehicle.oldPosition = new HPVector3(vehicle.position.getX(), vehicle.position.getY(), vehicle.position.getZ());
 //            Logger.warn("Angle: {} .", new HPVector2(routeMap.get(shapeIndex).getX() - routeMap.get(shapeIndex - 1).getX(),
 //                routeMap.get(shapeIndex).getY() - routeMap.get(shapeIndex - 1).getY()).angleDeg());
             Vector3 testVector = AtlasUtils.INSTANCE.latLongZoomToSlippyCoord(vehicle.position.getX(), vehicle.position.getY());
-//            Logger.warn("Vehicle position: {}x, {}y", vehicle.position.getX(), vehicle.position.getY());
+//            Logger.warn("Vehicle position: {}x, {}y, {}s, {}", vehicle.position.getX(), vehicle.position.getY(),
+//                HermesSim.time, HermesSim.tickCount);
 //            Logger.warn("Equivalent: {}x, {}y", testVector.x, testVector.y);
 //            Logger.warn("Equivalent2: {}x, {}y", (float)vehicle.position.getX(), (float)vehicle.position.getY());
         } else {

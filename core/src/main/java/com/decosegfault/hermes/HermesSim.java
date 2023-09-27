@@ -35,13 +35,12 @@ public class HermesSim {
     public static ConcurrentHashMap<String, AtlasVehicle> vehicleMap = new ConcurrentHashMap<>();
 
     /** time of day will be in seconds, max 86400 (one day) before looping back to 0 */
-    public static double time = 44100;
+    public static double time = 0;
 
 //    static float baseTime = 44100;
 
-    static float speed = 180f;
+    static float speed = 40f;
 
-//    static int tickCount = 0;
 
     /**
      * ticks time by x seconds.
@@ -55,18 +54,32 @@ public class HermesSim {
         time += (delta * speed);
 //        Logger.warn("Time: {} {}", floatTime, time);
 //        Logger.warn("tell me your mf length {}", vehicleMap.size());
-        for (TripData trip : RouteHandler.tripsByShape.values()) {
+        int tripsActive = 0;
+        for (TripData trip : RouteHandler.tripsbyID.values()) {
             if(RouteHandler.simType == SimType.LIVE) {
                 //trip.vehicle.tick(*position vector, z can be whatever*)
                 //uhhh set the live data here lol
             } else {
                 trip.tick();
             }
-            //apply coordinate conversion function here
-            vehicleMap.get(trip.routeID).updateTransform(
-                new Vector3((float) trip.vehicle.position.getX(), (float) trip.vehicle.position.getY(), (float) trip.vehicle.position.getZ()));
-            vehicleMap.get(trip.routeID).setHidden(trip.vehicle.hidden);
+            if(trip.vehicle.hidden && vehicleMap.containsKey(trip.routeID)) {
+                vehicleMap.remove(trip.routeID);
+            } else if(!trip.vehicle.hidden && !vehicleMap.containsKey(trip.routeID)) {
+                if (trip.vehicle.vehicleType == null) {
+                    Logger.warn("Null trip vehicle! {} {}", trip.routeName, trip.routeID);
+                    continue;
+                }
+                var vehicle = AtlasVehicle.Companion.createFromHermes(trip.vehicle.vehicleType);
+                vehicleMap.put(trip.routeID, vehicle);
+            }
         }
+        for (var tripID : vehicleMap.entrySet()) {
+            TripData trip = RouteHandler.tripsbyID.get(tripID.getKey());
+            tripID.getValue().updateTransform(
+                new Vector3((float) trip.vehicle.position.getX(), (float) trip.vehicle.position.getY(), (float) trip.vehicle.position.getZ()));
+            tripID.getValue().setHidden(trip.vehicle.hidden);
+        }
+//        Logger.warn("Trips Loaded: {}, {} active", vehicleMap.size(), tripsActive);
     }
 
     /**
@@ -91,16 +104,17 @@ public class HermesSim {
         //RouteHandler.logRoutes();
 //        RouteHandler.logTrips();
         //RouteHandler.logShapes();
+        Logger.warn("Trips Loaded: {}", RouteHandler.tripsbyID.size());
         Logger.info("Linking Hermes-Atlas vehicles");
-	    for (TripData trip : RouteHandler.tripsByShape.values()) {
-	        if (trip.vehicle == null || trip.vehicle.vehicleType == null) {
-                Logger.warn("Null trip vehicle! {} {}", trip.routeName, trip.routeID);
-                continue;
-            }
-            var vehicle = AtlasVehicle.Companion.createFromHermes(trip.vehicle.vehicleType);
-            vehicleMap.put(trip.routeID, vehicle);
-
-        }
+//	    for (TripData trip : RouteHandler.tripsbyID.values()) {
+//	        if (trip.vehicle == null || trip.vehicle.vehicleType == null) {
+//                Logger.warn("Null trip vehicle! {} {}", trip.routeName, trip.routeID);
+//                continue;
+//            }
+//            var vehicle = AtlasVehicle.Companion.createFromHermes(trip.vehicle.vehicleType);
+//            vehicleMap.put(trip.routeID, vehicle);
+//
+//        }
         Logger.info("GTFS Data Loaded");
     }
 
@@ -168,6 +182,15 @@ public class HermesSim {
         for (ShapePoint element : shapesById.values()) {
             RouteHandler.addShape(element);
         }
+
+        try {
+            reader.close();
+        } catch (IOException noFile) {
+            throw new IllegalArgumentException("uh oh");
+        }
+
+
+
     }
 
     public static void increaseSpeed() {
