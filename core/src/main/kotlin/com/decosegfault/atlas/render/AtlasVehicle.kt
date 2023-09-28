@@ -16,6 +16,7 @@ import com.decosegfault.atlas.util.AtlasUtils
 import com.decosegfault.hermes.types.VehicleType
 import net.mgsx.gltf.scene3d.scene.SceneAsset
 import org.tinylog.kotlin.Logger
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Atlas's representation of a vehicle, includes gdx-gltf high detail and low detail models and bounding box.
@@ -55,6 +56,9 @@ class AtlasVehicle(private val modelHigh: SceneAsset, private val modelLow: Scen
             BBOX_CACHE[modelHigh.scene.model] = bboxOrig
             Logger.debug("Calculate initial bounding box for model ${modelHigh.scene.model.hashCode()}")
         }
+
+//        modelInstanceHigh.calculateBoundingBox(bboxOrig)
+
     }
 
     /** Updates LoD transforms according to the shared [transform] */
@@ -165,6 +169,6 @@ class AtlasVehicle(private val modelHigh: SceneAsset, private val modelLow: Scen
             return vehicle
         }
 
-        private val BBOX_CACHE = mutableMapOf<Model, BoundingBox>()
+        private val BBOX_CACHE = ConcurrentHashMap<Model, BoundingBox>()
     }
 }

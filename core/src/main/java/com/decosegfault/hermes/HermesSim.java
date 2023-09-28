@@ -1,7 +1,6 @@
 package com.decosegfault.hermes;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
@@ -41,6 +40,8 @@ public class HermesSim {
 
     static float speed = 10f;
 
+    private static final List<TripData> vehiclesToCreate = new ArrayList<>();
+
 
     /**
      * ticks time by x seconds.
@@ -55,7 +56,10 @@ public class HermesSim {
 //        Logger.warn("Time: {} {}", floatTime, time);
 //        Logger.warn("tell me your mf length {}", vehicleMap.size());
         int tripsActive = 0;
-        for (TripData trip : RouteHandler.tripsbyID.values()) {
+
+        vehiclesToCreate.clear();
+
+        RouteHandler.tripsbyID.values().parallelStream().forEach((trip) -> {
             if(RouteHandler.simType == SimType.LIVE) {
                 //trip.vehicle.tick(*position vector, z can be whatever*)
                 //uhhh set the live data here lol
@@ -67,18 +71,26 @@ public class HermesSim {
             } else if(!trip.vehicle.hidden && !vehicleMap.containsKey(trip.routeID)) {
                 if (trip.vehicle.vehicleType == null) {
                     Logger.warn("Null trip vehicle! {} {}", trip.routeName, trip.routeID);
-                    continue;
+                    return;
                 }
-                var vehicle = AtlasVehicle.Companion.createFromHermes(trip.vehicle.vehicleType);
-                vehicleMap.put(trip.routeID, vehicle);
+                vehiclesToCreate.add(trip);
             }
+        });
+
+        // create vehicles - this has to be here because otherwise it breaks libGDX
+        // the other way would be to have a "creating vehicle" lock
+        for (TripData trip : vehiclesToCreate) {
+            var vehicle = AtlasVehicle.Companion.createFromHermes(trip.vehicle.vehicleType);
+            vehicleMap.put(trip.routeID, vehicle);
         }
-        for (var tripID : vehicleMap.entrySet()) {
+
+        // parallelising this currently breaks everything
+       vehicleMap.entrySet().stream().forEach((tripID) -> {
             TripData trip = RouteHandler.tripsbyID.get(tripID.getKey());
             tripID.getValue().updateTransform(
                 new Vector3((float) trip.vehicle.position.getX(), (float) trip.vehicle.position.getY(), (float) trip.vehicle.position.getZ()));
             tripID.getValue().setHidden(trip.vehicle.hidden);
-        }
+        });
 //        Logger.warn("Trips Loaded: {}, {} active", vehicleMap.size(), tripsActive);
     }
 

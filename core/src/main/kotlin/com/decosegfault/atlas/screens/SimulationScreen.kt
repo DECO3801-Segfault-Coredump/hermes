@@ -328,7 +328,7 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
             """FPS: ${Gdx.graphics.framesPerSecond} (${deltaMs} ms)    Draw calls: ${profiler.drawCalls}    Memory: $mem MB
             |${GCTileCache.getStats()}
             |${GCBuildingCache.getStats()}
-            |Vehicles    culled: ${sceneManager.cullRate}%    low LoD: ${sceneManager.lowLodRate}%    full: ${sceneManager.fullRenderRate}%    total: ${sceneManager.totalVehicles}
+            |Vehicles    culled: ${sceneManager.cullRate}    low LoD: ${sceneManager.lowLodRate}    full: ${sceneManager.fullRenderRate}    total: ${sceneManager.totalVehicles}
             |Tiles on screen: ${tileManager.numRetrievedTiles}
             |Work queue    done: $workIdx    left: ${WORK_QUEUE.size}
             |Graphics preset: ${graphics.name}

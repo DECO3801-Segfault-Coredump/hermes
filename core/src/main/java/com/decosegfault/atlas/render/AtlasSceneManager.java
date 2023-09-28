@@ -294,15 +294,15 @@ public class AtlasSceneManager implements Disposable {
     }
 
     public int getCullRate() {
-        return getRate(culledVehicles);
+        return culledVehicles;
     }
 
     public int getLowLodRate() {
-        return getRate(lowLodVehicles);
+        return lowLodVehicles;
     }
 
     public int getFullRenderRate() {
-        return getRate(renderedVehicles);
+        return renderedVehicles;
     }
 
     /**
