@@ -80,6 +80,7 @@ public class RouteHandler {
 //            Logger.warn("Editing trip ID: {}", time.getTrip().getId().getId());
             if(time.getStopSequence() == 1) {
                 trip.startTime = time.getDepartureTime();
+                trip.previousTime = time.getDepartureTime();
 //                Logger.warn("Start time: {}", time.getDepartureTime());
             }
             if(time.getArrivalTime() > trip.endTime) {
