@@ -5,12 +5,12 @@ import com.badlogic.gdx.backends.lwjgl3.Lwjgl3ApplicationConfiguration
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Graphics
 import com.badlogic.gdx.graphics.*
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
-import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute
 import com.badlogic.gdx.graphics.g3d.decals.CameraGroupStrategy
 import com.badlogic.gdx.graphics.g3d.decals.DecalBatch
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import com.badlogic.gdx.graphics.profiling.GLProfiler
 import com.badlogic.gdx.math.Vector3
+import com.badlogic.gdx.math.WindowedMean
 import com.badlogic.gdx.scenes.scene2d.Stage
 import com.badlogic.gdx.scenes.scene2d.ui.Image
 import com.badlogic.gdx.scenes.scene2d.ui.Label
@@ -29,21 +29,19 @@ import com.decosegfault.atlas.util.FirstPersonCamController
 import com.decosegfault.hermes.HermesSim
 import com.google.common.util.concurrent.ThreadFactoryBuilder
 import ktx.app.clearScreen
-import net.mgsx.gltf.scene3d.attributes.FogAttribute
 import net.mgsx.gltf.scene3d.attributes.PBRCubemapAttribute
 import net.mgsx.gltf.scene3d.attributes.PBRTextureAttribute
 import net.mgsx.gltf.scene3d.lights.DirectionalLightEx
 import net.mgsx.gltf.scene3d.lights.DirectionalShadowLight
 import net.mgsx.gltf.scene3d.scene.SceneSkybox
 import net.mgsx.gltf.scene3d.utils.IBLBuilder
+import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics
 import org.tinylog.kotlin.Logger
 import java.util.*
 import java.util.concurrent.*
 import kotlin.math.max
 import kotlin.math.roundToInt
 import kotlin.system.measureNanoTime
-import kotlin.time.Duration
-import kotlin.time.measureTime
 
 /**
  * Implements the main screen for rendering the simulation
@@ -116,6 +114,8 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
     private val batch = SpriteBatch()
 
     private var hermesDelta = 0f
+
+    private val deltaWindow = DescriptiveStatistics(1024)
 
     private fun createTextUI() {
         // hack to use linear scaling instead of nearest neighbour for text
@@ -321,14 +321,20 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
         GCBuildingCache.nextFrame()
 
         // render debug UI
+        deltaWindow.addValue(delta.toDouble())
+        val deltaMin = (deltaWindow.min * 1000.0f).roundToInt()
+        val deltaMax = (deltaWindow.max * 1000.0f).roundToInt()
+        val deltaAvg = (deltaWindow.mean * 1000.0f).roundToInt()
+        val deltaDev = (deltaWindow.standardDeviation * 1000.0f).roundToInt()
+
         if (isDebugDraw) {
             val mem = ((Gdx.app.javaHeap + Gdx.app.nativeHeap) / 1e6).roundToInt()
-            val deltaMs = (delta * 1000.0f).roundToInt()
             debugLabel.setText(
-            """FPS: ${Gdx.graphics.framesPerSecond} (${deltaMs} ms)    Draw calls: ${profiler.drawCalls}    Memory: $mem MB
+            """FPS: ${Gdx.graphics.framesPerSecond}    Draw calls: ${profiler.drawCalls}    Memory: $mem MB
+            |Delta    min: $deltaMin ms     max: $deltaMax ms     avg: $deltaAvg ms     stddev: $deltaDev ms
             |${GCTileCache.getStats()}
             |${GCBuildingCache.getStats()}
-            |Vehicles    culled: ${sceneManager.cullRate}    low LoD: ${sceneManager.lowLodRate}    full: ${sceneManager.fullRenderRate}    total: ${sceneManager.totalVehicles}
+            |Vehicles    culled: ${sceneManager.cullRate}    low LoD: ${sceneManager.lowLodRate}    full: ${sceneManager.fullRenderRate}    total: ${sceneManager.totalVehicles}    on screen: ${sceneManager.lowLodRate + sceneManager.fullRenderRate}
             |Tiles on screen: ${tileManager.numRetrievedTiles}
             |Work queue    done: $workIdx    left: ${WORK_QUEUE.size}
             |Graphics preset: ${graphics.name}

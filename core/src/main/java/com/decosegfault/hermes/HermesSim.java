@@ -5,25 +5,20 @@ import java.util.*;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.math.Vector3;
-import com.badlogic.gdx.math.Vector3;
-import com.decosegfault.hermes.data.VehicleData;
 import com.decosegfault.hermes.types.SimType;
-import com.decosegfault.hermes.types.VehicleType;
 import org.onebusaway.gtfs.impl.GtfsDaoImpl;
 import org.onebusaway.gtfs.model.*;
 import org.tinylog.Logger;
 import com.decosegfault.atlas.render.AtlasVehicle;
 
-import org.onebusaway.csv_entities.EntityHandler;
 import org.onebusaway.gtfs.serialization.GtfsReader;
-import com.decosegfault.hermes.data.RouteData;
 import com.decosegfault.hermes.data.TripData;
-import com.decosegfault.hermes.types.SimType;
 import org.onebusaway.gtfs.model.Route;
 import org.onebusaway.gtfs.model.Trip;
 
 import java.io.IOException;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ForkJoinPool;
 
 /**
  * @author Lachlan Ellis
@@ -59,7 +54,7 @@ public class HermesSim {
 
         vehiclesToCreate.clear();
 
-        RouteHandler.tripsbyID.values().parallelStream().forEach((trip) -> {
+        RouteHandler.tripsbyID.values().stream().forEach((trip) -> {
             if(RouteHandler.simType == SimType.LIVE) {
                 //trip.vehicle.tick(*position vector, z can be whatever*)
                 //uhhh set the live data here lol
