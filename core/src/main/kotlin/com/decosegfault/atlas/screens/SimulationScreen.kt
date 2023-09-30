@@ -10,7 +10,6 @@ import com.badlogic.gdx.graphics.g3d.decals.DecalBatch
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import com.badlogic.gdx.graphics.profiling.GLProfiler
 import com.badlogic.gdx.math.Vector3
-import com.badlogic.gdx.math.WindowedMean
 import com.badlogic.gdx.scenes.scene2d.Stage
 import com.badlogic.gdx.scenes.scene2d.ui.Image
 import com.badlogic.gdx.scenes.scene2d.ui.Label
@@ -39,9 +38,11 @@ import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics
 import org.tinylog.kotlin.Logger
 import java.util.*
 import java.util.concurrent.*
+import java.util.zip.Deflater
 import kotlin.math.max
 import kotlin.math.roundToInt
 import kotlin.system.measureNanoTime
+
 
 /**
  * Implements the main screen for rendering the simulation
@@ -93,9 +94,6 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
 
     /** Debug shape renderer */
     private val shapeRender = ShapeRenderer()
-
-    /** True if vehicles should move in benchmark */
-    private var shouldVehiclesMove = true
 
     /** True if debug drawing enabled */
     private var isDebugDraw = System.getProperty("debug") != null
@@ -278,10 +276,6 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
                 Logger.debug("Enter fullscreen from window mode")
                 Gdx.graphics.setFullscreenMode(Lwjgl3ApplicationConfiguration.getDisplayMode())
             }
-        } else if (Gdx.input.isKeyJustPressed(Input.Keys.LEFT_BRACKET)) {
-            // vehicle movement in benchmark
-            Logger.debug("Toggling vehicle movement")
-            shouldVehiclesMove = !shouldVehiclesMove
         } else if (Gdx.input.isKeyJustPressed(Input.Keys.P)) {
             // debug camera pose and frustum culling
             Logger.debug("Camera pose:\npos: ${cam.position}\ndirection: ${cam.direction}")
@@ -383,6 +377,13 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
 
         profiler.reset()
         sceneManager.resetStats()
+
+        if (Gdx.input.isKeyJustPressed(Input.Keys.SEMICOLON)) {
+            Logger.debug("Taking screenshot")
+            val pixmap = Pixmap.createFromFrameBuffer(0, 0, Gdx.graphics.width, Gdx.graphics.height)
+            PixmapIO.writePNG(Gdx.files.absolute("/tmp/atlas_screenshot.png"), pixmap, Deflater.BEST_COMPRESSION, true)
+            pixmap.dispose()
+        }
     }
 
     override fun resize(width: Int, height: Int) {

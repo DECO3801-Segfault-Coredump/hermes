@@ -1,5 +1,6 @@
 package com.decosegfault.atlas.map
 
+import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.GL20
 import com.badlogic.gdx.graphics.Texture
@@ -19,6 +20,8 @@ import com.decosegfault.atlas.util.AtlasUtils
 import com.decosegfault.atlas.util.Triangle
 import io.github.sebasbaumh.postgis.PGgeometry
 import io.github.sebasbaumh.postgis.Polygon
+import ktx.collections.isNotEmpty
+import net.mgsx.gltf.exporters.GLTFExporter
 import net.mgsx.gltf.scene3d.attributes.PBRColorAttribute
 import net.mgsx.gltf.scene3d.attributes.PBRTextureAttribute
 import org.postgresql.PGConnection
@@ -26,6 +29,7 @@ import org.postgresql.geometric.PGpolygon
 import org.tinylog.kotlin.Logger
 import java.sql.DriverManager
 import java.sql.SQLException
+import java.util.UUID
 import java.util.concurrent.CompletableFuture
 
 /**
@@ -44,6 +48,8 @@ class BuildingGenerator : Disposable {
 
     /** Prepared statement consisting of [BUILDING_QUERY] */
     private var statement = conn.prepareStatement(BUILDING_QUERY)
+
+    private val exporter = GLTFExporter()
 
     init {
         Logger.info("Connected to PostGIS successfully! ${conn.metaData.databaseProductName} ${conn.metaData.databaseProductVersion}")
@@ -121,15 +127,19 @@ class BuildingGenerator : Disposable {
         )
 
         // extrude each triangle into a prism
+        var i = 0
         for (tri in tris) {
+//            if (i++ != 2) {
+//                continue
+//            }
             tri.extrudeUpToPrismMesh(mpb, height)
-//            println(tri.dumpAsWgs84Wkt())
         }
     }
 
     /**
      * Generates a building chunk. Buildings are packaged together into a ModelCache.
      */
+    @OptIn(ExperimentalStdlibApi::class)
     fun generateBuildingChunk(buildings: Set<Building>): ModelCache {
         val begin = System.nanoTime()
         val cache = ModelCache()
@@ -157,6 +167,10 @@ class BuildingGenerator : Disposable {
         val modelFuture = CompletableFuture<ModelInstance>()
         val modelRunnable = Runnable {
             val model = modelBuilder.end() // FIXME: memory leak here (need to free model)
+
+//            if (model.nodes.isNotEmpty())
+//                exporter.export(model, Gdx.files.absolute("/tmp/atlas_model_${model.hashCode().toHexString()}.gltf"))
+
             modelFuture.complete(ModelInstance(model))
         }
         SimulationScreen.addWork(modelRunnable)
@@ -220,9 +234,8 @@ class BuildingGenerator : Disposable {
         """.trimMargin()
 
         private val BUILDING_MATERIAL = Material().apply {
-            set(PBRColorAttribute.createBaseColorFactor(Color.GRAY))
-//            set(PBRColorAttribute.createEmissive(Color.GREEN))
-//            set(PBRTextureAttribute.createBaseColorTexture(ASSETS["sprite/blocks1.jpg", Texture::class.java]))
+//            set(PBRColorAttribute.createBaseColorFactor(Color.GRAY))
+            set(PBRTextureAttribute.createBaseColorTexture(ASSETS["sprite/uvchecker1.png", Texture::class.java]))
         }
     }
 }
