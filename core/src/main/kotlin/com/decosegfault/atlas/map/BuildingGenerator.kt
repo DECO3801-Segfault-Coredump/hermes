@@ -18,6 +18,7 @@ import com.decosegfault.atlas.screens.SimulationScreen
 import com.decosegfault.atlas.util.Assets.ASSETS
 import com.decosegfault.atlas.util.AtlasUtils
 import com.decosegfault.atlas.util.Triangle
+import io.github.sebasbaumh.postgis.MultiPolygon
 import io.github.sebasbaumh.postgis.PGgeometry
 import io.github.sebasbaumh.postgis.Polygon
 import ktx.collections.isNotEmpty
@@ -84,22 +85,29 @@ class BuildingGenerator : Disposable {
                 val floors = result.getInt(3)
 //                Logger.debug("ID: $id, geom: $geometry, floors: $floors")
 
-                // convert PostGIS polygon to libGDX Polygon
-                if (geometry.geometry !is Polygon) {
-                    Logger.error("PostGIS gave us unsupported geometry: ${geometry.geometry} ${geometry.geometry?.javaClass}")
-                    return hashSetOf()
-                }
-                val pgPolygon = geometry.geometry as Polygon
-                val vertices = mutableListOf<Float>()
-                for (point in pgPolygon.coordinates) {
-                    // note y/x ordering as PostGIS uses long/lat whereas we use lat/long
-                    vertices.add(point.y.toFloat())
-                    vertices.add(point.x.toFloat())
+                // extract all polygons from PostGIS
+                val pgPolys = mutableListOf<Polygon>()
+                if (geometry.geometry is Polygon) {
+                    pgPolys.add(geometry.geometry as Polygon)
+                } else if (geometry.geometry is MultiPolygon) {
+                    pgPolys.addAll((geometry.geometry as MultiPolygon).geometries)
                 }
 
-                // convert libGDX polygon to building (also convert from WGS84 lat/long to long/lat)
-                val gdxPolygon = com.badlogic.gdx.math.Polygon(vertices.toFloatArray())
-                val building = Building(id, gdxPolygon, floors)
+                // convert each PostGIS polygon into a libGDX Polygon
+                val gdxPolygons = mutableListOf<com.badlogic.gdx.math.Polygon>()
+                for (pgPolygon in pgPolys) {
+                    val vertices = mutableListOf<Float>()
+                    for (point in pgPolygon.coordinates) {
+                        // note y/x ordering as PostGIS uses long/lat whereas we use lat/long
+                        vertices.add(point.y.toFloat())
+                        vertices.add(point.x.toFloat())
+                    }
+                    // now that we've unpacked the verts, we can make a polygon
+                    val gdxPolygon = com.badlogic.gdx.math.Polygon(vertices.toFloatArray())
+                    gdxPolygons.add(gdxPolygon)
+                }
+
+                val building = Building(id, gdxPolygons, floors)
                 // convert in place to Atlas coords from WGS84
                 building.toAtlas()
                 buildings.add(building)
@@ -116,23 +124,22 @@ class BuildingGenerator : Disposable {
      * Extrudes the given triangulated base of a building into a 3D model
      * @param height height in metres
      */
-    private fun extrudeToModel(modelBuilder: ModelBuilder, tris: List<Triangle>, height: Float) {
-        // by this point, modelBuilder should have already called begin(), so we are OK to just add parts
+    private fun extrudeToModel(modelBuilder: ModelBuilder, tris: List<List<Triangle>>, height: Float) {
+        // iterate over each block of triangles and extrude this block on its own (which came from a
+        // single polygon upstream)
+        for ((i, triGroup) in tris.withIndex()) {
+            // by this point, modelBuilder should have already called begin(), so we are OK to just add parts
+            val mpb = modelBuilder.part(
+                "building${tris.hashCode()}${height}$i", GL20.GL_TRIANGLES,
+                VertexAttributes.Usage.Position.toLong() or VertexAttributes.Usage.Normal.toLong()
+                    or VertexAttributes.Usage.TextureCoordinates.toLong(),
+                BUILDING_MATERIAL
+            )
 
-        val mpb = modelBuilder.part(
-            "building${tris.hashCode()}${height}", GL20.GL_TRIANGLES,
-            VertexAttributes.Usage.Position.toLong() or VertexAttributes.Usage.Normal.toLong()
-            or VertexAttributes.Usage.TextureCoordinates.toLong(),
-            BUILDING_MATERIAL
-        )
-
-        // extrude each triangle into a prism
-        var i = 0
-        for (tri in tris) {
-//            if (i++ != 2) {
-//                continue
-//            }
-            tri.extrudeUpToPrismMesh(mpb, height)
+            // extrude each triangle into a prism
+            for (tri in triGroup) {
+                tri.extrudeUpToPrismMesh(mpb, height)
+            }
         }
     }
 
