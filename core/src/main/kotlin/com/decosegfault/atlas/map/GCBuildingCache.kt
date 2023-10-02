@@ -35,7 +35,7 @@ object GCBuildingCache : AbstractGarbageCollectedCache<Pair<Vector2, Vector2>, M
     MAX_BUILDINGS_RAM,
     START_GC_THRESHOLD,
     END_GC_THRESHOLD,
-    Runtime.getRuntime().availableProcessors()
+    1
 ) {
     /**
      * This set stores a list of buildings that have been reserved by other chunks. This is used to implement

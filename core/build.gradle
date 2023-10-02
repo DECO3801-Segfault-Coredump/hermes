@@ -1,9 +1,22 @@
+plugins {
+  id 'application'
+  id 'org.openjfx.javafxplugin' version '0.1.0'
+}
+
+javafx {
+  version = "17.0.8"
+  modules = [ 'javafx.controls', 'javafx.graphics' ]
+}
+
+apply plugin: 'org.openjfx.javafxplugin'
+
 [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
 eclipse.project.name = appName + '-core'
 
-repositories {
-  maven { url "https://repo.camsys-apps.com/releases/" }
-}
+// if the game won't compile add this shit back in again
+//repositories {
+//  maven { url "https://repo.camsys-apps.com/releases/" }
+//}
 
 dependencies {
   api "com.badlogicgames.gdx:gdx-ai:$aiVersion"

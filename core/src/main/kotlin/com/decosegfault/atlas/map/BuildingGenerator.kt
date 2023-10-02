@@ -116,24 +116,15 @@ class BuildingGenerator : Disposable {
      * Extrudes the given triangulated base of a building into a 3D model
      * @param height height in metres
      */
-    private fun extrudeToModel(modelBuilder: ModelBuilder, tris: List<Triangle>, height: Float) {
+    private fun extrudeToModel(modelBuilder: ModelBuilder, building: Building) {
         // by this point, modelBuilder should have already called begin(), so we are OK to just add parts
-
         val mpb = modelBuilder.part(
-            "building${tris.hashCode()}${height}", GL20.GL_TRIANGLES,
+            "building${building.osmId}", GL20.GL_TRIANGLES,
             VertexAttributes.Usage.Position.toLong() or VertexAttributes.Usage.Normal.toLong()
             or VertexAttributes.Usage.TextureCoordinates.toLong(),
             BUILDING_MATERIAL
         )
-
-        // extrude each triangle into a prism
-        var i = 0
-        for (tri in tris) {
-//            if (i++ != 2) {
-//                continue
-//            }
-            tri.extrudeUpToPrismMesh(mpb, height)
-        }
+        building.extrudeToModelCSG(mpb)
     }
 
     /**
@@ -151,16 +142,7 @@ class BuildingGenerator : Disposable {
         modelBuilder.begin()
 
         for (building in buildings) {
-            // calculate the triangulation of the floor plan
-            // note DON'T translate the building, we centre it about the origin and translate the VERTICES
-            val triangles = building.triangulate()
-
-            // limit the height of buildings in case of errors, and if a height is missing give a default
-            // height of 1 floor
-            val height = MathUtils.clamp(building.floors.toFloat(), 1f, MAX_STOREYS) * STOREY_HEIGHT
-
-            // extrude the triangulation into a 3D model and insert into cache
-            extrudeToModel(modelBuilder, triangles, height)
+            extrudeToModel(modelBuilder, building)
         }
 
         // we have to call back to the main thread to upload the model and model instance to the GPU
@@ -209,15 +191,6 @@ class BuildingGenerator : Disposable {
 
         /** Web Mercator projection ID according to EPSG: https://epsg.io/3857 */
         private const val WEB_MERCATOR_ID = 3857
-
-        /** Approximate height in metres of one storey. Source: https://en.wikipedia.org/wiki/Storey#Overview */
-        private const val STOREY_HEIGHT = 4.3f * 3f
-
-        /**
-         * The tallest building in Brisbane is currently the Brisbane Skytower which is 90 storeys tall.
-         * We clamp building storeys to this many in case of OSM data misinputs so they're not mega tall.
-         */
-        private val MAX_STOREYS = 90f
 
         /**
          * Query to find polygons and tags for OSM buildings in a bounding box.
