@@ -242,6 +242,7 @@ class BuildingGenerator : Disposable {
 
         private val BUILDING_MATERIAL = Material().apply {
 //            set(PBRColorAttribute.createBaseColorFactor(Color.GRAY))
+//            set(PBRTextureAttribute.createBaseColorTexture(ASSETS["sprite/blocks1.jpg", Texture::class.java]))
             set(PBRTextureAttribute.createBaseColorTexture(ASSETS["sprite/uvchecker1.png", Texture::class.java]))
         }
     }

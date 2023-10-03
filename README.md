@@ -83,8 +83,10 @@ I haven't got around to doing this yet. If it does become necessary ping @matt.
 To edit these options: Go to Run -> Edit configurations, go to Lwjgl3Launcher, click "Modify options", then
 check "Add VM options". In the field labeled "VM options", paste the arguments.
 
-- `-Ddebug=true`: Enable debug features (e.g. mouse unlocked, debug menu shown by default)
-- `-Dnohermes=true`: Disable loading Hermes to reduce launch times when working on Atlas graphics
+- `-Ddebug`: Enable debug features (e.g. debug menu shown by default)
+- `-Dnohermes`: Disable loading Hermes to reduce launch times when working on Atlas graphics
+- `-Dnolockmouse`: Disables mouse input capturing, useful for breakpoint debugging
+- `-Duvtexturing`: Transitions to `UVTexturingScreen` after load to texture building UVs instead of normal Atlas
 
 ## Licence
 Unfortunately (or fortunately, depending on who you ask), the University of Queensland owns all the IP to

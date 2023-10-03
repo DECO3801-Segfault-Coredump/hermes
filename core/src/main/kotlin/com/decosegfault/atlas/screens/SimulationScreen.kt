@@ -71,19 +71,7 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
         update()
     }
 
-    /** a camera used to test culling */
-    private val debugCam = PerspectiveCamera().apply {
-        fieldOfView = 75f
-        near = 0.1f
-        far = 900f
-        position.set(-71.186066f,56.803688f,97.34365f)
-        direction.set(0.4725332f,-0.3691399f,-0.80027723f)
-        update()
-    }
-
     private val camController = FirstPersonCamController(cam)
-
-    private var isUsingDebugCam = false
 
     /** Viewport for main 3D camera */
     private val cameraViewport = ExtendViewport(1920f, 1080f, cam)
@@ -299,16 +287,7 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
 
         // render 3D
         camController.update(delta)
-        if (isUsingDebugCam) {
-            // move camera to debug spot
-            cam.position.set(debugCam.position)
-            cam.direction.set(debugCam.direction)
-            cam.up.set(debugCam.up)
-            // use old frustum so we get culling
-            cam.update(false)
-        } else {
-            cam.update()
-        }
+        cam.update()
         sceneManager.update(delta, HermesSim.vehicleMap.values)
         sceneManager.render()
         GCTileCache.nextFrame()

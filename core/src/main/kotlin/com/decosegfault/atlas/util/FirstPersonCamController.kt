@@ -30,7 +30,7 @@ class FirstPersonCamController(private val cam: PerspectiveCamera) : InputAdapte
     val quat = Quaternion()
 
     init {
-        Gdx.input.isCursorCatched = System.getProperty("debug") == null
+        Gdx.input.isCursorCatched = System.getProperty("nolockmouse") == null
         quat.setFromMatrix(cam.view)
     }
 
