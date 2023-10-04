@@ -85,7 +85,6 @@ class LoadingScreen(private val game: Game) : ScreenAdapter() {
             while (!TileServerManager.pollTileServer()) {
                 Thread.sleep(1000)
             }
-            BuildingGenerator.connect()
             Thread.sleep(500)
 
             // 3D assets will now load in main thread
@@ -138,7 +137,12 @@ class LoadingScreen(private val game: Game) : ScreenAdapter() {
                 label.setText("Loading 3D assets... ($completion%)")
             }
         } else if (currentStage == LoadingStage.DONE) {
-            game.screen = SimulationScreen(game)
+            if (System.getProperty("uvtexturing") != null) {
+                Logger.debug("Entering UVTexturingScreen")
+                game.screen = UVTexturingScreen()
+            } else {
+                game.screen = SimulationScreen(game)
+            }
         }
     }
 

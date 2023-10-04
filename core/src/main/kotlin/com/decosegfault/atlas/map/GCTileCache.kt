@@ -1,19 +1,14 @@
 package com.decosegfault.atlas.map
 
 import com.badlogic.gdx.Gdx
-import com.badlogic.gdx.graphics.Pixmap
 import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.graphics.Texture.TextureFilter
 import com.badlogic.gdx.math.Vector3
-import com.badlogic.gdx.math.WindowedMean
-import com.badlogic.gdx.utils.Disposable
 import com.decosegfault.atlas.screens.SimulationScreen
 import com.decosegfault.atlas.util.AbstractGarbageCollectedCache
-import com.google.common.util.concurrent.ThreadFactoryBuilder
 import ktx.assets.disposeSafely
 import org.tinylog.kotlin.Logger
 import java.util.concurrent.*
-import kotlin.math.roundToInt
 
 /** **Soft** limit of tiles in VRAM, size will be approx 100 KiB * this */
 private const val MAX_TILES_RAM = 4096.0
@@ -53,14 +48,13 @@ object GCTileCache : AbstractGarbageCollectedCache<Vector3, Texture>(
         // now that we have the pixmap, we need to context switch into the render thread in order to
         // upload the texture
         // transfer our work to the simulation screen's concurrent work queue
-        // the future allows us to be notified when the callable has completed
         val future = CompletableFuture<Texture>()
-        val callable = Callable {
+        val runnable = Runnable {
             val tex = Texture(pixmap)
             tex.setFilter(TextureFilter.Linear, TextureFilter.Linear)
-            return@Callable tex
+            future.complete(tex)
         }
-        SimulationScreen.TEX_WORK_QUEUE.add(Pair(future, callable))
+        SimulationScreen.addWork(runnable)
 
         // now wait for the future to get back to us
         val texture = future.get()

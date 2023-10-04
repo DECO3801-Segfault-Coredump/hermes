@@ -5,9 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="203e340a-1b32-49ca-a870-0d83883617cd" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/decosegfault/hermes/FrontendServer.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/build.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/build.gradle" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -18,9 +16,6 @@
     <projectState path="$PROJECT_DIR$">
       <ProjectState />
     </projectState>
-  </component>
-  <component name="Git.Settings">
-    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
   </component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 6
@@ -36,12 +31,8 @@
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "WebServerToolWindowFactoryState": "false",
     "android.gradle.sync.needed": "true",
-    "com.google.cloudcode.ide_session_index": "20230913_0000",
-    "git-widget-placeholder": "livedata",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
+    "git-widget-placeholder": "gtfs-rader",
+    "last_opened_file_path": "C:/Users/ellis/Documents/GitHub/hermes",
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
@@ -54,7 +45,6 @@
       <option name="presentableId" value="Default" />
       <updated>1694441144357</updated>
       <workItem from="1694441145455" duration="3000" />
-      <workItem from="1694578455052" duration="854000" />
     </task>
     <servers />
   </component>

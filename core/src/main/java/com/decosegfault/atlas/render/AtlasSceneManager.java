@@ -18,6 +18,10 @@ import com.badlogic.gdx.graphics.g3d.utils.ShaderProvider;
 import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Disposable;
+import com.decosegfault.atlas.map.BuildingChunk;
+import com.decosegfault.atlas.map.BuildingManager;
+import com.decosegfault.atlas.map.TileManager;
+import com.decosegfault.atlas.map.Tile;
 import net.mgsx.gltf.scene3d.attributes.PBRMatrixAttribute;
 import net.mgsx.gltf.scene3d.lights.DirectionalShadowLight;
 import net.mgsx.gltf.scene3d.lights.PointLightEx;
@@ -32,8 +36,6 @@ import org.tinylog.Logger;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-
-import com.decosegfault.hermes.HermesSim;
 
 /**
  * This is the scene manager for Atlas, which is a fixed and re-implemented version of the default
@@ -89,7 +91,10 @@ public class AtlasSceneManager implements Disposable {
     private DecalBatch decalBatch;
 
     /** Controller to render ground plane tiles */
-    private AtlasTileManager atlasTileManager;
+    private TileManager tileManager;
+
+    /** Controller used to render buildings */
+    private BuildingManager buildingManager;
 
     public AtlasSceneManager(GraphicsPreset graphics) {
         this(24);
@@ -205,6 +210,19 @@ public class AtlasSceneManager implements Disposable {
         }
     }
 
+    /** Only used for debug in UVTexturingScreen, updates models directly */
+    public void updateDirect(float delta, Collection<RenderableProvider> renderables) {
+        renderableProviders.clear();
+        for (RenderableProvider p : renderables) {
+            renderableProviders.add(p);
+        }
+
+        if (camera != null) {
+            updateEnvironment();
+            if (skyBox != null) skyBox.update(camera, delta);
+        }
+    }
+
     /**
      * Updates skybox, vehicle render list, and ground plane tiling list.
      * Will check with {@link AtlasVehicle#getRenderModel(Camera, GraphicsPreset)}
@@ -235,10 +253,19 @@ public class AtlasSceneManager implements Disposable {
 
         // Load ground plane tiles for rendering
         tileDecals.clear();
-        List<Tile> gamer = atlasTileManager.getTilesCulled( camera, graphics);
-        for (Tile tile : gamer) {
-            var decal = tile.getDecal();
-            if (decal != null) tileDecals.add(decal);
+        if (tileManager != null) {
+            for (Tile tile : tileManager.getTilesCulledHeightScaled(camera, graphics)) {
+                var decal = tile.getDecal();
+                if (decal != null) tileDecals.add(decal);
+            }
+        }
+
+        // Submit building chunks for rendering
+        if (buildingManager != null) {
+            for (BuildingChunk chunk : buildingManager.getBuildingChunksCulled(camera, graphics)) {
+                var modelCache = chunk.getBuildingCache();
+                if (modelCache != null) renderableProviders.add(modelCache);
+            }
         }
 
         if (camera != null) {
@@ -284,15 +311,15 @@ public class AtlasSceneManager implements Disposable {
     }
 
     public int getCullRate() {
-        return getRate(culledVehicles);
+        return culledVehicles;
     }
 
     public int getLowLodRate() {
-        return getRate(lowLodVehicles);
+        return lowLodVehicles;
     }
 
     public int getFullRenderRate() {
-        return getRate(renderedVehicles);
+        return renderedVehicles;
     }
 
     /**
@@ -440,6 +467,8 @@ public class AtlasSceneManager implements Disposable {
      * Render all tile decals.
      */
     public void renderDecal() {
+        if (decalBatch == null) return;
+
         for (Decal decal: tileDecals) {
             decalBatch.add(decal);
         }
@@ -493,10 +522,18 @@ public class AtlasSceneManager implements Disposable {
     /**
      * Sets the tile manager to used for ground plane.
      *
-     * @param atlasTileManager  Tile manager instance to use.
+     * @param tileManager  Tile manager instance to use.
      */
-    public void setAtlasTileManager(AtlasTileManager atlasTileManager) {
-        this.atlasTileManager = atlasTileManager;
+    public void setTileManager(TileManager tileManager) {
+        this.tileManager = tileManager;
+    }
+
+    /**
+     * Sets the building manager
+     * @param buildingManager New building manager instance
+     */
+    public void setBuildingManager(BuildingManager buildingManager) {
+        this.buildingManager = buildingManager;
     }
 
     public void setAmbientLight(float lum) {

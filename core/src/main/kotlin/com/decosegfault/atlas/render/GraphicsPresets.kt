@@ -26,28 +26,31 @@ object GraphicsPresets {
         anisotropic=1.0f,
         msaa=0,
         shadows=false,
+        workPerFrame=1,
     )
 
     private val standard = GraphicsPreset(
         name="Standard",
         description="Balanced settings for good framerate on most computers",
-        vehicleDrawDist=300.0f,
-        vehicleLodDist=100.0f,
-        tileDrawDist=5000.0f,
-        anisotropic=8.0f,
+        vehicleDrawDist=3000.0f,
+        vehicleLodDist=200.0f,
+        tileDrawDist=8000.0f,
+        anisotropic=4.0f,
         msaa=4,
         shadows=false,
+        workPerFrame=10,
     )
 
     private val itRunsCrysis = GraphicsPreset(
         name="It Runs Crysis",
         description="High settings for powerful gaming PCs or workstations",
-        vehicleDrawDist=900.0f,
-        vehicleLodDist=300.0f,
+        vehicleDrawDist=5000.0f,
+        vehicleLodDist=500.0f,
         tileDrawDist=15000.0f,
         anisotropic=16.0f,
         msaa=8,
         shadows=false,
+        workPerFrame=20,
     )
 
     private val nasaSupercomputer = GraphicsPreset(
@@ -59,6 +62,7 @@ object GraphicsPresets {
         anisotropic=64.0f, // this is insane lmao
         msaa=64, // wtf
         shadows=true,
+        workPerFrame=Int.MAX_VALUE,
     )
 
     private val presets = listOf(genuinePotato, standard, itRunsCrysis, nasaSupercomputer)

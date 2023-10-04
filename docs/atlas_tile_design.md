@@ -11,6 +11,8 @@ will attempt to automatically start the tile server. It will then verify the til
 If the tile server crashes, Atlas should throw an error dialogue and probably quit the game.
 
 ## Constructing the grid
+**OUTDATED**
+
 - Imagine the ground is an infinite plane
 - We can determine the area of this plane that is visible on screen
 - Using the camera frustum, we can cast rays through the four corners and see where they intersect
@@ -21,6 +23,8 @@ but we can fix this by still doing distance thresholding
   - Either truncate the rectangle or cap ray length
 
 ## Fetching and caching tiles
+**PARTIALLY OUTDATED**
+
 Once the grid is constructed, Atlas will fetch tiles from the tile server using HTTP. To avoid blocking the
 main thread, the HTTP fetch is done async  using `Gdx.net`.
 
