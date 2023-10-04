@@ -17,6 +17,8 @@ import com.decosegfault.atlas.render.AtlasVehicle;
 import org.onebusaway.gtfs.serialization.GtfsReader;
 import org.onebusaway.gtfs.model.Route;
 import org.onebusaway.gtfs.model.Trip;
+import com.decosegfault.hermes.data.TripData;
+
 
 import java.io.IOException;
 import java.util.concurrent.ConcurrentHashMap;

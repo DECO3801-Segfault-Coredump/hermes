@@ -1,6 +1,6 @@
 package com.decosegfault.hermes;
 
-import com.badlogic.gdx.math.Vector3;
+import com.decosegfault.atlas.util.HPVector3;
 import com.decosegfault.hermes.data.RouteData;
 import com.decosegfault.hermes.data.VehicleData;
 import com.decosegfault.hermes.types.VehicleType;
@@ -83,12 +83,9 @@ public class LiveDataFeed {
      * @param entity Unit of information for vehicle single vehicle from live data feed
      * @return Position vector of vehicle
      */
-    public static Vector3 getVehiclePosition(GtfsRealtime.FeedEntity entity) {
-        Vector3 vehiclePosition = new Vector3();
-        float latitude = entity.getVehicle().getPosition().getLatitude();
-        float longitude = entity.getVehicle().getPosition().getLongitude();
-        vehiclePosition.x = latitude;
-        vehiclePosition.y = longitude;
-        return vehiclePosition;
+    public static HPVector3 getVehiclePosition(GtfsRealtime.FeedEntity entity) {
+        double latitude = entity.getVehicle().getPosition().getLatitude();
+        double longitude = entity.getVehicle().getPosition().getLongitude();
+        return new HPVector3(latitude, longitude, 0.0);
     }
 }
