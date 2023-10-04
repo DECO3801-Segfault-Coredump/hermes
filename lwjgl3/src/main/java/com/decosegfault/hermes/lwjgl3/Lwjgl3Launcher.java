@@ -20,7 +20,18 @@ import java.util.List;
  */
 public class Lwjgl3Launcher {
     public static void main(String[] args) {
+        // The very first thing we want to do is display the config prompts, even before restarting the JVM
+        // on Mac. This is because -xstartOnFirstThread breaks Swing.
+        // Reference: https://stackoverflow.com/q/43359687
+        if (System.getProperty("debug") == null || System.getProperty("jvmIsRestarted") != null) {
+            displayConfigPrompts();
+        } else {
+            Logger.info("Skipping displaying config prompts due to debug or jvmIsRestarted");
+        }
+
+        // Now, we can actually spawn a new JVM for the Mac users.
         if (StartupHelper.startNewJvmIfRequired()) return; // This handles macOS support and helps on Windows.
+
         Logger.info("DECO3801 Hermes+Atlas, by Team Segmentation fault (core dumped) - UQ 2023 Semester 2");
         Logger.info("Working dir: " + new File(".").getAbsolutePath());
 
@@ -29,12 +40,6 @@ public class Lwjgl3Launcher {
             Logger.error(throwable);
             System.exit(1);
         });
-
-        if (System.getProperty("debug") == null) {
-            displayConfigPrompts();
-        } else {
-            Logger.info("Skipping displaying config prompts in debug mode");
-        }
 
         createApplication();
     }
