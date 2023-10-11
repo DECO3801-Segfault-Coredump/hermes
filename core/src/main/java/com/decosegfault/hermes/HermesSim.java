@@ -8,6 +8,7 @@ import com.badlogic.gdx.math.Vector3;
 import com.decosegfault.hermes.frontend.FrontendData;
 import com.decosegfault.hermes.frontend.FrontendEndpoint;
 import com.decosegfault.hermes.frontend.FrontendServer;
+import com.decosegfault.hermes.LiveDataFeed;
 import com.decosegfault.hermes.types.SimType;
 import org.onebusaway.gtfs.impl.GtfsDaoImpl;
 import org.onebusaway.gtfs.model.*;
@@ -26,6 +27,8 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * @author Lachlan Ellis
  * @author Matt Young
+ * @author Henry Batt
+ * @author Cathy Nguyen
  */
 public class HermesSim {
 
@@ -40,7 +43,7 @@ public class HermesSim {
 
     static float speed = 10f;
 
-    private static final List<TripData> vehiclesToCreate = new ArrayList<>();
+    public static final List<TripData> vehiclesToCreate = new ArrayList<>();
 
 
     /**
@@ -59,24 +62,24 @@ public class HermesSim {
 
         vehiclesToCreate.clear();
 
-        RouteHandler.tripsbyID.values().stream().forEach((trip) -> {
-            if(RouteHandler.simType == SimType.LIVE) {
-                //trip.vehicle.tick(*position vector, z can be whatever*)
-                //uhhh set the live data here lol
-            } else {
+        if (RouteHandler.simType == SimType.LIVE) {
+            //trip.vehicle.tick(*position vector, z can be whatever*)
+            //uhhh set the live data here lol
+            //LiveDataFeed.storeVehicleData(LiveDataFeed.getLiveDataFeed());
+        } else {
+            RouteHandler.tripsbyID.values().stream().forEach((trip) -> {
                 trip.tick();
-            }
-            if(trip.vehicle.hidden && vehicleMap.containsKey(trip.routeID)) {
-                vehicleMap.remove(trip.routeID);
-            } else if(!trip.vehicle.hidden && !vehicleMap.containsKey(trip.routeID)) {
-                if (trip.vehicle.vehicleType == null) {
-                    Logger.warn("Null trip vehicle! {} {}", trip.routeName, trip.routeID);
-                    return;
+                if (trip.vehicle.hidden && vehicleMap.containsKey(trip.routeID)) {
+                    vehicleMap.remove(trip.routeID);
+                } else if (!trip.vehicle.hidden && !vehicleMap.containsKey(trip.routeID)) {
+                    if (trip.vehicle.vehicleType == null) {
+                        Logger.warn("Null trip vehicle! {} {}", trip.routeName, trip.routeID);
+                        return;
+                    }
+                    vehiclesToCreate.add(trip);
                 }
-                vehiclesToCreate.add(trip);
-            }
-        });
-
+            });
+        }
         // create vehicles - this has to be here because otherwise it breaks libGDX
         // the other way would be to have a "creating vehicle" lock
         for (TripData trip : vehiclesToCreate) {
@@ -85,12 +88,13 @@ public class HermesSim {
         }
 
         // parallelising this currently breaks everything
-       vehicleMap.entrySet().stream().forEach((tripID) -> {
+        vehicleMap.entrySet().stream().forEach((tripID) -> {
             TripData trip = RouteHandler.tripsbyID.get(tripID.getKey());
             tripID.getValue().updateTransform(
                 new Vector3((float) trip.vehicle.position.getX(), (float) trip.vehicle.position.getY(), (float) trip.vehicle.position.getZ()));
             tripID.getValue().setHidden(trip.vehicle.hidden);
         });
+
 //        Logger.warn("Trips Loaded: {}, {} active", vehicleMap.size(), tripsActive);
         // transmit data to the frontend
         FrontendData data = new FrontendData();
@@ -111,9 +115,14 @@ public class HermesSim {
         }
 
         RouteHandler.simType = simType;
-        if(simType != SimType.LIVE) {
+
+        if (RouteHandler.simType == SimType.LIVE) {
+            read();
+            return;
+        } else {
             read();
         }
+
         //placeholder
         RouteHandler.sortShapes();
         RouteHandler.initTrips();
@@ -180,11 +189,16 @@ public class HermesSim {
         Map<AgencyAndId, Trip> tripsById = store.getEntitiesByIdForEntityType(
                 AgencyAndId.class, Trip.class);
 
-        Map<AgencyAndId, ShapePoint> shapesById = store.getEntitiesByIdForEntityType(
-            AgencyAndId.class, ShapePoint.class);
+        Map<AgencyAndId, ShapePoint> shapesById = null;
+        Map<AgencyAndId, StopTime> stopTimesById = null;
 
-        Map<AgencyAndId, StopTime> stopTimesById = store.getEntitiesByIdForEntityType(
-            AgencyAndId.class, StopTime.class);
+        if (RouteHandler.simType != SimType.LIVE) {
+            shapesById = store.getEntitiesByIdForEntityType(
+                AgencyAndId.class, ShapePoint.class);
+
+            stopTimesById = store.getEntitiesByIdForEntityType(
+                AgencyAndId.class, StopTime.class);
+        }
 
         for (Route element : routesById.values()) {
             RouteHandler.addRoute(element);
@@ -194,12 +208,13 @@ public class HermesSim {
             RouteHandler.addTrip(element);
         }
 
-        for (StopTime element : stopTimesById.values()) {
-            RouteHandler.handleTime(element);
-        }
-
-        for (ShapePoint element : shapesById.values()) {
-            RouteHandler.addShape(element);
+        if (RouteHandler.simType != SimType.LIVE) {
+            for (StopTime element : stopTimesById.values()) {
+                RouteHandler.handleTime(element);
+            }
+            for (ShapePoint element : shapesById.values()) {
+                RouteHandler.addShape(element);
+            }
         }
 
         try {
