@@ -17,7 +17,10 @@ import com.decosegfault.atlas.map.BuildingGenerator
 import com.decosegfault.atlas.map.GCTileCache
 import com.decosegfault.atlas.map.TileServerManager
 import com.decosegfault.atlas.util.Assets
+import com.decosegfault.atlas.util.AtlasUtils
 import com.decosegfault.atlas.util.ImageAnimation
+import com.decosegfault.hermes.HermesSim
+import com.decosegfault.hermes.types.SimType
 import ktx.app.clearScreen
 import org.tinylog.kotlin.Logger
 import kotlin.concurrent.thread
@@ -97,6 +100,8 @@ class LoadingScreen(private val game: Game) : ScreenAdapter() {
         thread(isDaemon = true, name = "StartHermes") {
             // temporary
             Logger.info("Starting Hermes")
+            val simType = AtlasUtils.readHermesPreset()
+            HermesSim.load(simType)
             currentStage = LoadingStage.DONE
         }
     }
@@ -132,7 +137,12 @@ class LoadingScreen(private val game: Game) : ScreenAdapter() {
                 label.setText("Loading 3D assets... ($completion%)")
             }
         } else if (currentStage == LoadingStage.DONE) {
-            game.screen = SimulationScreen(game)
+            if (System.getProperty("uvtexturing") != null) {
+                Logger.debug("Entering UVTexturingScreen")
+                game.screen = UVTexturingScreen()
+            } else {
+                game.screen = SimulationScreen(game)
+            }
         }
     }
 

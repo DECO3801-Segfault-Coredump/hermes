@@ -2,8 +2,7 @@ package com.decosegfault.atlas.render
 
 import com.badlogic.gdx.graphics.Camera
 import com.badlogic.gdx.graphics.Color
-import com.badlogic.gdx.graphics.g3d.ModelCache
-import com.badlogic.gdx.graphics.g3d.ModelCache.TightMeshPool
+import com.badlogic.gdx.graphics.g3d.Model
 import com.badlogic.gdx.graphics.g3d.ModelInstance
 import com.badlogic.gdx.graphics.g3d.RenderableProvider
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
@@ -12,10 +11,12 @@ import com.badlogic.gdx.math.Matrix4
 import com.badlogic.gdx.math.Vector3
 import com.badlogic.gdx.math.collision.BoundingBox
 import com.badlogic.gdx.math.collision.Ray
-import com.badlogic.gdx.utils.Disposable
+import com.decosegfault.atlas.util.Assets
 import com.decosegfault.atlas.util.AtlasUtils
-import com.decosegfault.hermes.VehicleType
+import com.decosegfault.hermes.types.VehicleType
 import net.mgsx.gltf.scene3d.scene.SceneAsset
+import org.tinylog.kotlin.Logger
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Atlas's representation of a vehicle, includes gdx-gltf high detail and low detail models and bounding box.
@@ -24,9 +25,9 @@ import net.mgsx.gltf.scene3d.scene.SceneAsset
  * @param modelHigh high poly 3D model
  * @param modelLow low poly 3D model
  */
-class AtlasVehicle(private val modelHigh: SceneAsset, private val modelLow: SceneAsset, val vehicleType: VehicleType) {
+class AtlasVehicle(private val modelHigh: SceneAsset, private val modelLow: SceneAsset) {
     /** actual transform of the vehicle shared between model instances */
-    private val transform = Matrix4()
+    val transform = Matrix4()
     /** original bbox for the model itself */
     private val bboxOrig = BoundingBox()
     /** transformed bbox for current model */
@@ -35,13 +36,29 @@ class AtlasVehicle(private val modelHigh: SceneAsset, private val modelLow: Scen
     var didCull = false
     /** true if the vehicle used low LoD model in the last render pass */
     var didUseLowLod = false
+    /** If true, force this vehicle to be hidden */
+    var hidden = false
 
     private val modelInstanceHigh = ModelInstance(modelHigh.scene.model)
     private val modelInstanceLow = ModelInstance(modelLow.scene.model)
 
     init {
         // only calculate bbox once, then multiply it with transform (see update())
-        modelInstanceHigh.calculateBoundingBox(bboxOrig)
+        // also pull it from cache if we are able, since we only have 3 models
+
+        val maybeBbox = BBOX_CACHE[modelHigh.scene.model]
+        if (maybeBbox != null) {
+            // we hit the cache
+            bboxOrig.set(maybeBbox)
+        } else {
+            // didn't hit the cache, do the slow calculation
+            modelInstanceHigh.calculateBoundingBox(bboxOrig)
+            BBOX_CACHE[modelHigh.scene.model] = bboxOrig
+            Logger.debug("Calculate initial bounding box for model ${modelHigh.scene.model.hashCode()}")
+        }
+
+//        modelInstanceHigh.calculateBoundingBox(bboxOrig)
+
     }
 
     /** Updates LoD transforms according to the shared [transform] */
@@ -66,6 +83,17 @@ class AtlasVehicle(private val modelHigh: SceneAsset, private val modelLow: Scen
         update()
     }
 
+    /**
+     * Sets vehicle position from Hermes lat/long coord
+     * @param trans new transform in hermes coords: x, y, theta (degrees)
+     */
+    fun updateTransformFromHermes(transLat: Double, transLong: Double, theta: Double) {
+        val atlasPos = AtlasUtils.latLongToAtlas(transLat, transLong, theta)
+//        val atlasPos = Vector3(transLat, transLong, theta)
+//        Logger.debug("updateTformFromHermes: lat/long $trans atlas: $atlasPos for vehicle $this")
+        updateTransform(atlasPos)
+    }
+
     fun addTransform(trans: Vector3) {
         transform.translate(trans.x, 0f, trans.y)
         transform.rotate(Vector3.Z, trans.z)
@@ -73,7 +101,7 @@ class AtlasVehicle(private val modelHigh: SceneAsset, private val modelLow: Scen
     }
 
     fun debug(render: ShapeRenderer) {
-        if (didCull) return
+        if (didCull || hidden) return
         render.color = if (didUseLowLod) Color.GREEN else Color.RED
         render.box(bbox.min.x , bbox.min.y, bbox.max.z, bbox.width, bbox.height, bbox.depth)
 
@@ -90,6 +118,11 @@ class AtlasVehicle(private val modelHigh: SceneAsset, private val modelLow: Scen
     fun getRenderModel(cam: Camera, graphics: GraphicsPreset): RenderableProvider? {
         didCull = false
         didUseLowLod = false
+
+        if (hidden) {
+            didCull = true
+            return null
+        }
 
         // first do distance thresholding since it's cheap
         // distance thresholding we compute as distance to the dist from the camera to the closest point
@@ -118,5 +151,24 @@ class AtlasVehicle(private val modelHigh: SceneAsset, private val modelLow: Scen
 
     fun intersectRay(ray: Ray): Boolean {
         return Intersector.intersectRayBoundsFast(ray, bbox)
+    }
+
+    override fun toString(): String {
+        return "AtlasVehicle(transform=${transform.getTranslation(Vector3())}, didCull=$didCull, didUseLowLod=$didUseLowLod, hidden=$hidden)"
+    }
+
+
+    companion object {
+        /** Creates a vehicle for a Hermes [VehicleType] */
+        fun createFromHermes(type: VehicleType): AtlasVehicle {
+            val modelName = type.name.lowercase()
+            val modelLow = Assets.ASSETS["atlas/${modelName}_low.glb", SceneAsset::class.java]
+            val modelHigh = Assets.ASSETS["atlas/${modelName}_high.glb", SceneAsset::class.java]
+            val vehicle = AtlasVehicle(modelHigh, modelLow)
+            vehicle.updateTransform(Vector3.Zero)
+            return vehicle
+        }
+
+        private val BBOX_CACHE = ConcurrentHashMap<Model, BoundingBox>()
     }
 }

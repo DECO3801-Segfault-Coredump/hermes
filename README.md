@@ -60,13 +60,17 @@ This JAR file can be run anywhere with a JRE, and it includes all the app's asse
 It should also be possible to use JPackager to generate bundled native binaries for Windows, Mac and Linux, but
 I haven't got around to doing this yet. If it does become necessary ping @matt.
 
-**Key bindings for SimulationScreen:**
+**Key bindings for Atlas game window:**
 
 - ESCAPE: Quit
 - ENTER: Toggle fullscreen
 - G: Show/hide debug info
 - ]: Force garbage collected caches to run a GC
-- [: Pause/resume vehicle benchmark
+- P: Print camera pose
+- .: Increase Hermes speed
+- ,: Decrease Hermes speed
+- B: Teleport to random vehicle
+- ;: Take screenshot
 - WASD: Move forward, left, back, right
 - Mouse: Look
 - Shift: Boost movement speed
@@ -74,9 +78,15 @@ I haven't got around to doing this yet. If it does become necessary ping @matt.
 - SPACE: Zoom up
 - R: Reset camera
 
-To toggle debug mode: Go to Run -> Edit configurations, go to Lwjgl3Launcher, click "Modify options", then
-check "Add VM options". In the field labeled "VM options", paste: `-Ddebug=true` (this is adding a system
-property called "debug")
+**Command line options:**
+
+To edit these options: Go to Run -> Edit configurations, go to Lwjgl3Launcher, click "Modify options", then
+check "Add VM options". In the field labeled "VM options", paste the arguments.
+
+- `-Ddebug`: Enable debug features (e.g. debug menu shown by default)
+- `-Dnohermes`: Disable loading Hermes to reduce launch times when working on Atlas graphics
+- `-Dnolockmouse`: Disables mouse input capturing, useful for breakpoint debugging
+- `-Duvtexturing`: Transitions to `UVTexturingScreen` after load to texture building UVs instead of normal Atlas
 
 ## Licence
 Unfortunately (or fortunately, depending on who you ask), the University of Queensland owns all the IP to

@@ -8,6 +8,14 @@ import kotlin.io.path.createFile
 import kotlin.io.path.exists
 import kotlin.io.path.writeText
 import kotlin.math.*
+import com.decosegfault.hermes.types.SimType
+import java.io.IOException
+import java.lang.IllegalArgumentException
+import kotlin.io.path.createFile
+import kotlin.io.path.exists
+import kotlin.io.path.readText
+import kotlin.io.path.writeText
+import kotlin.math.*
 
 /**
  * @author Various (see comments)
@@ -70,6 +78,25 @@ object AtlasUtils {
         path.writeText(name.uppercase())
     }
 
+    fun readHermesPreset(): SimType {
+        val path = Paths.get(System.getProperty("user.home"), "Documents", "DECOSegfault", "hermes.txt")
+        Logger.info("Loading Hermes preset from: $path")
+        var name: String
+        try {
+            name = path.readText().trim()
+            Logger.info("Using saved Hermes preset: $name")
+        } catch (e: IOException) {
+            Logger.info("Using default hermes preset 'History', saved does not exist")
+            name = "History"
+        }
+        return try {
+            SimType.valueOf(name.uppercase())
+        } catch (e: IllegalArgumentException) {
+            Logger.error("Invalid Hermes preset $name!!! Using standard!")
+            SimType.HISTORY
+        }
+    }
+
     /**
      * Converts the given latitude, longitude and zoom level into Slippy Tile Map lookup
      *
@@ -83,6 +110,18 @@ object AtlasUtils {
         val xTile = ((latLongZoom.y + 180.0) / 360.0 * n).toInt().toFloat()
         val yTile = ((1.0 - asinh(tan(latLongZoom.x * PI / 180)) / PI) / 2.0 * n).toInt().toFloat()
         return Vector3(xTile, yTile, latLongZoom.z)
+    }
+
+    /**
+     * See [latLongZoomToSlippyCoord]
+     */
+    fun latLongZoomToSlippyCoord(lat: Double, long: Double) : Vector3 {
+        // Tile lookup calculation from Open Street Map Wiki
+        // [https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames]
+        val n = 1 shl PIXEL_ZOOM.toInt()
+        val xTile = ((long + 180.0) / 360.0 * n)
+        val yTile = ((1.0 - asinh(tan(lat * PI / 180)) / PI) / 2.0 * n)
+        return Vector3(xTile.toFloat(), yTile.toFloat(), 0f)
     }
 
     /**
@@ -111,6 +150,15 @@ object AtlasUtils {
     fun latLongToAtlas(latLong: Vector3): Vector3 {
         val coords = latLongZoomToSlippyCoord(Vector3(latLong.x, latLong.y, PIXEL_ZOOM))
         coords.z = latLong.z
+        return coords.sub(MAP_CENTRE_SLIPPY)
+    }
+
+    /**
+     * See [latLongToAtlas]
+     */
+    fun latLongToAtlas(lat: Double, long: Double, theta: Double): Vector3 {
+        val coords = latLongZoomToSlippyCoord(lat, long)
+        coords.z = theta.toFloat()
         return coords.sub(MAP_CENTRE_SLIPPY)
     }
 

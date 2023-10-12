@@ -34,6 +34,7 @@ import net.mgsx.gltf.scene3d.utils.EnvironmentUtil;
 import org.tinylog.Logger;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -209,12 +210,25 @@ public class AtlasSceneManager implements Disposable {
         }
     }
 
+    /** Only used for debug in UVTexturingScreen, updates models directly */
+    public void updateDirect(float delta, Collection<RenderableProvider> renderables) {
+        renderableProviders.clear();
+        for (RenderableProvider p : renderables) {
+            renderableProviders.add(p);
+        }
+
+        if (camera != null) {
+            updateEnvironment();
+            if (skyBox != null) skyBox.update(camera, delta);
+        }
+    }
+
     /**
      * Updates skybox, vehicle render list, and ground plane tiling list.
      * Will check with {@link AtlasVehicle#getRenderModel(Camera, GraphicsPreset)}
      * to perform frustum culling and distance thresholding.
      */
-    public void update(float delta, List<AtlasVehicle> vehicles) {
+    public void update(float delta, Collection<AtlasVehicle> vehicles) {
         renderableProviders.clear();
         renderedAtlasVehicles.clear();
 
@@ -239,15 +253,19 @@ public class AtlasSceneManager implements Disposable {
 
         // Load ground plane tiles for rendering
         tileDecals.clear();
-        for (Tile tile : tileManager.getTilesCulled( camera, graphics)){
-            var decal = tile.getDecal();
-            if (decal != null) tileDecals.add(decal);
+        if (tileManager != null) {
+            for (Tile tile : tileManager.getTilesCulledHeightScaled(camera, graphics)) {
+                var decal = tile.getDecal();
+                if (decal != null) tileDecals.add(decal);
+            }
         }
 
         // Submit building chunks for rendering
-        for (BuildingChunk chunk : buildingManager.getBuildingChunksCulled(camera, graphics)) {
-            var modelCache = chunk.getBuildingCache();
-            if (modelCache != null) renderableProviders.add(modelCache);
+        if (buildingManager != null) {
+            for (BuildingChunk chunk : buildingManager.getBuildingChunksCulled(camera, graphics)) {
+                var modelCache = chunk.getBuildingCache();
+                if (modelCache != null) renderableProviders.add(modelCache);
+            }
         }
 
         if (camera != null) {
@@ -293,15 +311,15 @@ public class AtlasSceneManager implements Disposable {
     }
 
     public int getCullRate() {
-        return getRate(culledVehicles);
+        return culledVehicles;
     }
 
     public int getLowLodRate() {
-        return getRate(lowLodVehicles);
+        return lowLodVehicles;
     }
 
     public int getFullRenderRate() {
-        return getRate(renderedVehicles);
+        return renderedVehicles;
     }
 
     /**
@@ -449,6 +467,8 @@ public class AtlasSceneManager implements Disposable {
      * Render all tile decals.
      */
     public void renderDecal() {
+        if (decalBatch == null) return;
+
         for (Decal decal: tileDecals) {
             decalBatch.add(decal);
         }

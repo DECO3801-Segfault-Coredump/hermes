@@ -28,9 +28,10 @@ class FirstPersonCamController(private val cam: PerspectiveCamera) : InputAdapte
     private val minHeight = 1f
     private val maxHeight = 8000f
     val quat = Quaternion()
+    var enabled = true
 
     init {
-        Gdx.input.isCursorCatched = true
+        Gdx.input.isCursorCatched = System.getProperty("nolockmouse") == null
         quat.setFromMatrix(cam.view)
     }
 
@@ -46,6 +47,8 @@ class FirstPersonCamController(private val cam: PerspectiveCamera) : InputAdapte
     }
 
     override fun mouseMoved(screenX: Int, screenY: Int): Boolean {
+        if (!enabled) return false
+
         val movementX = Gdx.input.deltaX.toFloat()
         val movementY = Gdx.input.deltaY.toFloat()
 
@@ -74,6 +77,7 @@ class FirstPersonCamController(private val cam: PerspectiveCamera) : InputAdapte
     }
 
     fun update(delta: Float) {
+        if (!enabled) return
         val heightFactor = cam.position.y / 128f
         val actualSpeed = if (Gdx.input.isKeyPressed(Input.Keys.SHIFT_LEFT)) speed * heightFactor * boostFactor else speed * heightFactor
 
@@ -101,6 +105,7 @@ class FirstPersonCamController(private val cam: PerspectiveCamera) : InputAdapte
     }
 
     override fun scrolled(amountX: Float, amountY: Float): Boolean {
+        if (!enabled) return false
         cam.fieldOfView += amountY
         cam.update()
         return true

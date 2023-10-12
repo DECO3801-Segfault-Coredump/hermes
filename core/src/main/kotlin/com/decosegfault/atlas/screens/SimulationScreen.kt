@@ -19,28 +19,30 @@ import com.badlogic.gdx.utils.viewport.ExtendViewport
 import com.badlogic.gdx.utils.viewport.FitViewport
 import com.decosegfault.atlas.map.BuildingManager
 import com.decosegfault.atlas.map.GCBuildingCache
-import com.decosegfault.atlas.map.TileManager
 import com.decosegfault.atlas.map.GCTileCache
+import com.decosegfault.atlas.map.TileManager
 import com.decosegfault.atlas.render.*
 import com.decosegfault.atlas.util.Assets
 import com.decosegfault.atlas.util.Assets.ASSETS
 import com.decosegfault.atlas.util.FirstPersonCamController
-import com.decosegfault.hermes.VehicleType
+import com.decosegfault.hermes.HermesSim
 import com.google.common.util.concurrent.ThreadFactoryBuilder
 import ktx.app.clearScreen
 import net.mgsx.gltf.scene3d.attributes.PBRCubemapAttribute
 import net.mgsx.gltf.scene3d.attributes.PBRTextureAttribute
 import net.mgsx.gltf.scene3d.lights.DirectionalLightEx
 import net.mgsx.gltf.scene3d.lights.DirectionalShadowLight
-import net.mgsx.gltf.scene3d.scene.SceneAsset
 import net.mgsx.gltf.scene3d.scene.SceneSkybox
 import net.mgsx.gltf.scene3d.utils.IBLBuilder
+import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics
 import org.tinylog.kotlin.Logger
 import java.util.*
 import java.util.concurrent.*
+import java.util.zip.Deflater
 import kotlin.math.max
 import kotlin.math.roundToInt
-import kotlin.random.Random
+import kotlin.system.measureNanoTime
+
 
 /**
  * Implements the main screen for rendering the simulation
@@ -63,25 +65,13 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
     private val cam = PerspectiveCamera().apply {
         fieldOfView = 75f
         near = 0.5f
-        far = max(graphics.tileDrawDist, graphics.vehicleDrawDist) * 10
+        far = max(graphics.tileDrawDist, graphics.vehicleDrawDist) * 20
 //        rotate(Vector3.X, -90f)
         translate(0f, 300f, 0f)
         update()
     }
 
-    /** a camera used to test culling */
-    private val debugCam = PerspectiveCamera().apply {
-        fieldOfView = 75f
-        near = 0.1f
-        far = 900f
-        position.set(-71.186066f,56.803688f,97.34365f)
-        direction.set(0.4725332f,-0.3691399f,-0.80027723f)
-        update()
-    }
-
     private val camController = FirstPersonCamController(cam)
-
-    private var isUsingDebugCam = false
 
     /** Viewport for main 3D camera */
     private val cameraViewport = ExtendViewport(1920f, 1080f, cam)
@@ -92,15 +82,6 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
 
     /** Debug shape renderer */
     private val shapeRender = ShapeRenderer()
-
-    /** Vehicles for benchmark, in future this will be from Hermes */
-    private val vehicles = mutableListOf<AtlasVehicle>()
-
-    /** Counter for when to move vehicles */
-    private var debugCounter = 0.0f
-
-    /** True if vehicles should move in benchmark */
-    private var shouldVehiclesMove = true
 
     /** True if debug drawing enabled */
     private var isDebugDraw = System.getProperty("debug") != null
@@ -117,6 +98,10 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
     private val skin = ASSETS["ui/uiskin.json", Skin::class.java]
 
     private val batch = SpriteBatch()
+
+    private var hermesDelta = 0f
+
+    private val deltaWindow = DescriptiveStatistics(1024)
 
     private fun createTextUI() {
         // hack to use linear scaling instead of nearest neighbour for text
@@ -189,6 +174,8 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
         sceneManager.environment.set(PBRTextureAttribute(PBRTextureAttribute.BRDFLUTTexture, brdfLut))
         sceneManager.environment.set(PBRCubemapAttribute.createSpecularEnv(specularCubemap))
         sceneManager.environment.set(PBRCubemapAttribute.createDiffuseEnv(diffuseCubemap))
+//        sceneManager.environment.set(ColorAttribute(ColorAttribute.Fog, Color.GRAY))
+//        sceneManager.environment.set(FogAttribute(FogAttribute.FogEquation).set(1f, 2000f, 8f))
 
         // setup skybox
         sceneManager.skyBox = SceneSkybox(environmentCubemap)
@@ -208,26 +195,17 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
         Logger.info("GL version: ${v.majorVersion}.${v.minorVersion}.${v.releaseVersion} vendor: ${v.vendorString} renderer: ${v.rendererString}")
     }
 
-    private fun constructBenchmarkScene() {
-        Logger.debug("Construct test scene")
-        vehicles.clear()
-        for (i in 0..200) {
-            val modelName = listOf("bus", "train", "ferry").random()
-            val modelLow = ASSETS["atlas/${modelName}_low.glb", SceneAsset::class.java]
-            val modelHigh = ASSETS["atlas/${modelName}_high.glb", SceneAsset::class.java]
-            val vehicle = AtlasVehicle(modelHigh, modelLow, if (modelName == "train") VehicleType.TRAIN else VehicleType.BUS)
-            vehicle.updateTransform(Vector3.Zero)
-            vehicles.add(vehicle)
-        }
-    }
-
     private fun initialiseHermes() {
-        // Hermes.init()
-
         // tell Hermes to tick every 100 ms, in its own thread asynchronously, so we don't block the renderer
+        Logger.info("Hermes tick rate: $HERMES_TICK_RATE ms (delta: $HERMES_DELTA s)")
         hermesExecutor.scheduleAtFixedRate({
-            // HermesSim.tick()
-        }, 0L, 100L, TimeUnit.MILLISECONDS)
+            try {
+                hermesDelta = measureNanoTime { HermesSim.tick(HERMES_DELTA) } / 1e6f
+            } catch (e: Exception) {
+                Logger.error("Hermes exception: $e")
+                Logger.error(e)
+            }
+        }, 0L, HERMES_TICK_RATE.toLong(), TimeUnit.MILLISECONDS)
     }
 
     override fun show() {
@@ -238,7 +216,7 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
 
         createTextUI()
         initialise3D()
-        constructBenchmarkScene()
+//        constructBenchmarkScene()
         initialiseHermes()
 
         mux.addProcessor(camController)
@@ -260,13 +238,11 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
 
         // try and take up to WORK_PER_FRAME items from the work queue and run them
         var workIdx = 0
-        synchronized(WORK_QUEUE) {
-            var item = WORK_QUEUE.poll()
-            while (item != null && workIdx < graphics.workPerFrame) {
-                item.run()
-                item = WORK_QUEUE.poll()
-                workIdx++
-            }
+        val iterator = WORK_QUEUE.iterator()
+        while (iterator.hasNext() && workIdx < graphics.workPerFrame) {
+            iterator.next().run()
+            iterator.remove()
+            workIdx++
         }
 
         if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
@@ -288,10 +264,6 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
                 Logger.debug("Enter fullscreen from window mode")
                 Gdx.graphics.setFullscreenMode(Lwjgl3ApplicationConfiguration.getDisplayMode())
             }
-        } else if (Gdx.input.isKeyJustPressed(Input.Keys.LEFT_BRACKET)) {
-            // vehicle movement in benchmark
-            Logger.debug("Toggling vehicle movement")
-            shouldVehiclesMove = !shouldVehiclesMove
         } else if (Gdx.input.isKeyJustPressed(Input.Keys.P)) {
             // debug camera pose and frustum culling
             Logger.debug("Camera pose:\npos: ${cam.position}\ndirection: ${cam.direction}")
@@ -300,50 +272,47 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
         } else if (Gdx.input.isKeyJustPressed(Input.Keys.R)) {
             Logger.debug("Reset camera")
             cam.position.set(0f, 200f, 0f)
-        }
-
-        // update benchmark
-        debugCounter += delta
-        if (debugCounter >= 0.5f && shouldVehiclesMove) {
-            debugCounter = 0f
-            for (vehicle in vehicles) {
-                // x, y, theta degrees
-                val x = Random.nextDouble(-50.0, 50.0).toFloat()
-                val y = Random.nextDouble(-50.0, 50.0).toFloat()
-                val pos = Vector3(x, y, 0f)
-                vehicle.updateTransform(pos)
-            }
+        } else if (Gdx.input.isKeyJustPressed(Input.Keys.B)) {
+            val vehicle = HermesSim.vehicleMap.values.filter { !it.hidden }.random()
+            Logger.debug("Going to randomly selected vehicle: $vehicle, ${vehicle.hashCode()}")
+            val position = vehicle.transform.getTranslation(Vector3())
+            cam.position.set(position.x, 200f, position.z)
+        } else if (Gdx.input.isKeyJustPressed(Input.Keys.PERIOD)) {
+            Logger.debug("Increment speed")
+            HermesSim.increaseSpeed()
+        } else if (Gdx.input.isKeyJustPressed(Input.Keys.COMMA)) {
+            Logger.debug("Decrement speed")
+            HermesSim.decreaseSpeed()
         }
 
         // render 3D
         camController.update(delta)
-        if (isUsingDebugCam) {
-            // move camera to debug spot
-            cam.position.set(debugCam.position)
-            cam.direction.set(debugCam.direction)
-            cam.up.set(debugCam.up)
-            // use old frustum so we get culling
-            cam.update(false)
-        } else {
-            cam.update()
-        }
-        sceneManager.update(delta, vehicles)
+        cam.update()
+        sceneManager.update(delta, HermesSim.vehicleMap.values)
         sceneManager.render()
         GCTileCache.nextFrame()
         GCBuildingCache.nextFrame()
 
         // render debug UI
+        deltaWindow.addValue(delta.toDouble())
+        val deltaMin = (deltaWindow.min * 1000.0f).roundToInt()
+        val deltaMax = (deltaWindow.max * 1000.0f).roundToInt()
+        val deltaAvg = (deltaWindow.mean * 1000.0f).roundToInt()
+        val deltaDev = (deltaWindow.standardDeviation * 1000.0f).roundToInt()
+
         if (isDebugDraw) {
             val mem = ((Gdx.app.javaHeap + Gdx.app.nativeHeap) / 1e6).roundToInt()
-            val deltaMs = (delta * 1000.0f).roundToInt()
             debugLabel.setText(
-            """FPS: ${Gdx.graphics.framesPerSecond} (${deltaMs} ms)    Draw calls: ${profiler.drawCalls}    Memory: $mem MB
+            """FPS: ${Gdx.graphics.framesPerSecond}    Draw calls: ${profiler.drawCalls}    Memory: $mem MB
+            |Delta    min: $deltaMin ms     max: $deltaMax ms     avg: $deltaAvg ms     stddev: $deltaDev ms
             |${GCTileCache.getStats()}
             |${GCBuildingCache.getStats()}
-            |Vehicles    culled: ${sceneManager.cullRate}%    low LoD: ${sceneManager.lowLodRate}%    full: ${sceneManager.fullRenderRate}%    total: ${sceneManager.totalVehicles}
+            |Vehicles    culled: ${sceneManager.cullRate}    low LoD: ${sceneManager.lowLodRate}    full: ${sceneManager.fullRenderRate}    total: ${sceneManager.totalVehicles}    on screen: ${sceneManager.lowLodRate + sceneManager.fullRenderRate}
             |Tiles on screen: ${tileManager.numRetrievedTiles}
             |Work queue    done: $workIdx    left: ${WORK_QUEUE.size}
             |Graphics preset: ${graphics.name}
+            |Hermes compute time: ${hermesDelta.roundToInt()} ms
+            |Hermes sim time: ${HermesSim.time.roundToInt()}
             |pitch: ${camController.quat.pitch}, roll: ${camController.quat.roll}, yaw: ${camController.quat.yaw}
             |x: ${cam.position.x}, y: ${cam.position.y}, z: ${cam.position.z}
             """.trimMargin())
@@ -355,11 +324,11 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
         if (isDebugDraw) {
             shapeRender.projectionMatrix = cam.combined
             shapeRender.begin(ShapeRenderer.ShapeType.Line)
-            for (vehicle in vehicles) {
+            for (vehicle in HermesSim.vehicleMap.values) {
                 vehicle.debug(shapeRender)
             }
 
-            val tiles = tileManager.getTilesCulled(cam, graphics)
+            val tiles = tileManager.getTilesCulledHeightScaled(cam, graphics)
             for (tile in tiles) {
                 tile.debug(shapeRender)
             }
@@ -387,6 +356,13 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
 
         profiler.reset()
         sceneManager.resetStats()
+
+        if (Gdx.input.isKeyJustPressed(Input.Keys.SEMICOLON)) {
+            Logger.debug("Taking screenshot")
+            val pixmap = Pixmap.createFromFrameBuffer(0, 0, Gdx.graphics.width, Gdx.graphics.height)
+            PixmapIO.writePNG(Gdx.files.absolute("/tmp/atlas_screenshot.png"), pixmap, Deflater.BEST_COMPRESSION, true)
+            pixmap.dispose()
+        }
     }
 
     override fun resize(width: Int, height: Int) {
@@ -416,19 +392,20 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
         /**
          * List of work items to process per frame. Unlike Gdx.app.postRunnable, only [WORK_PER_FRAME] are
          * processed per frame.
-         *
-         * **IMPORTANT:** MUST BE SYNCHRONISED USING A `synchronized` BLOCK! This is not concurrent
-         * by default due to the stupid way in which I pull items off the queue.
          */
-        private val WORK_QUEUE = LinkedList<Runnable>()
+        private val WORK_QUEUE = ConcurrentLinkedQueue<Runnable>()
 
         /** Absolute max number of items in the work queue to prevent RAM from filling up */
         private const val WORK_QUEUE_ABSOLUTE_MAX = 8192
 
+        /** Hermes ticks every this many milliseconds */
+        private const val HERMES_TICK_RATE = 50f
+
+        /** Hermes tick delta */
+        private const val HERMES_DELTA = HERMES_TICK_RATE / 1000f
+
         fun addWork(runnable: Runnable) {
-            synchronized (WORK_QUEUE) {
-                WORK_QUEUE.add(runnable)
-            }
+            WORK_QUEUE.add(runnable)
         }
     }
 }
