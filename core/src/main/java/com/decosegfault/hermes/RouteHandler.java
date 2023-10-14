@@ -19,6 +19,7 @@ import org.tinylog.Logger;
 
 /**
  * @author Lachlan Ellis
+ * @author Henry Batt
  */
 public class RouteHandler {
     public static SimType simType;
@@ -51,6 +52,7 @@ public class RouteHandler {
             TripData newTrip = new TripData(routes.get(trip.getRoute().getId().getId()).routeType, trip.getDirectionId());
             newTrip.routeID = trip.getId().getId();
             newTrip.routeName = trip.getTripHeadsign();
+            newTrip.routeVehicleName = trip.getRoute().getShortName();
 
 
             //check this later to make sure it's not a deep copy, if it is I will be sad

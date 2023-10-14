@@ -62,6 +62,12 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
     private lateinit var debugLabel: Label
     private val mux = InputMultiplexer()
 
+    /** Status text */
+    private lateinit var statusLabel: Label
+
+    private var selectedVehicle: AtlasVehicle? = null
+
+
     private val cam = PerspectiveCamera().apply {
         fieldOfView = 75f
         near = 0.5f
@@ -126,12 +132,24 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
         debugLabel.pack()
 
         // debug UI
-        val container = Table()
-        container.pad(10f)
-        container.add(debugLabel)
-        container.setFillParent(true)
-        container.top().left()
-        container.pack()
+        val debugContainer = Table()
+        debugContainer.pad(10f)
+        debugContainer.add(debugLabel)
+        debugContainer.setFillParent(true)
+        debugContainer.top().right()
+        debugContainer.pack()
+
+        // status details UI
+        statusLabel = Label("", skin, "window")
+        statusLabel.style = style
+        statusLabel.pack()
+
+        val statusContainer = Table()
+        statusContainer.pad(10f)
+        statusContainer.add(statusLabel)
+        statusContainer.setFillParent(true)
+        statusContainer.top().left()
+        statusContainer.pack()
 
         // add a label saying "(c) OpenStreetMap contributors" in the bottom right corner to comply with
         // the OpenStreetMap licence
@@ -145,7 +163,15 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
         osmContainer.bottom().right()
         osmContainer.pack()
 
-        stage.addActor(container)
+        val crosshairContainer = Table()
+        crosshairContainer.setFillParent(true)
+        crosshairContainer.add(Image(ASSETS["sprite/crosshair.png", Texture::class.java])).width(32f).height(32f)
+        crosshairContainer.center()
+        crosshairContainer.pack()
+
+        stage.addActor(debugContainer)
+        stage.addActor(statusContainer)
+        stage.addActor(crosshairContainer)
         stage.addActor(osmContainer)
     }
 
@@ -320,6 +346,12 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
             debugLabel.setText("FPS: ${Gdx.graphics.framesPerSecond}    Draw calls: ${profiler.drawCalls}\n${GCTileCache.getStats()}")
         }
 
+        if (Gdx.input.isButtonJustPressed(Input.Buttons.LEFT)) {
+            Logger.debug("Select Vehicle")
+            selectVehicle()
+        }
+        drawStatusText()
+
         // draw bounding boxes for vehicles
         if (isDebugDraw) {
             shapeRender.projectionMatrix = cam.combined
@@ -340,15 +372,13 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
 
             shapeRender.end()
 
-//            batch.begin()
-//            for (tile in tiles) {
-//                tile.debugText(batch, skin.getFont("window"), cam)
-//            }
-//            batch.end()
-
-//            shapeRender.begin(ShapeRenderer.ShapeType.Filled)
-//            shapeRender.point(camController.target.x, camController.target.y, camController.target.z)
-//            shapeRender.end()
+        } else {
+            shapeRender.projectionMatrix = cam.combined
+            shapeRender.begin(ShapeRenderer.ShapeType.Line)
+            for (vehicle in HermesSim.vehicleMap.values) {
+                vehicle.draw(shapeRender, vehicle == selectedVehicle)
+            }
+            shapeRender.end()
         }
 
         stage.act()
@@ -365,9 +395,47 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
         }
     }
 
+    /**
+     * Selects the vehicle at the current screen centre and saves if exists.
+     */
+    private fun selectVehicle() {
+        val possibleVehicle = sceneManager.intersectRayVehicle(cam.getPickRay(Gdx.graphics.width/2f, Gdx.graphics.height/2f));
+        if (possibleVehicle != null) {
+            selectedVehicle = possibleVehicle
+        }
+    }
+
+    private fun calculateTime() : String {
+        val hours = (HermesSim.time % 86400) / 3600 // L + Ratio + @lachlanellis fell off
+        val hour = hours.toInt()
+
+        val minutes = (hours - hour) * 60
+        val minute = minutes.toInt()
+
+        val seconds = (minutes - minute) * 60
+        val second = seconds.toInt()
+
+        val signature = if (hour > 12) "PM" else "AM"
+        return "${hour%12}:$minute:$second $signature"
+    }
+
+    private fun drawStatusText() {
+        var vehicleName = "Not selected"
+        if (selectedVehicle != null) {
+            vehicleName = selectedVehicle!!.name
+        }
+        statusLabel.setText(
+            """
+            |Time:  ${calculateTime()}
+            |Selected:    $vehicleName
+            """.trimMargin())
+    }
+
     override fun resize(width: Int, height: Int) {
         stage.viewport.update(width, height, true)
-        cameraViewport.update(width, height)
+        cameraViewport.update(width, height, true)
+                stage.camera.update()
+
     }
 
     override fun hide() {

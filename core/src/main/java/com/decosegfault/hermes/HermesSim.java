@@ -6,6 +6,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.math.Vector3;
 import com.decosegfault.hermes.types.SimType;
+import com.decosegfault.hermes.types.VehicleType;
 import org.onebusaway.gtfs.impl.GtfsDaoImpl;
 import org.onebusaway.gtfs.model.*;
 import org.tinylog.Logger;
@@ -23,6 +24,7 @@ import java.util.concurrent.ForkJoinPool;
 /**
  * @author Lachlan Ellis
  * @author Matt Young
+ * @author Henry Batt
  */
 public class HermesSim {
 
@@ -75,7 +77,18 @@ public class HermesSim {
         // create vehicles - this has to be here because otherwise it breaks libGDX
         // the other way would be to have a "creating vehicle" lock
         for (TripData trip : vehiclesToCreate) {
-            var vehicle = AtlasVehicle.Companion.createFromHermes(trip.vehicle.vehicleType);
+            StringBuilder vehicleName = new StringBuilder();
+
+            if (trip.vehicle.vehicleType == VehicleType.TRAIN) {
+                vehicleName.append(trip.routeVehicleName).append(" line");
+            } else if (trip.vehicle.vehicleType == VehicleType.FERRY) {
+                vehicleName.append(trip.routeVehicleName).append(" voyage");
+            } else {
+                vehicleName.append("Route ").append(trip.routeVehicleName);
+            }
+            vehicleName.append(": ").append(trip.routeName).append("\t").append(trip.vehicle.vehicleType);
+
+            var vehicle = AtlasVehicle.Companion.createFromHermes(trip.vehicle.vehicleType, vehicleName.toString());
             vehicleMap.put(trip.routeID, vehicle);
         }
 

@@ -17,6 +17,7 @@ import org.tinylog.kotlin.Logger
  * This was borrowed from my (Matt) previous work:
  * [https://github.com/UQRacing/gazilla/blob/master/core/src/main/kotlin/com/uqracing/gazilla/client/utils/Assets.kt]
  * @author Matt Young
+ * @author Henry Batt
  */
 object Assets {
     private val allowedExtensions = listOf("glb", "atlas", "png", "jpg", "fnt")
@@ -36,6 +37,7 @@ object Assets {
         assets.load("sprite/blocks1.jpg", Texture::class.java)
         assets.load("sprite/brown_age_by_darkwood67.jpg", Texture::class.java)
         assets.load("sprite/brown_ice_by_darkwood67.jpg", Texture::class.java)
+        assets.load("sprite/crosshair.png", Texture::class.java)
         assets.load("sprite/uvchecker1.png", Texture::class.java)
 
         // load vehicle 3D models

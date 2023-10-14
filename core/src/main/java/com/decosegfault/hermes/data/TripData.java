@@ -17,11 +17,13 @@ import org.tinylog.Logger;
 
 /**
  * @author Lachlan Ellis
+ * @author Henry Batt
  */
 public class TripData {
     public VehicleType routeType;
     public String routeID;
     public String routeName;
+    public String routeVehicleName;
     public List<HPVector3> routeMap =  new ArrayList<>();
     public VehicleData vehicle;
 
