@@ -36,6 +36,9 @@ import net.mgsx.gltf.scene3d.scene.SceneSkybox
 import net.mgsx.gltf.scene3d.utils.IBLBuilder
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics
 import org.tinylog.kotlin.Logger
+import java.time.LocalDateTime
+import java.time.Month
+import java.time.format.DateTimeFormatter
 import java.util.*
 import java.util.concurrent.*
 import java.util.zip.Deflater
@@ -69,6 +72,7 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
 
     private var followingBus = false
 
+    private var showUIAdjustments = true
 
     private val cam = PerspectiveCamera().apply {
         fieldOfView = 75f
@@ -110,6 +114,8 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
     private var hermesDelta = 0f
 
     private val deltaWindow = DescriptiveStatistics(1024)
+
+    private lateinit var crosshairContainer: Table
 
     private fun createTextUI() {
         // hack to use linear scaling instead of nearest neighbour for text
@@ -165,7 +171,7 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
         osmContainer.bottom().right()
         osmContainer.pack()
 
-        val crosshairContainer = Table()
+        crosshairContainer = Table()
         crosshairContainer.setFillParent(true)
         crosshairContainer.add(Image(ASSETS["sprite/crosshair.png", Texture::class.java])).width(32f).height(32f)
         crosshairContainer.center()
@@ -275,6 +281,7 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
 
         if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
             // quit the game
+            Logger.debug("Quitting")
             Gdx.app.exit()
         } else if (Gdx.input.isKeyJustPressed(Input.Keys.G)) {
             // toggle debug
@@ -282,6 +289,7 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
             isDebugDraw = !isDebugDraw
         } else if (Gdx.input.isKeyJustPressed(Input.Keys.RIGHT_BRACKET)) {
             // forces tile cache GC
+            Logger.debug("Force tile cache GC next frame")
             GCTileCache.gcNextFrame()
         } else if (Gdx.input.isKeyJustPressed(Input.Keys.ENTER)) {
             // toggle fullscreen
@@ -293,18 +301,17 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
                 Gdx.graphics.setFullscreenMode(Lwjgl3ApplicationConfiguration.getDisplayMode())
             }
         } else if (Gdx.input.isKeyJustPressed(Input.Keys.P)) {
-            // debug camera pose and frustum culling
             Logger.debug("Camera pose:\npos: ${cam.position}\ndirection: ${cam.direction}")
-//            Logger.debug("Toggling usingDebugCam")
-//            isUsingDebugCam = !isUsingDebugCam
         } else if (Gdx.input.isKeyJustPressed(Input.Keys.R)) {
             Logger.debug("Reset camera")
             cam.position.set(0f, 200f, 0f)
         } else if (Gdx.input.isKeyJustPressed(Input.Keys.B)) {
-            val vehicle = HermesSim.vehicleMap.values.filter { !it.hidden }.random()
-            Logger.debug("Going to randomly selected vehicle: $vehicle, ${vehicle.hashCode()}")
-            val position = vehicle.transform.getTranslation(Vector3())
-            cam.position.set(position.x, 200f, position.z)
+            val vehicle = HermesSim.vehicleMap.values.filter { !it.hidden }.randomOrNull()
+            if (vehicle != null) {
+                Logger.debug("Going to randomly selected vehicle: $vehicle, ${vehicle.hashCode()}")
+                val position = vehicle.transform.getTranslation(Vector3())
+                cam.position.set(position.x, 200f, position.z)
+            }
         } else if (Gdx.input.isKeyJustPressed(Input.Keys.PERIOD)) {
             Logger.debug("Increment speed")
             HermesSim.increaseSpeed()
@@ -314,11 +321,15 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
         } else if (Gdx.input.isKeyJustPressed(Input.Keys.F)) {
             Logger.debug("Toggle follow bus")
             followingBus = !followingBus
+        } else if (Gdx.input.isKeyJustPressed(Input.Keys.T)) {
+            Logger.debug("Toggle show UI adjustments")
+            crosshairContainer.isVisible = !crosshairContainer.isVisible
+            showUIAdjustments = !showUIAdjustments
         }
 
         // follow selected vehicle if enabled
         if (selectedVehicle != null && followingBus) {
-            cam.position.set(selectedVehicle!!.transform.getTranslation(Vector3()))
+            cam.position.set(selectedVehicle!!.bbox.getCenter(Vector3()))
             cam.position.y += 100f
         }
 
@@ -383,11 +394,12 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
 
             shapeRender.end()
 
-        } else {
+        } else if (showUIAdjustments) {
             shapeRender.projectionMatrix = cam.combined
             shapeRender.begin(ShapeRenderer.ShapeType.Line)
             // this is stupid
             for (vehicle in HermesSim.vehicleMap.values) {
+                if (vehicle == selectedVehicle) continue
                 vehicle.draw(shapeRender, false)
             }
             selectedVehicle?.draw(shapeRender, true)
@@ -414,22 +426,20 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
     private fun selectVehicle() {
         val possibleVehicle = sceneManager.intersectRayVehicle(cam.getPickRay(Gdx.graphics.width/2f, Gdx.graphics.height/2f));
         if (possibleVehicle != null) {
-            selectedVehicle = possibleVehicle
+            selectedVehicle = if (possibleVehicle == selectedVehicle) {
+                // unselect by clicking twice
+                null
+            } else {
+                // select by clicking once
+                possibleVehicle
+            }
         }
+        Logger.debug("selectVehicle() selected $possibleVehicle")
     }
 
     private fun calculateTime() : String {
-        val hours = (HermesSim.time % 86400) / 3600 // L + Ratio + @lachlanellis fell off
-        val hour = hours.toInt()
-
-        val minutes = (hours - hour) * 60
-        val minute = minutes.toInt()
-
-        val seconds = (minutes - minute) * 60
-        val second = seconds.toInt()
-
-        val signature = if (hour > 12) "PM" else "AM"
-        return "${hour%12}:$minute:$second $signature"
+        val time = BASE_DATE.plusSeconds(HermesSim.time.toLong())
+        return time.format(TIME_FORMATTER)
     }
 
     private fun drawStatusText() {
@@ -467,6 +477,7 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
         hermesExecutor.shutdownNow()
         // we should no longer need assets since we quit the game
         ASSETS.dispose()
+        Logger.info("Goodbye! Enjoy your day")
     }
 
     companion object {
@@ -484,6 +495,10 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
 
         /** Hermes tick delta */
         private const val HERMES_DELTA = HERMES_TICK_RATE / 1000f
+
+        private val BASE_DATE = LocalDateTime.of(2023, Month.JANUARY, 1, 0, 0)
+
+        private val TIME_FORMATTER = DateTimeFormatter.ofPattern("h:m:s a")
 
         fun addWork(runnable: Runnable) {
             WORK_QUEUE.add(runnable)

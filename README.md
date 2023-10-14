@@ -73,10 +73,13 @@ I haven't got around to doing this yet. If it does become necessary ping @matt.
 - ;: Take screenshot
 - WASD: Move forward, left, back, right
 - Mouse: Look
+- Left click: Select vehicle
 - Shift: Boost movement speed
 - CTRL: Move down
 - SPACE: Zoom up
 - R: Reset camera
+- T: Show/hide UI adjustments (vehicle boxes and crosshair)
+- F: Enable/disable camera following selected vehicle
 
 **Command line options:**
 

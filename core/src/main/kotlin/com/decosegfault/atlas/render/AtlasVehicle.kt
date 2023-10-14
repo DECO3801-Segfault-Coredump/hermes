@@ -33,7 +33,7 @@ class AtlasVehicle(private val modelHigh: SceneAsset, private val modelLow: Scen
     /** original bbox for the model itself */
     private val bboxOrig = BoundingBox()
     /** transformed bbox for current model */
-    private val bbox = BoundingBox()
+    val bbox = BoundingBox()
     /** true if the vehicle was culled in the last render pass */
     var didCull = false
     /** true if the vehicle used low LoD model in the last render pass */
