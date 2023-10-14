@@ -112,7 +112,7 @@ class AtlasVehicle(private val modelHigh: SceneAsset, private val modelLow: Scen
 
     fun draw(render: ShapeRenderer, selected: Boolean) {
         if (didCull || hidden) return
-        render.color = if (selected) Color.GREEN else Color.YELLOW
+        render.color = if (selected) Color.valueOf("#00de30") else Color.valueOf("#0d0063")
         render.box(bbox.min.x , bbox.min.y, bbox.max.z, bbox.width, bbox.height, bbox.depth)
     }
 

@@ -67,6 +67,8 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
 
     private var selectedVehicle: AtlasVehicle? = null
 
+    private var followingBus = false
+
 
     private val cam = PerspectiveCamera().apply {
         fieldOfView = 75f
@@ -309,6 +311,15 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
         } else if (Gdx.input.isKeyJustPressed(Input.Keys.COMMA)) {
             Logger.debug("Decrement speed")
             HermesSim.decreaseSpeed()
+        } else if (Gdx.input.isKeyJustPressed(Input.Keys.F)) {
+            Logger.debug("Toggle follow bus")
+            followingBus = !followingBus
+        }
+
+        // follow selected vehicle if enabled
+        if (selectedVehicle != null && followingBus) {
+            cam.position.set(selectedVehicle!!.transform.getTranslation(Vector3()))
+            cam.position.y += 100f
         }
 
         // render 3D
@@ -343,7 +354,7 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
             |x: ${cam.position.x}, y: ${cam.position.y}, z: ${cam.position.z}
             """.trimMargin())
         } else {
-            debugLabel.setText("FPS: ${Gdx.graphics.framesPerSecond}    Draw calls: ${profiler.drawCalls}\n${GCTileCache.getStats()}")
+            debugLabel.setText("FPS: ${Gdx.graphics.framesPerSecond}    Draw calls: ${profiler.drawCalls}")
         }
 
         if (Gdx.input.isButtonJustPressed(Input.Buttons.LEFT)) {
@@ -375,9 +386,11 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
         } else {
             shapeRender.projectionMatrix = cam.combined
             shapeRender.begin(ShapeRenderer.ShapeType.Line)
+            // this is stupid
             for (vehicle in HermesSim.vehicleMap.values) {
-                vehicle.draw(shapeRender, vehicle == selectedVehicle)
+                vehicle.draw(shapeRender, false)
             }
+            selectedVehicle?.draw(shapeRender, true)
             shapeRender.end()
         }
 
