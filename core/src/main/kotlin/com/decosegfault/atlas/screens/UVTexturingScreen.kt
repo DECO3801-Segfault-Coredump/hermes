@@ -6,15 +6,22 @@ import com.badlogic.gdx.InputMultiplexer
 import com.badlogic.gdx.ScreenAdapter
 import com.badlogic.gdx.graphics.*
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
+import com.badlogic.gdx.graphics.g2d.TextureRegion
 import com.badlogic.gdx.graphics.g3d.Material
 import com.badlogic.gdx.graphics.g3d.ModelInstance
 import com.badlogic.gdx.graphics.g3d.decals.CameraGroupStrategy
 import com.badlogic.gdx.graphics.g3d.decals.DecalBatch
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
+import com.badlogic.gdx.math.MathUtils
 import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.scenes.scene2d.Stage
+import com.badlogic.gdx.scenes.scene2d.ui.Image
+import com.badlogic.gdx.scenes.scene2d.ui.Label
 import com.badlogic.gdx.scenes.scene2d.ui.Skin
+import com.badlogic.gdx.scenes.scene2d.ui.Slider
+import com.badlogic.gdx.scenes.scene2d.ui.Table
+import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable
 import com.badlogic.gdx.utils.viewport.ExtendViewport
 import com.badlogic.gdx.utils.viewport.FitViewport
 import com.decosegfault.atlas.map.BuildingGenerator
@@ -77,6 +84,9 @@ class UVTexturingScreen : ScreenAdapter() {
         set(PBRTextureAttribute.createBaseColorTexture(Assets.ASSETS["sprite/uvchecker1.png", Texture::class.java]))
     }
 
+    // list of slider pairs (x slider then y slider)
+    private val sliders = mutableListOf<Pair<Slider, Slider>>()
+
     private fun initialise3D() {
         sceneManager = AtlasSceneManager(graphics)
         sceneManager.setCamera(cam)
@@ -110,7 +120,48 @@ class UVTexturingScreen : ScreenAdapter() {
         Logger.info("GL version: ${v.majorVersion}.${v.minorVersion}.${v.releaseVersion} vendor: ${v.vendorString} renderer: ${v.rendererString}")
     }
 
+    private fun createUI() {
+        // hack to use linear scaling instead of nearest neighbour for text
+        // makes the text slightly less ugly, but ideally we should use FreeType
+        // https://stackoverflow.com/a/33633682/5007892
+        for (region in skin.getFont("window").regions) {
+            region.texture.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear)
+        }
+
+        // generate black texture for background
+        // https://stackoverflow.com/a/38881685/5007892
+        val pixmap = Pixmap(1, 1, Pixmap.Format.RGB888)
+        pixmap.setColor(Color.BLACK)
+        pixmap.fill()
+        val black = Texture(pixmap)
+        pixmap.dispose()
+
+        // debug UI
+        val container = Table()
+        container.pad(10f)
+        container.add(Label("UV Texturing", skin, "window"))
+        container.row()
+        for (i in 0 until 7) {
+            val xSlider = Slider(0.0f, 1.0f, 0.01f, false, skin)
+            val ySlider = Slider(0.0f, 1.0f, 0.01f, false, skin)
+            xSlider.value = MathUtils.random()
+            ySlider.value = MathUtils.random()
+            container.add(xSlider)
+            container.row()
+            container.add(ySlider)
+            container.row().padTop(20f)
+            sliders.add(Pair(xSlider, ySlider))
+        }
+        container.setFillParent(true)
+        container.top().left()
+//        container.background = TextureRegionDrawable(black)
+        container.pack()
+
+        stage.addActor(container)
+    }
+
     override fun show() {
+        createUI()
         initialise3D()
         mux.addProcessor(camController)
         mux.addProcessor(stage)
@@ -120,10 +171,31 @@ class UVTexturingScreen : ScreenAdapter() {
     override fun render(delta: Float) {
         clearScreen(0.0f, 0.0f, 0.0f)
 
+        // get slider values
+        val uvs = Array<Vector2?>(7) { Vector2() }
+        for ((i, sliderPair) in sliders.withIndex()) {
+            val x = sliderPair.first.value
+            val y = sliderPair.second.value
+            val vec = Vector2(x, y)
+            uvs[i] = vec
+        }
+
+
         if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
             // quit the game
             Gdx.app.exit()
+        } else if (Gdx.input.isKeyJustPressed(Input.Keys.K)) {
+            // toggle mouse lock
+            Gdx.input.isCursorCatched = !Gdx.input.isCursorCatched
+            camController.enabled = Gdx.input.isCursorCatched
+        } else if (Gdx.input.isKeyJustPressed(Input.Keys.P)) {
+            println("val uvs: Array<Vector2?> = arrayOf(")
+            for ((i, uv) in uvs.withIndex()) {
+                println("Vector2(${uv!!.x}f, ${uv.y}f), ")
+            }
+            println(")")
         }
+
 
         // make a new model each frame
         val modelBuilder = ModelBuilder()
@@ -135,7 +207,7 @@ class UVTexturingScreen : ScreenAdapter() {
             material
         )
         val triangle = Triangle(Vector2(-30f, 0f), Vector2(30f, 0f), Vector2(0f, 60f))
-        triangle.extrudeUpToPrismMesh(mpb, 20f)
+        triangle.extrudeUpToPrismMesh(mpb, 20f, uvs)
 
         val model = modelBuilder.end()
         val inst = ModelInstance(model)

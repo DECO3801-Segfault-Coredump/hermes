@@ -36,6 +36,9 @@ import net.mgsx.gltf.scene3d.scene.SceneSkybox
 import net.mgsx.gltf.scene3d.utils.IBLBuilder
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics
 import org.tinylog.kotlin.Logger
+import java.time.LocalDateTime
+import java.time.Month
+import java.time.format.DateTimeFormatter
 import java.util.*
 import java.util.concurrent.*
 import java.util.zip.Deflater
@@ -61,6 +64,15 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
     /** Debug text */
     private lateinit var debugLabel: Label
     private val mux = InputMultiplexer()
+
+    /** Status text */
+    private lateinit var statusLabel: Label
+
+    private var selectedVehicle: AtlasVehicle? = null
+
+    private var followingBus = false
+
+    private var showUIAdjustments = true
 
     private val cam = PerspectiveCamera().apply {
         fieldOfView = 75f
@@ -103,6 +115,8 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
 
     private val deltaWindow = DescriptiveStatistics(1024)
 
+    private lateinit var crosshairContainer: Table
+
     private fun createTextUI() {
         // hack to use linear scaling instead of nearest neighbour for text
         // makes the text slightly less ugly, but ideally we should use FreeType
@@ -126,12 +140,24 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
         debugLabel.pack()
 
         // debug UI
-        val container = Table()
-        container.pad(10f)
-        container.add(debugLabel)
-        container.setFillParent(true)
-        container.top().left()
-        container.pack()
+        val debugContainer = Table()
+        debugContainer.pad(10f)
+        debugContainer.add(debugLabel)
+        debugContainer.setFillParent(true)
+        debugContainer.top().right()
+        debugContainer.pack()
+
+        // status details UI
+        statusLabel = Label("", skin, "window")
+        statusLabel.style = style
+        statusLabel.pack()
+
+        val statusContainer = Table()
+        statusContainer.pad(10f)
+        statusContainer.add(statusLabel)
+        statusContainer.setFillParent(true)
+        statusContainer.top().left()
+        statusContainer.pack()
 
         // add a label saying "(c) OpenStreetMap contributors" in the bottom right corner to comply with
         // the OpenStreetMap licence
@@ -145,7 +171,15 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
         osmContainer.bottom().right()
         osmContainer.pack()
 
-        stage.addActor(container)
+        crosshairContainer = Table()
+        crosshairContainer.setFillParent(true)
+        crosshairContainer.add(Image(ASSETS["sprite/crosshair.png", Texture::class.java])).width(32f).height(32f)
+        crosshairContainer.center()
+        crosshairContainer.pack()
+
+        stage.addActor(debugContainer)
+        stage.addActor(statusContainer)
+        stage.addActor(crosshairContainer)
         stage.addActor(osmContainer)
     }
 
@@ -247,6 +281,7 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
 
         if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
             // quit the game
+            Logger.debug("Quitting")
             Gdx.app.exit()
         } else if (Gdx.input.isKeyJustPressed(Input.Keys.G)) {
             // toggle debug
@@ -254,6 +289,7 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
             isDebugDraw = !isDebugDraw
         } else if (Gdx.input.isKeyJustPressed(Input.Keys.RIGHT_BRACKET)) {
             // forces tile cache GC
+            Logger.debug("Force tile cache GC next frame")
             GCTileCache.gcNextFrame()
         } else if (Gdx.input.isKeyJustPressed(Input.Keys.ENTER)) {
             // toggle fullscreen
@@ -265,24 +301,36 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
                 Gdx.graphics.setFullscreenMode(Lwjgl3ApplicationConfiguration.getDisplayMode())
             }
         } else if (Gdx.input.isKeyJustPressed(Input.Keys.P)) {
-            // debug camera pose and frustum culling
             Logger.debug("Camera pose:\npos: ${cam.position}\ndirection: ${cam.direction}")
-//            Logger.debug("Toggling usingDebugCam")
-//            isUsingDebugCam = !isUsingDebugCam
         } else if (Gdx.input.isKeyJustPressed(Input.Keys.R)) {
             Logger.debug("Reset camera")
             cam.position.set(0f, 200f, 0f)
         } else if (Gdx.input.isKeyJustPressed(Input.Keys.B)) {
-            val vehicle = HermesSim.vehicleMap.values.filter { !it.hidden }.random()
-            Logger.debug("Going to randomly selected vehicle: $vehicle, ${vehicle.hashCode()}")
-            val position = vehicle.transform.getTranslation(Vector3())
-            cam.position.set(position.x, 200f, position.z)
+            val vehicle = HermesSim.vehicleMap.values.filter { !it.hidden }.randomOrNull()
+            if (vehicle != null) {
+                Logger.debug("Going to randomly selected vehicle: $vehicle, ${vehicle.hashCode()}")
+                val position = vehicle.transform.getTranslation(Vector3())
+                cam.position.set(position.x, 200f, position.z)
+            }
         } else if (Gdx.input.isKeyJustPressed(Input.Keys.PERIOD)) {
             Logger.debug("Increment speed")
             HermesSim.increaseSpeed()
         } else if (Gdx.input.isKeyJustPressed(Input.Keys.COMMA)) {
             Logger.debug("Decrement speed")
             HermesSim.decreaseSpeed()
+        } else if (Gdx.input.isKeyJustPressed(Input.Keys.F)) {
+            Logger.debug("Toggle follow bus")
+            followingBus = !followingBus
+        } else if (Gdx.input.isKeyJustPressed(Input.Keys.T)) {
+            Logger.debug("Toggle show UI adjustments")
+            crosshairContainer.isVisible = !crosshairContainer.isVisible
+            showUIAdjustments = !showUIAdjustments
+        }
+
+        // follow selected vehicle if enabled
+        if (selectedVehicle != null && followingBus) {
+            cam.position.set(selectedVehicle!!.bbox.getCenter(Vector3()))
+            cam.position.y += 100f
         }
 
         // render 3D
@@ -317,8 +365,14 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
             |x: ${cam.position.x}, y: ${cam.position.y}, z: ${cam.position.z}
             """.trimMargin())
         } else {
-            debugLabel.setText("FPS: ${Gdx.graphics.framesPerSecond}    Draw calls: ${profiler.drawCalls}\n${GCTileCache.getStats()}")
+            debugLabel.setText("FPS: ${Gdx.graphics.framesPerSecond}    Draw calls: ${profiler.drawCalls}")
         }
+
+        if (Gdx.input.isButtonJustPressed(Input.Buttons.LEFT)) {
+            Logger.debug("Select Vehicle")
+            selectVehicle()
+        }
+        drawStatusText()
 
         // draw bounding boxes for vehicles
         if (isDebugDraw) {
@@ -340,15 +394,16 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
 
             shapeRender.end()
 
-//            batch.begin()
-//            for (tile in tiles) {
-//                tile.debugText(batch, skin.getFont("window"), cam)
-//            }
-//            batch.end()
-
-//            shapeRender.begin(ShapeRenderer.ShapeType.Filled)
-//            shapeRender.point(camController.target.x, camController.target.y, camController.target.z)
-//            shapeRender.end()
+        } else if (showUIAdjustments) {
+            shapeRender.projectionMatrix = cam.combined
+            shapeRender.begin(ShapeRenderer.ShapeType.Line)
+            // this is stupid
+            for (vehicle in HermesSim.vehicleMap.values) {
+                if (vehicle == selectedVehicle) continue
+                vehicle.draw(shapeRender, false)
+            }
+            selectedVehicle?.draw(shapeRender, true)
+            shapeRender.end()
         }
 
         stage.act()
@@ -365,9 +420,45 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
         }
     }
 
+    /**
+     * Selects the vehicle at the current screen centre and saves if exists.
+     */
+    private fun selectVehicle() {
+        val possibleVehicle = sceneManager.intersectRayVehicle(cam.getPickRay(Gdx.graphics.width/2f, Gdx.graphics.height/2f));
+        if (possibleVehicle != null) {
+            selectedVehicle = if (possibleVehicle == selectedVehicle) {
+                // unselect by clicking twice
+                null
+            } else {
+                // select by clicking once
+                possibleVehicle
+            }
+        }
+        Logger.debug("selectVehicle() selected $possibleVehicle")
+    }
+
+    private fun calculateTime() : String {
+        val time = BASE_DATE.plusSeconds(HermesSim.time.toLong())
+        return time.format(TIME_FORMATTER)
+    }
+
+    private fun drawStatusText() {
+        var vehicleName = "Not selected"
+        if (selectedVehicle != null) {
+            vehicleName = selectedVehicle!!.name
+        }
+        statusLabel.setText(
+            """
+            |Time:  ${calculateTime()}
+            |Selected:    $vehicleName
+            """.trimMargin())
+    }
+
     override fun resize(width: Int, height: Int) {
         stage.viewport.update(width, height, true)
-        cameraViewport.update(width, height)
+        cameraViewport.update(width, height, true)
+                stage.camera.update()
+
     }
 
     override fun hide() {
@@ -387,6 +478,7 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
         hermesExecutor.shutdownNow()
         // we should no longer need assets since we quit the game
         ASSETS.dispose()
+        Logger.info("Goodbye! Enjoy your day")
     }
 
     companion object {
@@ -404,6 +496,10 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
 
         /** Hermes tick delta */
         private const val HERMES_DELTA = HERMES_TICK_RATE / 1000f
+
+        private val BASE_DATE = LocalDateTime.of(2023, Month.JANUARY, 1, 0, 0)
+
+        private val TIME_FORMATTER = DateTimeFormatter.ofPattern("h:m:s a")
 
         fun addWork(runnable: Runnable) {
             WORK_QUEUE.add(runnable)

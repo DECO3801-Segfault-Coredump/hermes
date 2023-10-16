@@ -16,28 +16,32 @@ import com.decosegfault.atlas.util.AtlasUtils
 import com.decosegfault.hermes.types.VehicleType
 import net.mgsx.gltf.scene3d.scene.SceneAsset
 import org.tinylog.kotlin.Logger
+import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Atlas's representation of a vehicle, includes gdx-gltf high detail and low detail models and bounding box.
  *
  * @author Matt Young
+ * @author Henry Batt
  * @param modelHigh high poly 3D model
  * @param modelLow low poly 3D model
  */
-class AtlasVehicle(private val modelHigh: SceneAsset, private val modelLow: SceneAsset) {
+class AtlasVehicle(private val modelHigh: SceneAsset, private val modelLow: SceneAsset, val name: String = "") {
     /** actual transform of the vehicle shared between model instances */
     val transform = Matrix4()
     /** original bbox for the model itself */
     private val bboxOrig = BoundingBox()
     /** transformed bbox for current model */
-    private val bbox = BoundingBox()
+    val bbox = BoundingBox()
     /** true if the vehicle was culled in the last render pass */
     var didCull = false
     /** true if the vehicle used low LoD model in the last render pass */
     var didUseLowLod = false
     /** If true, force this vehicle to be hidden */
     var hidden = false
+
+    val uuid = UUID.randomUUID()
 
     private val modelInstanceHigh = ModelInstance(modelHigh.scene.model)
     private val modelInstanceLow = ModelInstance(modelLow.scene.model)
@@ -104,14 +108,12 @@ class AtlasVehicle(private val modelHigh: SceneAsset, private val modelLow: Scen
         if (didCull || hidden) return
         render.color = if (didUseLowLod) Color.GREEN else Color.RED
         render.box(bbox.min.x , bbox.min.y, bbox.max.z, bbox.width, bbox.height, bbox.depth)
+    }
 
-//        render.end()
-//        render.begin(ShapeRenderer.ShapeType.Filled)
-//        val centre = bbox.getCenter(Vector3())
-//        render.point(centre.x, centre.y, centre.z)
-//        val closest = AtlasUtils.closestPoint(cam.position, bbox)
-//        render.point(closest.x, closest.y, closest.z)
-//        render.end()
+    fun draw(render: ShapeRenderer, selected: Boolean) {
+        if (didCull || hidden) return
+        render.color = if (selected) Color.valueOf("#00de30") else Color.valueOf("#0d0063")
+        render.box(bbox.min.x , bbox.min.y, bbox.max.z, bbox.width, bbox.height, bbox.depth)
     }
 
     /** @return The model to render, or null if we should not render this vehicle */
@@ -157,14 +159,31 @@ class AtlasVehicle(private val modelHigh: SceneAsset, private val modelLow: Scen
         return "AtlasVehicle(transform=${transform.getTranslation(Vector3())}, didCull=$didCull, didUseLowLod=$didUseLowLod, hidden=$hidden)"
     }
 
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as AtlasVehicle
+
+        if (name != other.name) return false
+        if (uuid != other.uuid) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = name.hashCode()
+        result = 31 * result + (uuid?.hashCode() ?: 0)
+        return result
+    }
 
     companion object {
         /** Creates a vehicle for a Hermes [VehicleType] */
-        fun createFromHermes(type: VehicleType): AtlasVehicle {
+        fun createFromHermes(type: VehicleType, name: String): AtlasVehicle {
             val modelName = type.name.lowercase()
             val modelLow = Assets.ASSETS["atlas/${modelName}_low.glb", SceneAsset::class.java]
             val modelHigh = Assets.ASSETS["atlas/${modelName}_high.glb", SceneAsset::class.java]
-            val vehicle = AtlasVehicle(modelHigh, modelLow)
+            val vehicle = AtlasVehicle(modelHigh, modelLow, name)
             vehicle.updateTransform(Vector3.Zero)
             return vehicle
         }
