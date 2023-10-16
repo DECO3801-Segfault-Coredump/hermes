@@ -19,7 +19,8 @@ public class VehicleData {
     public VehicleData(VehicleType type) {
         vehicleType = type;
     }
-    public void tick(Vector3 newPosition) {
-
+    public void tick(HPVector3 newPosition) {
+        oldPosition = position;
+        position = newPosition;
     }
 }

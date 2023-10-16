@@ -1,11 +1,16 @@
 package com.decosegfault.hermes;
 
+import com.decosegfault.atlas.util.HPVector3;
+import com.decosegfault.hermes.data.VehicleData;
+import com.decosegfault.hermes.types.VehicleType;
 import com.google.transit.realtime.GtfsRealtime;
-
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Retrieves and stores live vehicle data
@@ -13,69 +18,109 @@ import java.net.URL;
  * @author Lachlan Ellis
  */
 public class LiveDataFeed {
-    private static URL vehiclesURL;
-    private static URL tripUpdatesURL;
-    private static void init() {
+
+    private final GtfsRealtime.FeedMessage tripFeed;
+    private final URL vehiclesURL;
+    private GtfsRealtime.FeedMessage vehiclePositionsFeed;
+    public ArrayList<String> routeIDList = new ArrayList<>();
+    public Map<String, HPVector3> vehiclePositions = new HashMap<>();
+    public Map<String, VehicleData> vehicleDataMap = new HashMap<>();
+
+    public LiveDataFeed() {
         try {
             URI vehiclesURI = new URI("https://gtfsrt.api.translink.com.au/api/realtime/SEQ/VehiclePositions");
-            URI tripUpdatesURI = new URI("https://gtfsrt.api.translink.com.au/api/realtime/SEQ/TripUpdates");
             vehiclesURL = vehiclesURI.toURL();
-            tripUpdatesURL = tripUpdatesURI.toURL();
+            vehiclePositionsFeed = GtfsRealtime.FeedMessage.parseFrom(vehiclesURL.openStream());
+
+
+            URI tripURI = new URI("https://gtfsrt.api.translink.com.au/api/realtime/SEQ/TripUpdates");
+            URL tripURL = tripURI.toURL();
+            tripFeed = GtfsRealtime.FeedMessage.parseFrom(tripURL.openStream());
         } catch (URISyntaxException | IOException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    public static void main(String[] args) {
         init();
-//        System.out.println(getVehiclePositionsFeed().getEntity(0));
-//        System.out.println(getTripUpdatesFeed().getEntity(0));
-
-        System.out.println(RouteHandler.tripsbyID);
     }
 
-    public static GtfsRealtime.FeedMessage getVehiclePositionsFeed() {
-        GtfsRealtime.FeedMessage feed;
+    public GtfsRealtime.FeedMessage getFeed() {
+        return tripFeed;
+    }
+
+    public GtfsRealtime.FeedMessage getFeed2() {
+        return vehiclePositionsFeed;
+    }
+
+
+
+
+
+    public void update() {
         try {
-            feed = GtfsRealtime.FeedMessage.parseFrom(vehiclesURL.openStream());
+            vehiclePositionsFeed = GtfsRealtime.FeedMessage.parseFrom(vehiclesURL.openStream());
         } catch (IOException e) {
-            throw new RuntimeException();
+            System.out.println("rip");
         }
-        return feed;
+        routeIDList.clear();
+        storeRouteID();
+        vehiclePositions.clear();
+        setVehiclePositions();
+        // Calls tick() on existing VehicleData
+        // If routeID exists in vehicleDataMap, call tick() to updates its position
+        // Otherwise, add new vehicleDataMap entry
+        for (String routeID : routeIDList) {
+            VehicleData vehicleData;
+            if (RouteHandler.routes.get(routeID) != null) {
+                if (vehicleDataMap.containsKey(routeID)) {
+                    VehicleData existingVehicleData = vehicleDataMap.get(routeID);
+                    existingVehicleData.hidden = false;
+                    existingVehicleData.tick(vehiclePositions.get(routeID));
+                } else {
+                    VehicleType vehicleType = RouteHandler.routes.get(routeID).routeType;
+                    vehicleData = new VehicleData(vehicleType);
+                    vehicleData.position = vehiclePositions.get(routeID);
+                    vehicleDataMap.put(routeID, vehicleData);
+                }
+            }
+        }
+        // Now check for routeIDs in vehicleDataMap no longer present in routeIDList and hide vehicle
+        for (Map.Entry<String, VehicleData> entry : vehicleDataMap.entrySet()) {
+            if (!routeIDList.contains(entry.getKey())) {
+                entry.getValue().hidden = true;
+            }
+        }
     }
 
-    public static GtfsRealtime.FeedMessage getTripUpdatesFeed() {
-        GtfsRealtime.FeedMessage feed;
-        try {
-            feed = GtfsRealtime.FeedMessage.parseFrom(tripUpdatesURL.openStream());
-        } catch (IOException e) {
-            throw new RuntimeException();
-        }
-        return feed;
+    private void init() {
+        storeRouteID();
+        setVehiclePositions();
+        storeVehicleData();
     }
 
+    private void storeRouteID() {
+        for (GtfsRealtime.FeedEntity entity : vehiclePositionsFeed.getEntityList()) {
+            routeIDList.add(entity.getVehicle().getTrip().getRouteId());
+        }
+    }
 
+    private void setVehiclePositions() {
+        for (GtfsRealtime.FeedEntity entity : vehiclePositionsFeed.getEntityList()) {
+            String routeID = entity.getVehicle().getTrip().getRouteId();
+            double latitude = entity.getVehicle().getPosition().getLatitude();
+            double longitude = entity.getVehicle().getPosition().getLongitude();
+            HPVector3 position = new HPVector3(latitude, longitude, 0.0);
+            vehiclePositions.put(routeID, position);
+        }
+    }
 
-//    public static void storeVehicleData(GtfsRealtime.FeedMessage feed) {
-//        HashMap<String, AtlasVehicle> vehicleMapCopy = new HashMap<>(HermesSim.vehicleMap);
-//        HermesSim.vehicleMap.clear();
-//        for (GtfsRealtime.FeedEntity entity : feed.getEntityList()) {
-//            TripData tripData = RouteHandler.tripsbyID.get(entity.getVehicle().getTrip().getTripId())
-//
-//            VehicleData vehicle = new VehicleData(tripData.routeType);
-//            vehicle.position = getVehiclePosition(entity);
-//            if(vehicleMapCopy.containsKey(tripData.routeID)) {
-//                HermesSim.vehicleMap.put(tripData.routeID, vehicleMapCopy.get(tripData.routeID));
-//            } else {
-//                HermesSim.vehiclesToCreate.add(tripData);
-//            }
-//
-//        }
-//    }
-//
-//    public static HPVector3 getVehiclePosition(GtfsRealtime.FeedEntity entity) {
-//        double latitude = entity.getVehicle().getPosition().getLatitude();
-//        double longitude = entity.getVehicle().getPosition().getLongitude();
-//        return new HPVector3(latitude, longitude, 0.0);
-//    }
+    private void storeVehicleData() {
+        for (Map.Entry<String, HPVector3> entry : vehiclePositions.entrySet()) {
+            String routeID = entry.getKey();
+            if (RouteHandler.routes.get(routeID) != null) {
+                VehicleType routeType = RouteHandler.routes.get(routeID).routeType;
+                VehicleData vehicleData = new VehicleData(routeType);
+                vehicleData.position = entry.getValue();
+                vehicleDataMap.put(routeID, vehicleData);
+            }
+        }
+    }
 }

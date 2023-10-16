@@ -1,26 +1,22 @@
 package com.decosegfault.hermes;
 
 import java.util.*;
-
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.math.Vector3;
+import com.decosegfault.hermes.data.VehicleData;
 import com.decosegfault.hermes.frontend.FrontendData;
 import com.decosegfault.hermes.frontend.FrontendEndpoint;
 import com.decosegfault.hermes.frontend.FrontendServer;
-import com.decosegfault.hermes.LiveDataFeed;
 import com.decosegfault.hermes.types.SimType;
 import org.onebusaway.gtfs.impl.GtfsDaoImpl;
 import org.onebusaway.gtfs.model.*;
 import org.tinylog.Logger;
 import com.decosegfault.atlas.render.AtlasVehicle;
-
 import org.onebusaway.gtfs.serialization.GtfsReader;
 import org.onebusaway.gtfs.model.Route;
 import org.onebusaway.gtfs.model.Trip;
 import com.decosegfault.hermes.data.TripData;
-
-
 import java.io.IOException;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -33,18 +29,13 @@ import java.util.concurrent.ConcurrentHashMap;
 public class HermesSim {
 
     private static FrontendServer server = new FrontendServer();
-
     public static ConcurrentHashMap<String, AtlasVehicle> vehicleMap = new ConcurrentHashMap<>();
-
     /** time of day will be in seconds, max 86400 (one day) before looping back to 0 */
     public static double time = 44100;
-
 //    static float baseTime = 44100;
-
     static float speed = 10f;
-
     public static final List<TripData> vehiclesToCreate = new ArrayList<>();
-
+    public static LiveDataFeed liveDataFeed = new LiveDataFeed();
 
     /**
      * ticks time by x seconds.
@@ -63,9 +54,12 @@ public class HermesSim {
         vehiclesToCreate.clear();
 
         if (RouteHandler.simType == SimType.LIVE) {
-            //trip.vehicle.tick(*position vector, z can be whatever*)
-            //uhhh set the live data here lol
-            //LiveDataFeed.storeVehicleData(LiveDataFeed.getLiveDataFeed());
+            liveDataFeed.update();
+            // CHECK IF THIS WORKS?
+            for (Map.Entry<String, VehicleData> entry : liveDataFeed.vehicleDataMap.entrySet()) {
+                var vehicle = AtlasVehicle.Companion.createFromHermes(entry.getValue().vehicleType);
+                vehicleMap.put(entry.getKey(), vehicle);
+            }
         } else {
             RouteHandler.tripsbyID.values().stream().forEach((trip) -> {
                 trip.tick();
@@ -115,7 +109,6 @@ public class HermesSim {
         }
 
         RouteHandler.simType = simType;
-
         if (RouteHandler.simType == SimType.LIVE) {
             read();
             return;
@@ -141,7 +134,6 @@ public class HermesSim {
 //
 //        }
         Logger.info("GTFS Data Loaded");
-
         Logger.info("Starting frontend server");
         server.start();
     }
@@ -156,7 +148,6 @@ public class HermesSim {
             FileHandle gtfsZip = Gdx.files.internal("assets/hermes/gtfs.zip");
             Logger.info("Copying Hermes gtfs.zip 2 to " + gtfsZip.file().getAbsolutePath());
             gtfsZip.copyTo(tmpPath);
-
 
             reader.setInputLocation(tmpPath.file());
         } catch (IOException noFile) {
@@ -222,9 +213,6 @@ public class HermesSim {
         } catch (IOException noFile) {
             throw new IllegalArgumentException("uh oh");
         }
-
-
-
     }
 
     public static void increaseSpeed() {

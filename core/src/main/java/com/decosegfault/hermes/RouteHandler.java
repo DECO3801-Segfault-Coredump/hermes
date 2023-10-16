@@ -40,7 +40,7 @@ public class RouteHandler {
         newRoute.routeName = route.getLongName();
 
         routes.put(route.getId().getId(), newRoute);
-        Logger.debug("Route: {} {} {} {}", route.getId(), route.getLongName(), route.getShortName(), route.getType());
+        //Logger.debug("Route: {} {} {} {}", route.getId().getId(), route.getLongName(), route.getShortName(), route.getType());
     }
 
     //debug
