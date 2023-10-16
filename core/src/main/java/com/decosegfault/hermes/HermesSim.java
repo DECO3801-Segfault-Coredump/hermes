@@ -4,6 +4,8 @@ import java.util.*;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.math.Vector3;
+import com.decosegfault.atlas.util.AtlasUtils;
+import com.decosegfault.atlas.util.HPVector3;
 import com.decosegfault.hermes.data.VehicleData;
 import com.decosegfault.hermes.frontend.FrontendData;
 import com.decosegfault.hermes.frontend.FrontendEndpoint;
@@ -56,11 +58,38 @@ public class HermesSim {
 
         if (RouteHandler.simType == SimType.LIVE) {
             liveDataFeed.update();
-            // CHECK IF THIS WORKS?
+
+            ConcurrentHashMap<String, AtlasVehicle> slayMap = new ConcurrentHashMap<>();
+
             for (Map.Entry<String, VehicleData> entry : liveDataFeed.vehicleDataMap.entrySet()) {
-                var vehicle = AtlasVehicle.Companion.createFromHermes(entry.getValue().vehicleType);
-                vehicleMap.put(entry.getKey(), vehicle);
+
+                String tripID = entry.getKey();
+
+                if (!vehicleMap.containsKey(tripID)){
+                    VehicleType type = entry.getValue().vehicleType;
+                    String name = RouteHandler.routes.get(tripID).routeName;
+                    String id = RouteHandler.routes.get(tripID).routeID;
+                    StringBuilder vehicleName = new StringBuilder();
+                    if (type == VehicleType.TRAIN) {
+                        vehicleName.append(id).append(" line");
+                    } else if (type == VehicleType.FERRY) {
+                        vehicleName.append(id).append(" voyage");
+                    } else {
+                        vehicleName.append("Route ").append(id);
+                    }
+                    vehicleName.append(": ").append(name).append("\t").append(type);
+                    var vehicle = AtlasVehicle.Companion.createFromHermes(type, vehicleName.toString());
+                    slayMap.put(tripID, vehicle);
+                } else {
+                    slayMap.put(tripID, vehicleMap.get(tripID));
+                }
+
+                HPVector3 position = entry.getValue().position;
+                Vector3 pos = AtlasUtils.INSTANCE.latLongToAtlas(new Vector3((float) position.getX(), (float) position.getY(), (float) position.getZ()));
+                slayMap.get(tripID).updateTransform(pos);
             }
+            vehicleMap = slayMap;
+
         } else {
             RouteHandler.tripsbyID.values().stream().forEach((trip) -> {
                 trip.tick();
@@ -74,32 +103,33 @@ public class HermesSim {
                     vehiclesToCreate.add(trip);
                 }
             });
-        }
-        // create vehicles - this has to be here because otherwise it breaks libGDX
-        // the other way would be to have a "creating vehicle" lock
-        for (TripData trip : vehiclesToCreate) {
-            StringBuilder vehicleName = new StringBuilder();
 
-            if (trip.vehicle.vehicleType == VehicleType.TRAIN) {
-                vehicleName.append(trip.routeVehicleName).append(" line");
-            } else if (trip.vehicle.vehicleType == VehicleType.FERRY) {
-                vehicleName.append(trip.routeVehicleName).append(" voyage");
-            } else {
-                vehicleName.append("Route ").append(trip.routeVehicleName);
+            // create vehicles - this has to be here because otherwise it breaks libGDX
+            // the other way would be to have a "creating vehicle" lock
+            for (TripData trip : vehiclesToCreate) {
+                StringBuilder vehicleName = new StringBuilder();
+
+                if (trip.vehicle.vehicleType == VehicleType.TRAIN) {
+                    vehicleName.append(trip.routeVehicleName).append(" line");
+                } else if (trip.vehicle.vehicleType == VehicleType.FERRY) {
+                    vehicleName.append(trip.routeVehicleName).append(" voyage");
+                } else {
+                    vehicleName.append("Route ").append(trip.routeVehicleName);
+                }
+                vehicleName.append(": ").append(trip.routeName).append("\t").append(trip.vehicle.vehicleType);
+
+                var vehicle = AtlasVehicle.Companion.createFromHermes(trip.vehicle.vehicleType, vehicleName.toString());
+                vehicleMap.put(trip.routeID, vehicle);
             }
-            vehicleName.append(": ").append(trip.routeName).append("\t").append(trip.vehicle.vehicleType);
 
-            var vehicle = AtlasVehicle.Companion.createFromHermes(trip.vehicle.vehicleType, vehicleName.toString());
-            vehicleMap.put(trip.routeID, vehicle);
+            // parallelising this currently breaks everything
+            vehicleMap.entrySet().stream().forEach((tripID) -> {
+                TripData trip = RouteHandler.tripsbyID.get(tripID.getKey());
+                tripID.getValue().updateTransform(
+                    new Vector3((float) trip.vehicle.position.getX(), (float) trip.vehicle.position.getY(), (float) trip.vehicle.position.getZ()));
+                tripID.getValue().setHidden(trip.vehicle.hidden);
+            });
         }
-
-        // parallelising this currently breaks everything
-        vehicleMap.entrySet().stream().forEach((tripID) -> {
-            TripData trip = RouteHandler.tripsbyID.get(tripID.getKey());
-            tripID.getValue().updateTransform(
-                new Vector3((float) trip.vehicle.position.getX(), (float) trip.vehicle.position.getY(), (float) trip.vehicle.position.getZ()));
-            tripID.getValue().setHidden(trip.vehicle.hidden);
-        });
 
 //        Logger.warn("Trips Loaded: {}, {} active", vehicleMap.size(), tripsActive);
         // transmit data to the frontend
@@ -207,11 +237,11 @@ public class HermesSim {
             RouteHandler.addRoute(element);
         }
 
-        for (Trip element : tripsById.values()) {
-            RouteHandler.addTrip(element);
-        }
-
         if (RouteHandler.simType != SimType.LIVE) {
+            for (Trip element : tripsById.values()) {
+                RouteHandler.addTrip(element);
+            }
+
             for (StopTime element : stopTimesById.values()) {
                 RouteHandler.handleTime(element);
             }
