@@ -31,7 +31,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class HermesSim {
 
-    private static FrontendServer server = new FrontendServer();
+    private static FrontendServer server;
     public static ConcurrentHashMap<String, AtlasVehicle> vehicleMap = new ConcurrentHashMap<>();
     /** time of day will be in seconds, max 86400 (one day) before looping back to 0 */
     public static double time = 44100;
@@ -89,6 +89,8 @@ public class HermesSim {
                 slayMap.get(tripID).updateTransform(pos);
             }
             vehicleMap = slayMap;
+
+
 
         } else {
             RouteHandler.tripsbyID.values().stream().forEach((trip) -> {
@@ -150,6 +152,10 @@ public class HermesSim {
             return;
         }
 
+        Logger.info("Starting frontend server");
+        server = new FrontendServer();
+        server.start();
+
         RouteHandler.simType = simType;
         if (RouteHandler.simType == SimType.LIVE) {
             read();
@@ -176,8 +182,6 @@ public class HermesSim {
 //
 //        }
         Logger.info("GTFS Data Loaded");
-        Logger.info("Starting frontend server");
-        server.start();
     }
 
     public static void read()  {
