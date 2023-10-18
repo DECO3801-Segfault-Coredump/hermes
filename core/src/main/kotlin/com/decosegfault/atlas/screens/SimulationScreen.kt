@@ -26,6 +26,8 @@ import com.decosegfault.atlas.util.Assets
 import com.decosegfault.atlas.util.Assets.ASSETS
 import com.decosegfault.atlas.util.FirstPersonCamController
 import com.decosegfault.hermes.HermesSim
+import com.decosegfault.hermes.RouteHandler
+import com.decosegfault.hermes.types.SimType
 import com.google.common.util.concurrent.ThreadFactoryBuilder
 import ktx.app.clearScreen
 import net.mgsx.gltf.scene3d.attributes.PBRCubemapAttribute
@@ -437,11 +439,22 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
         Logger.debug("selectVehicle() selected $possibleVehicle")
     }
 
+    /**
+     * Calculates the time of current buses being displayed.
+     * Live time for live data, and or historical time.
+     */
     private fun calculateTime() : String {
+        if (RouteHandler.simType == SimType.LIVE) {
+            return java.time.LocalTime.now().format(TIME_FORMATTER)
+        }
+
         val time = BASE_DATE.plusSeconds(HermesSim.time.toLong())
         return time.format(TIME_FORMATTER)
     }
 
+    /**
+     * Display the status information on the label.
+     */
     private fun drawStatusText() {
         var vehicleName = "Not selected"
         if (selectedVehicle != null) {
@@ -458,7 +471,6 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
         stage.viewport.update(width, height, true)
         cameraViewport.update(width, height, true)
                 stage.camera.update()
-
     }
 
     override fun hide() {
