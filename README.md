@@ -28,9 +28,11 @@ to run the renderer.
 First, you need to install the dependencies for Hermes and Atlas, which are:
 
 - JDK 17 (exactly this version, no earlier, no later)
-  - Windows, Mac: Download from Adoptium: https://adoptium.net/en-GB/
+  - Windows, Mac: Download from Adoptium: https://adoptium.net/en-GB/temurin/releases/?version=17
+    - Windows: Select Windows x64 .msi file
+    - Mac, Apple Silicon: Select macOS aarch64 .pkg file
+    - Mac, Intel: Select macOS x64 .pkg file
   - Linux: Use your package manager (pacman, apt, etc)
-  - Strongly avoid using Oracle's JDK because Matt won't support it and we will have to pay licencing fees :skull:
 - Docker
   - Windows: https://docs.docker.com/desktop/install/windows-install/
   - Mac: https://docs.docker.com/desktop/install/mac-install/ (note instructions for Apple Silicon)
@@ -40,7 +42,8 @@ First, you need to install the dependencies for Hermes and Atlas, which are:
   - Linux: Use JB Toolbox through your package manager if available, otherwise from the website above
 
 **Important:** You now need to set up the OpenStreetMap Docker and import the Brisbane data. 
-Please read [docs/atlas_map_pipeline.md](docs/atlas_map_pipeline.md)
+Please read [docs/atlas_map_pipeline.md](docs/atlas_map_pipeline.md). The game will not run at all unless you follow the steps
+in this document.
 
 ## Editing
 Now, you can open the project in IntelliJ. You should also go to Settings (CTRL+ALT+S)

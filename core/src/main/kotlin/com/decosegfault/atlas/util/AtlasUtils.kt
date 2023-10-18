@@ -18,6 +18,8 @@ import kotlin.io.path.writeText
 import kotlin.math.*
 
 /**
+ * @author Matt Young
+ * @author Henry Batt
  * @author Various (see comments)
  */
 object AtlasUtils {
