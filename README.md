@@ -8,7 +8,7 @@ are implementing project 031: Optimised Events – Digital Twins for Traffic Pla
 The Hermes simulator is written in Java and ingests both online and offline Translink GTFS data. The Atlas
 renderer is written in Kotlin and uses libGDX as the graphics framework. It ingests OpenStreetMap data and
 renders it efficiently into a 3D world. The combined Hermes+Atlas application runs on Windows, Mac and Linux, 
-requiring Java 17 or later.
+requiring Java 17.
 
 For more information, see the `docs` directory. You will need to at least follow `docs/atlas_map_pipeline.md`
 to run the renderer.
@@ -27,7 +27,7 @@ to run the renderer.
 ## Setting up the toolchain
 First, you need to install the dependencies for Hermes and Atlas, which are:
 
-- JDK 17 or later
+- JDK 17 (exactly this version, no earlier, no later)
   - Windows, Mac: Download from Adoptium: https://adoptium.net/en-GB/
   - Linux: Use your package manager (pacman, apt, etc)
   - Strongly avoid using Oracle's JDK because Matt won't support it and we will have to pay licencing fees :skull:
@@ -51,14 +51,8 @@ Before writing code, please read [docs/guidelines.md](docs/guidelines.md) for so
 remember to add `@author <Your Name>` to each class you write or append your name to the list of authors.
 
 ## Running
-Run `Lwjgl3Launcher` in the "lwjgl3" subproject, or from the terminal use `./gradlew lwjgl3:run`. Log files
-are available in `${HOME}/Documents/DECOSegfault/hermes.log`
-
-You can make a release build with `./gradlew lwjgl3:jar`. This will write a runnable JAR file to lwjgl3/build/lib.
-This JAR file can be run anywhere with a JRE, and it includes all the app's assets.
-
-It should also be possible to use JPackager to generate bundled native binaries for Windows, Mac and Linux, but
-I haven't got around to doing this yet. If it does become necessary ping @matt.
+Run `Lwjgl3Launcher` in the "lwjgl3" subproject. Log files are available in `${HOME}/Documents/DECOSegfault/hermes.log`.
+For example, on Linux for me, they are in `/home/matt/Documents/DECOSegfault/hermes.log`.
 
 **Key bindings for Atlas game window:**
 
@@ -86,14 +80,28 @@ I haven't got around to doing this yet. If it does become necessary ping @matt.
 To edit these options: Go to Run -> Edit configurations, go to Lwjgl3Launcher, click "Modify options", then
 check "Add VM options". In the field labeled "VM options", paste the arguments.
 
-- `-Ddebug`: Enable debug features (e.g. debug menu shown by default)
+- `-Ddebug`: Enable debug features (e.g. debug menu shown by default, skip launch prompts)
 - `-Dnohermes`: Disable loading Hermes to reduce launch times when working on Atlas graphics
 - `-Dnolockmouse`: Disables mouse input capturing, useful for breakpoint debugging
 - `-Duvtexturing`: Transitions to `UVTexturingScreen` after load to texture building UVs instead of normal Atlas
 
+**Additional notes**
+
+You can make a release build with `./gradlew lwjgl3:jar`. This will write a runnable JAR file to lwjgl3/build/lib.
+This JAR file can be run anywhere with a JRE, and it includes all the app's assets.
+
+It should also be possible to use JPackager to generate bundled native binaries for Windows, Mac and Linux, but
+I haven't got around to doing this yet. If it does become necessary ping @matt.
+
+Theoretically you can also run the game using `./gradlew lwjgl3:run`, however there is currently a macOS specific
+bug that prevents the game from correctly launching this way in release mode, which is the default. This is
+why we recommend running through IntelliJ. On Windows and Linux this is not an issue. If you're on Mac, you
+can try pass `-Ddebug` to the game to skip the launch prompts, which may unbreak it. In general though, it
+will be easiest to run in IntelliJ.
+
 ## Licence
-Unfortunately (or fortunately, depending on who you ask), the University of Queensland owns all the IP to
-this project, so you'll have to talk to them.
+Once the assessment is over, and pending group approval, this project will probably be open-sourced under the
+Mozilla Public License v2.0.
 
 Hermes and Atlas use open-source data and 3D models, which are available in 
 [atlas_data_raw](https://github.com/DECO3801-Segfault-Coredump/atlas_data_raw).
