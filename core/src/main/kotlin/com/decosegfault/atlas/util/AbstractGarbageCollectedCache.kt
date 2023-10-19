@@ -7,7 +7,6 @@ import ktx.assets.disposeSafely
 import org.tinylog.kotlin.Logger
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.LinkedBlockingQueue
-import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 import kotlin.math.roundToInt
 
@@ -15,7 +14,7 @@ import kotlin.math.roundToInt
  * A generic garbage-collected cache for items that take a long time to instantiate. Items in the cache are
  * instantiated asynchronously as required. The cache will start garbage collecting
  * unused items (items not marked as used) once it reaches [startGcThreshold] out of [maxItems].
- * It will try and remove enough tiles to reach the end threshold [endGcThreshold].
+ * It will try and remove enough items to reach the end threshold [endGcThreshold].
  *
  * Note that [maxItems] is not a hard limit, and the cache can _theoretically_ go beyond this bound in
  * extreme situations. It only garbage collects on a "best effort" basis.
@@ -23,7 +22,7 @@ import kotlin.math.roundToInt
  * @param K key type
  * @param V value type
  * @param name Name of the cache e.g. "TileGC"
- * @param maxItems **Soft** limit of tiles in VRAM, size will be approx 100 KiB * this
+ * @param maxItems **Soft** limit of items in VRAM, size will be approx 100 KiB * this
  * @param startGcThreshold If the cache is this% full, start trying to evict items
  *
  * @author Matt Young
@@ -37,10 +36,10 @@ abstract class AbstractGarbageCollectedCache<K, V>(
 ) : Disposable {
     private val cache = ConcurrentHashMap<K, V>() // threaded (executor)
 
-    /** List of tiles which are currently in the process of being fetched and should not be re-fetched */
+    /** List of items which are currently in the process of being fetched and should not be re-fetched */
     private val pendingFetches = ConcurrentHashMap.newKeySet<K>() // threaded (executor)
 
-    /** Tiles marked as currently in use on screen this frame */
+    /** Items marked as currently in use on screen this frame */
     private val itemsInUse = mutableSetOf<K>() // serial (only called from main)
 
     /** Queue used to manage tasks the executor should run when it's full (overflow) */
@@ -78,7 +77,7 @@ abstract class AbstractGarbageCollectedCache<K, V>(
         val begin = System.nanoTime()
         val maybeItem = cache[item]
         if (maybeItem != null) {
-            // tile was already in cache
+            // item was already in cache
             onRetrieved(maybeItem)
             hits++
             return
@@ -117,7 +116,7 @@ abstract class AbstractGarbageCollectedCache<K, V>(
             val maybeCanEvict = cache.keys().toList().toMutableList()
 
             while ((fillRate >= endGcThreshold || force) && maybeCanEvict.isNotEmpty()) {
-                // check if this tile can be GC'd
+                // check if this item can be GC'd
                 // remove it from the back of the list to save a shift down
                 val item = maybeCanEvict.removeAt(maybeCanEvict.size - 1)
                 if (item !in itemsInUse) {
@@ -179,8 +178,8 @@ abstract class AbstractGarbageCollectedCache<K, V>(
     /** @return cache hit rate stats for displaying */
     fun getStats(): String {
         return "$name    size: ${cache.size}     GCs: $gcs    executor: ${executorQueue.size}    " +
-                "pending: ${pendingFetches.size}    " +
-                "fetch: ${fetchTimes.mean.roundToInt()} ms"
+            "pending: ${pendingFetches.size}    " +
+            "fetch: ${fetchTimes.mean.roundToInt()} ms"
     }
 
     override fun dispose() {

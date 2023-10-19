@@ -4,9 +4,6 @@ import com.badlogic.gdx.graphics.g3d.utils.MeshPartBuilder
 import com.badlogic.gdx.math.MathUtils
 import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.math.Vector3
-import org.tinylog.kotlin.Logger
-import kotlin.math.abs
-import kotlin.math.atan2
 
 /** @author Matt Young */
 data class Triangle(
@@ -36,14 +33,6 @@ data class Triangle(
     }
 
     fun extrudeUpToPrismMesh(mpb: MeshPartBuilder, height: Float) {
-//        0: (1.0,1.0)
-//        1: (0.62,1.0)
-//        2: (1.0,0.0)
-//        3: (0.78,1.0)
-//        4: (0.0,1.0)
-//        5: (0.78,0.0)
-//        6: (1.0,0.0)
-//        val uvs: Array<Vector2?> = arrayOf(Vector2())
         val uvs: Array<Vector2?> = arrayOf(
             Vector2(1.0f, 1.0f),
             Vector2(0.62f, 1.0f),

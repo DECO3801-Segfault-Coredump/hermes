@@ -3,29 +3,23 @@ package com.decosegfault.hermes.frontend;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.servlet.ServletContextHandler;
-import org.eclipse.jetty.servlet.ServletHandler;
 import org.eclipse.jetty.websocket.javax.server.config.JavaxWebSocketServletContainerInitializer;
 import org.tinylog.Logger;
-
-import javax.servlet.Servlet;
 
 /**
  * WebSocket server for frontend
  * Based on: https://github.com/jetty-project/embedded-jetty-websocket-examples/blob/10.0.x/javax.websocket-example/src/main/java/org/eclipse/jetty/demo/EventServer.java
+ *
  * @author Cathy Nguyen, Matt Young, Henry Batt
  */
 public class FrontendServer {
     private final Server server;
     private final ServerConnector connector;
+
     public FrontendServer() {
         server = new Server(42069); // WebSocket on port 42069
         connector = new ServerConnector(server);
-//        connector.setPort(42069);
         server.addConnector(connector);
-
-//        ServletHandler handler = new ServletHandler();
-//        handler.addServletWithMapping(TestServerlet.class, "/test");
-//        server.setHandler(handler);
 
         // Setup the basic application "context" for this application at "/"
         // This is also known as the handler tree (in jetty speak)

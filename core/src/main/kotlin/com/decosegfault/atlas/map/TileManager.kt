@@ -4,7 +4,8 @@ import com.badlogic.gdx.graphics.Camera
 import com.badlogic.gdx.math.Vector3
 import com.decosegfault.atlas.render.GraphicsPreset
 import com.decosegfault.atlas.util.AtlasUtils
-import kotlin.math.*
+import kotlin.math.max
+import kotlin.math.pow
 
 /**
  * Tile manager that generates the basic and largest possible resolution tiles.
@@ -13,7 +14,6 @@ import kotlin.math.*
  * @author Henry Batt
  */
 class TileManager {
-
     /** Collection of all largest-resolution tiles that make up plane */
     private var tileSurface = mutableListOf<Tile>()
 
@@ -22,8 +22,9 @@ class TileManager {
 
     init {
         val nwTile = AtlasUtils.latLongZoomToSlippyCoord(Vector3(AtlasUtils.NW_BRISBANE_LAT_LONG, 13f))
-        val xShift = AtlasUtils.NUM_X_TILES/2
-        val zShift = AtlasUtils.NUM_Y_TILES/2
+        val xShift = AtlasUtils.NUM_X_TILES / 2
+        val zShift = AtlasUtils.NUM_Y_TILES / 2
+
         // Create all the largest tiles
         for (i in -xShift until xShift) {
             for (j in -zShift until zShift) {
@@ -134,11 +135,11 @@ class TileManager {
      */
     fun getTilesCulledHeightScaled(cam: Camera, graphics: GraphicsPreset): MutableList<Tile> {
         val tiles = mutableListOf<Tile>()
-        val height = max(cam.position.y/400, 1f)
+        val height = max(cam.position.y / 400, 1f)
 
         for (tile in tileSurface) {
-                for (subTile in tile.getTilesCulledHeightScaled(height, cam, graphics)) {
-                    tiles.add(subTile)
+            for (subTile in tile.getTilesCulledHeightScaled(height, cam, graphics)) {
+                tiles.add(subTile)
             }
         }
         numRetrievedTiles = tiles.size

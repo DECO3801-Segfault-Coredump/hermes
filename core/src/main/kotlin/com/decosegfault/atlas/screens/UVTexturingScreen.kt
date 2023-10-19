@@ -6,33 +6,24 @@ import com.badlogic.gdx.InputMultiplexer
 import com.badlogic.gdx.ScreenAdapter
 import com.badlogic.gdx.graphics.*
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
-import com.badlogic.gdx.graphics.g2d.TextureRegion
 import com.badlogic.gdx.graphics.g3d.Material
 import com.badlogic.gdx.graphics.g3d.ModelInstance
-import com.badlogic.gdx.graphics.g3d.decals.CameraGroupStrategy
-import com.badlogic.gdx.graphics.g3d.decals.DecalBatch
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import com.badlogic.gdx.math.MathUtils
 import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.scenes.scene2d.Stage
-import com.badlogic.gdx.scenes.scene2d.ui.Image
 import com.badlogic.gdx.scenes.scene2d.ui.Label
 import com.badlogic.gdx.scenes.scene2d.ui.Skin
 import com.badlogic.gdx.scenes.scene2d.ui.Slider
 import com.badlogic.gdx.scenes.scene2d.ui.Table
-import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable
 import com.badlogic.gdx.utils.viewport.ExtendViewport
 import com.badlogic.gdx.utils.viewport.FitViewport
-import com.decosegfault.atlas.map.BuildingGenerator
-import com.decosegfault.atlas.map.GCBuildingCache
-import com.decosegfault.atlas.map.GCTileCache
 import com.decosegfault.atlas.render.AtlasSceneManager
 import com.decosegfault.atlas.render.GraphicsPresets
 import com.decosegfault.atlas.util.Assets
 import com.decosegfault.atlas.util.FirstPersonCamController
 import com.decosegfault.atlas.util.Triangle
-import com.decosegfault.hermes.HermesSim
 import ktx.app.clearScreen
 import net.mgsx.gltf.scene3d.attributes.PBRCubemapAttribute
 import net.mgsx.gltf.scene3d.attributes.PBRTextureAttribute
@@ -42,7 +33,6 @@ import net.mgsx.gltf.scene3d.scene.SceneSkybox
 import net.mgsx.gltf.scene3d.utils.IBLBuilder
 import org.tinylog.kotlin.Logger
 import kotlin.math.max
-import kotlin.math.roundToInt
 
 /**
  * Screen used to bruteforce the UV coordinates for use in Triangle
@@ -58,7 +48,6 @@ class UVTexturingScreen : ScreenAdapter() {
         fieldOfView = 75f
         near = 0.5f
         far = max(graphics.tileDrawDist, graphics.vehicleDrawDist) * 20
-//        rotate(Vector3.X, -90f)
         translate(0f, 100f, 0f)
         update()
     }
@@ -154,7 +143,6 @@ class UVTexturingScreen : ScreenAdapter() {
         }
         container.setFillParent(true)
         container.top().left()
-//        container.background = TextureRegionDrawable(black)
         container.pack()
 
         stage.addActor(container)
@@ -224,9 +212,6 @@ class UVTexturingScreen : ScreenAdapter() {
         sceneManager.resetStats()
 
         model.dispose()
-
-//        val mem = ((Gdx.app.javaHeap + Gdx.app.nativeHeap) / 1e6).roundToInt()
-//        Logger.debug("(${Gdx.graphics.framesPerSecond} FPS, $mem MB)")
     }
 
     override fun resize(width: Int, height: Int) {

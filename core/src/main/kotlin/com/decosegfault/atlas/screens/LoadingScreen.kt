@@ -13,14 +13,12 @@ import com.badlogic.gdx.scenes.scene2d.ui.Label
 import com.badlogic.gdx.scenes.scene2d.ui.Skin
 import com.badlogic.gdx.scenes.scene2d.ui.Table
 import com.badlogic.gdx.utils.viewport.ScreenViewport
-import com.decosegfault.atlas.map.BuildingGenerator
 import com.decosegfault.atlas.map.GCTileCache
 import com.decosegfault.atlas.map.TileServerManager
 import com.decosegfault.atlas.util.Assets
 import com.decosegfault.atlas.util.AtlasUtils
 import com.decosegfault.atlas.util.ImageAnimation
 import com.decosegfault.hermes.HermesSim
-import com.decosegfault.hermes.types.SimType
 import ktx.app.clearScreen
 import org.tinylog.kotlin.Logger
 import kotlin.concurrent.thread
@@ -38,9 +36,9 @@ class LoadingScreen(private val game: Game) : ScreenAdapter() {
         CHECKING_CONNECTIVITY("Checking tile server connectivity..."),
         LOADING_3D_ASSETS("Loading 3D assets..."),
         STARTING_HERMES("Starting Hermes..."),
-
         DONE("Done.")
     }
+
     private lateinit var skin: Skin
     private lateinit var stage: Stage
     private lateinit var label: Label
@@ -75,7 +73,7 @@ class LoadingScreen(private val game: Game) : ScreenAdapter() {
         stage.addActor(container)
 
         // run checks outside of render loop so we don't block render
-        thread(isDaemon = true, name="LoadWorker") {
+        thread(isDaemon=true, name="LoadWorker") {
             // Start tile server
             TileServerManager.maybeStartTileServer()
             currentStage = LoadingStage.CHECKING_CONNECTIVITY

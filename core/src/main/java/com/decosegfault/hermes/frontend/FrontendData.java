@@ -1,9 +1,6 @@
 package com.decosegfault.hermes.frontend;
 
-import com.decosegfault.atlas.util.HPVector2;
 import com.decosegfault.atlas.util.HPVector3;
-import com.decosegfault.hermes.types.VehicleType;
-import org.jetbrains.annotations.Contract;
 
 import java.util.List;
 import java.util.Map;
@@ -15,7 +12,7 @@ public class FrontendData {
     // list of all the buses in the circles
     private List<String> busesInInterest;
 
-    // number of 66s per tick
+    // number of each route per tick (Ex. 66s)
     private Map<String, Integer> routeFrequency;
 
     // number of vehicles in the entire simulation per type (pie chart)
