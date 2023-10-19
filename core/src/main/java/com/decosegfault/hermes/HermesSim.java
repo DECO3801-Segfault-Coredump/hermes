@@ -163,12 +163,12 @@ public class HermesSim {
     public static Map<String, Integer> calculateRouteFrequency() {
         Map<String, Integer> routeFrequency = new HashMap<>();
         for (Map.Entry<String, RouteData> entry : RouteHandler.routes.entrySet()) {
-            String routeID = entry.getKey();
-            if (routeFrequency.containsKey(routeID)) {
-                Integer count = routeFrequency.get(routeID);
-                routeFrequency.put(routeID, count + 1);
+            String routeName = entry.getValue().routeName;
+            if (routeFrequency.containsKey(routeName)) {
+                Integer count = routeFrequency.get(routeName);
+                routeFrequency.put(routeName, count + 1);
             } else {
-                routeFrequency.put(routeID, 1);
+                routeFrequency.put(routeName, 1);
             }
         }
         return routeFrequency;
