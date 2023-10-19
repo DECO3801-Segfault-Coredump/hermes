@@ -60,6 +60,7 @@ public class LiveDataFeed {
         storeTripID();
         vehiclePositions.clear();
         setVehiclePositions();
+        vehicleDataMap.clear();
         // Calls tick() on existing VehicleData
         // If routeID exists in vehicleDataMap, call tick() to updates its position
         // Otherwise, add new vehicleDataMap entry

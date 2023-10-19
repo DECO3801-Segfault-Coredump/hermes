@@ -156,17 +156,18 @@ public class HermesSim {
         }
     }
 
+
     public static Map<String, Integer> calculateRouteFrequency() {
         Map<String, Integer> routeFrequency = new HashMap<>();
 
         if (RouteHandler.simType == SimType.LIVE) {
-            for (Map.Entry<String, VehicleData> entry : liveDataFeed.vehicleDataMap.entrySet()) {
-                String routeName = RouteHandler.routes.get(liveDataFeed.tripIDMap.get(entry.getKey())).routeName;
-                if (routeFrequency.containsKey(routeName)) {
-                    Integer count = routeFrequency.get(routeName);
-                    routeFrequency.put(routeName, count + 1);
+            for (Map.Entry<String, VehicleData> entry: liveDataFeed.vehicleDataMap.entrySet()) {
+                String id = RouteHandler.routes.get(liveDataFeed.tripIDMap.get((entry.getKey()))).routeID;
+                if (routeFrequency.containsKey(id)) {
+                    Integer count = routeFrequency.get(id);
+                    routeFrequency.put(id, count + 1);
                 } else {
-                    routeFrequency.put(routeName, 1);
+                    routeFrequency.put(id, 1);
                 }
             }
         } else {
