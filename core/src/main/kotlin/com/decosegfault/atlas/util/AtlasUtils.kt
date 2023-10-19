@@ -195,7 +195,7 @@ object AtlasUtils {
         val buses = listOf("69", "420", "1337", "NHAM", "CATHY", "CONNOR", "train")
 
         frontendData.interestPoints = HermesSim.brisbaneOlympics
-        frontendData.busesInInterest = listOf(buses.random(), buses.random(), buses.random())
+//        frontendData.busesInInterest = mapOf(buses.random(), buses.random(), buses.random())
         frontendData.routeFrequency = mapOf(Pair(buses.random(), Random.nextInt(420)), Pair(buses.random(), Random.nextInt(1337)))
         frontendData.vehicleTypes = mapOf(Pair("Train", Random.nextInt(420)), Pair("Bus", Random.nextInt(69)), Pair("Ferry", Random.nextInt(10)))
 
