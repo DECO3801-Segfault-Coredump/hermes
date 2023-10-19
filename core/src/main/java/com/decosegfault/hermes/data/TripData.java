@@ -10,6 +10,7 @@ import com.decosegfault.atlas.util.AtlasUtils;
 import com.decosegfault.atlas.util.HPVector2;
 import com.decosegfault.hermes.HermesSim;
 import com.decosegfault.hermes.RouteHandler;
+import com.decosegfault.hermes.frontend.RouteExpectedReal;
 import com.decosegfault.hermes.types.SimType;
 import com.decosegfault.hermes.types.VehicleType;
 import com.decosegfault.atlas.util.HPVector3;
@@ -160,7 +161,13 @@ public class TripData {
             vehicle.hidden = true;
             if (HermesSim.time >= startTime && !didRouteEnd) {
                 actualEndTime = (int) HermesSim.time;
-//                Logger.debug("ARARHGHGHGAHHAHGHAGHDhsghsg {} {}", HermesSim.time, routeName);
+
+                RouteExpectedReal expectedReal = new RouteExpectedReal();
+                expectedReal.setRouteName(this.routeName);
+                expectedReal.setActualTime(this.actualEndTime);
+                expectedReal.setExpectedTime(this.endTime);
+                HermesSim.expectedReals.add(expectedReal);
+
                 didRouteEnd = true;
             }
         }

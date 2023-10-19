@@ -11,6 +11,7 @@ import com.decosegfault.hermes.data.VehicleData;
 import com.decosegfault.hermes.frontend.FrontendData;
 import com.decosegfault.hermes.frontend.FrontendEndpoint;
 import com.decosegfault.hermes.frontend.FrontendServer;
+import com.decosegfault.hermes.frontend.RouteExpectedReal;
 import com.decosegfault.hermes.types.SimType;
 import com.decosegfault.hermes.types.VehicleType;
 import org.onebusaway.gtfs.impl.GtfsDaoImpl;
@@ -54,6 +55,8 @@ public class HermesSim {
 
     public static Set<String> affectedRoutes = new HashSet<>();
 
+    public static List<RouteExpectedReal> expectedReals = new ArrayList<>();
+
     /**
      * ticks time by x seconds.
      * tick speed set by end user.
@@ -71,6 +74,7 @@ public class HermesSim {
         frontendData = new FrontendData();
 
         vehiclesToCreate.clear();
+        expectedReals.clear();
 
         if (RouteHandler.simType == SimType.LIVE) {
             liveDataFeed.update();
@@ -149,6 +153,7 @@ public class HermesSim {
 
         frontendData.setInterestPoints(HermesSim.brisbaneOlympics);
         frontendData.setBusesInInterest(affectedRoutes.stream().toList());
+        frontendData.setRouteExpectedReals(expectedReals);
 
         FrontendEndpoint.broadcast(frontendData);
     }
