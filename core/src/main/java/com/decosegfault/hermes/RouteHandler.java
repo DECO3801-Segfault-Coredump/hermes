@@ -89,9 +89,8 @@ public class RouteHandler {
                     // yeah nah we got an affected route didn't we
                     List<String> routeList = new ArrayList<>();
                     routeList.add(entry.getKey());
-                    routeList.add(trip.routeVehicleName);
                     routeList.add(trip.routeName);
-                    HermesSim.affectedRoutes.add(routeList);
+                    HermesSim.affectedRoutes.put(routeList, trip.routeVehicleName);
                 }
             }
         }
