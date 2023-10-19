@@ -464,6 +464,7 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
             """
             |Time:  ${calculateTime()}
             |Selected:    $vehicleName
+            |Mode: ${if (!followingBus) "Not " else ""}Following
             """.trimMargin())
     }
 

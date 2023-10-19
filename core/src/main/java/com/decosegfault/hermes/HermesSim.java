@@ -47,6 +47,7 @@ public class HermesSim {
     public static ConcurrentHashMap<String, AtlasVehicle> vehicleMap = new ConcurrentHashMap<>();
     /** time of day will be in seconds, max 86400 (one day) before looping back to 0 */
     public static double time = 0;
+    public static double MAX_TIME = 86400;
 //    static float baseTime = 44100;
     static float speed = 10f;
     public static final List<TripData> vehiclesToCreate = new ArrayList<>();
@@ -69,7 +70,7 @@ public class HermesSim {
      */
     public static void tick(float delta) {
         if (System.getProperty("nohermes") != null) return;
-        time += (delta * speed);
+        time = (time + (delta * speed)) % MAX_TIME;
 //        Logger.warn("Time: {} {}", floatTime, time);
 //        Logger.warn("tell me your mf length {}", vehicleMap.size());
         int tripsActive = 0;
