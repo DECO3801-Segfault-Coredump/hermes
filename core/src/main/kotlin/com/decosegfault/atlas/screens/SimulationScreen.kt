@@ -509,9 +509,9 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
         /** Hermes tick delta */
         private const val HERMES_DELTA = HERMES_TICK_RATE / 1000f
 
-        private val BASE_DATE = LocalDateTime.of(2023, Month.JANUARY, 1, 0, 0)
+        private val BASE_DATE = LocalDateTime.of(2023, Month.DECEMBER, 23, 0, 0)
 
-        private val TIME_FORMATTER = DateTimeFormatter.ofPattern("h:m:s a")
+        private val TIME_FORMATTER = DateTimeFormatter.ofPattern("h:m:ss a")
 
         fun addWork(runnable: Runnable) {
             WORK_QUEUE.add(runnable)
