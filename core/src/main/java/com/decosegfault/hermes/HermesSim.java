@@ -143,6 +143,7 @@ public class HermesSim {
 
 //        Logger.warn("Trips Loaded: {}, {} active", vehicleMap.size(), tripsActive);
         // transmit data to the frontend
+        frontendData = AtlasUtils.INSTANCE.fillWithJunk(frontendData);
         FrontendEndpoint.broadcast(frontendData);
     }
 

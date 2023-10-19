@@ -18,7 +18,7 @@ public class FrontendData {
     // number of 66s per tick
     private Map<String, Integer> routeFrequency;
 
-    // vehicle types innit
+    // number of vehicles in the entire simulation per type (pie chart)
     private Map<String, Integer> vehicleTypes;
 
     public Map<String, HPVector3> getInterestPoints() {

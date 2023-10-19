@@ -2,6 +2,8 @@ package com.decosegfault.atlas.util
 
 import com.badlogic.gdx.math.*
 import com.badlogic.gdx.math.collision.BoundingBox
+import com.decosegfault.hermes.HermesSim
+import com.decosegfault.hermes.frontend.FrontendData
 import org.tinylog.kotlin.Logger
 import java.nio.file.Paths
 import kotlin.io.path.createFile
@@ -191,5 +193,13 @@ object AtlasUtils {
         val coords = Vector2(atlasCoords).add(Vector2(MAP_CENTRE_SLIPPY.x, MAP_CENTRE_SLIPPY.y))
         val latLong = slippyCoordToLatLongZoom(Vector3(coords.x, coords.y, PIXEL_ZOOM))
         return Vector2(latLong.x, latLong.y)
+    }
+
+    fun fillWithJunk(frontendData: FrontendData): FrontendData {
+        frontendData.interestPoints = HermesSim.brisbaneOlympics
+        frontendData.busesInInterest = listOf("69", "420", "1337")
+        frontendData.routeFrequency = mapOf(Pair("69", 1000), Pair("420", 1337))
+        frontendData.vehicleTypes = mapOf(Pair("Train", 420), Pair("Bus", 69), Pair("Ferry", 3))
+        return frontendData
     }
 }
