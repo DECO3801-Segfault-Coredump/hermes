@@ -122,28 +122,4 @@ public class LiveDataFeed {
             }
         }
     }
-
-
-    // DATA FOR FRONTEND
-    public void sendFrontendData() {
-        FrontendData frontendData = new FrontendData();
-        frontendData.setInterestPoints(HermesSim.brisbaneOlympics);
-
-//        HashMap<String, String> frontendMap = new HashMap<>();
-//        for (GtfsRealtime.FeedEntity entity : tripFeed.getEntityList()) {
-////            frontendMap.put(entity.getTripUpdate().getTrip().getTripId(), entity.)
-//        }
-//        ArrayList<FrontendData> frontendData = new ArrayList<>();
-//        for (Map.Entry<String, String> entry : tripIDMap.entrySet()) {
-//            FrontendData data = new FrontendData();
-//            if (RouteHandler.routes.get(entry.getValue()) != null) {
-//                String routeID = entry.getValue();
-//                data.setRouteID(routeID);
-//                data.setRouteName(RouteHandler.routes.get(routeID).routeName);
-//                data.setVehicleType(RouteHandler.routes.get(routeID).routeType);
-//                data.setActualTime(String.valueOf());
-                //data.setActualTime(String.valueOf());
-                //data.setExpectedTime(tripFeed)
-
-    }
 }

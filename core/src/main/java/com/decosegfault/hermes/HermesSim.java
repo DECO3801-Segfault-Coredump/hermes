@@ -7,6 +7,7 @@ import com.badlogic.gdx.math.Vector3;
 import com.decosegfault.atlas.util.AtlasUtils;
 import com.decosegfault.atlas.util.HPVector2;
 import com.decosegfault.atlas.util.HPVector3;
+import com.decosegfault.hermes.data.RouteData;
 import com.decosegfault.hermes.data.VehicleData;
 import com.decosegfault.hermes.frontend.FrontendData;
 import com.decosegfault.hermes.frontend.FrontendEndpoint;
@@ -154,8 +155,37 @@ public class HermesSim {
         frontendData.setInterestPoints(HermesSim.brisbaneOlympics);
         frontendData.setBusesInInterest(affectedRoutes.stream().toList());
         frontendData.setRouteExpectedReals(expectedReals);
-
+        frontendData.setRouteFrequency(calculateRouteFrequency());
+        frontendData.setVehicleTypes(calculateVehicleTypes());
         FrontendEndpoint.broadcast(frontendData);
+    }
+
+    public static Map<String, Integer> calculateRouteFrequency() {
+        Map<String, Integer> routeFrequency = new HashMap<>();
+        for (Map.Entry<String, RouteData> entry : RouteHandler.routes.entrySet()) {
+            String routeID = entry.getKey();
+            if (routeFrequency.containsKey(routeID)) {
+                Integer count = routeFrequency.get(routeID);
+                routeFrequency.put(routeID, count += 1);
+            } else {
+                routeFrequency.put(routeID, 1);
+            }
+        }
+        return routeFrequency;
+    }
+
+    public static Map<String, Integer> calculateVehicleTypes() {
+        Map<String, Integer> vehicleTypes = new HashMap<>();
+        for (Map.Entry<String, RouteData> entry : RouteHandler.routes.entrySet()) {
+            String type = entry.getValue().routeType.toString();
+            if (vehicleTypes.containsKey(type)) {
+                Integer count = vehicleTypes.get(type);
+                vehicleTypes.put(type, count += 1);
+            } else {
+                vehicleTypes.put(type, 1);
+            }
+        }
+        return vehicleTypes;
     }
 
     /**
@@ -291,6 +321,8 @@ public class HermesSim {
     public static void shutdown() {
         server.stop();
     }
+
+
 
 //    private static class GtfsEntityHandler implements EntityHandler {
 //
