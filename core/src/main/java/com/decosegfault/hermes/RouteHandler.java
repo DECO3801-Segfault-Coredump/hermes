@@ -87,7 +87,7 @@ public class RouteHandler {
                 // remember z is the radius
                 if (pointPos.dst(stadiumPos) <= entry.getValue().getZ()) {
                     // yeah nah we got an affected route didn't we
-                    HermesSim.affectedRoutes.put(entry.getKey(), routes.get(trip.routeIDReal).routeName);
+                    HermesSim.affectedRoutes.put(entry.getKey(), trip.routeVehicleName);
                 }
             }
         }
