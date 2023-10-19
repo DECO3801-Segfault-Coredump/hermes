@@ -186,13 +186,27 @@ public class HermesSim {
 
     public static Map<String, Integer> calculateVehicleTypes() {
         Map<String, Integer> vehicleTypes = new HashMap<>();
-        for (Map.Entry<String, RouteData> entry : RouteHandler.routes.entrySet()) {
-            String type = entry.getValue().routeType.toString();
-            if (vehicleTypes.containsKey(type)) {
-                Integer count = vehicleTypes.get(type);
-                vehicleTypes.put(type, count + 1);
-            } else {
-                vehicleTypes.put(type, 1);
+
+        if (RouteHandler.simType == SimType.LIVE) {
+            for (Map.Entry<String, VehicleData> entry: liveDataFeed.vehicleDataMap.entrySet()) {
+                String type = entry.getValue().vehicleType.toString();
+                if (vehicleTypes.containsKey(type)) {
+                    Integer count = vehicleTypes.get(type);
+                    vehicleTypes.put(type, count + 1);
+                } else {
+                    vehicleTypes.put(type, 1);
+                }
+            }
+        } else {
+            for (Map.Entry<String, TripData> entry : RouteHandler.tripsbyID.entrySet()) {
+                String type = entry.getValue().routeType.toString();
+                if (entry.getValue().vehicle.hidden) continue;
+                if (vehicleTypes.containsKey(type)) {
+                    Integer count = vehicleTypes.get(type);
+                    vehicleTypes.put(type, count + 1);
+                } else {
+                    vehicleTypes.put(type, 1);
+                }
             }
         }
         return vehicleTypes;
