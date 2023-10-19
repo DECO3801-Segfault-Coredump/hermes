@@ -149,7 +149,7 @@ public class HermesSim {
 
         // transmit data to the frontend
         frontendData.setInterestPoints(HermesSim.brisbaneOlympics);
-        frontendData.setBusesInInterest(affectedRoutes.stream().toList());
+        frontendData.setBusesInInterest(affectedRoutes);
         frontendData.setRouteExpectedReals(expectedReals);
         frontendData.setRouteFrequency(calculateRouteFrequency());
         frontendData.setVehicleTypes(calculateVehicleTypes());
