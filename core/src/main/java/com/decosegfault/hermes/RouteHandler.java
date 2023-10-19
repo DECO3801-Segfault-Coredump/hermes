@@ -74,14 +74,16 @@ public class RouteHandler {
             Vector3 tempVector = AtlasUtils.INSTANCE.latLongToAtlas(tempVector2);
 //            Logger.warn("Shape added: {}x {}y {}s", tempVector.x, tempVector.y, tempVector.z);
 //            Logger.warn("original: {}x {}y", point.getLat(), point.getLon());
-            HPVector2 tempVector2_1 = new HPVector2(tempVector.x, tempVector.y);
+            HPVector2 pointPos = new HPVector2(tempVector.x, tempVector.y);
             trip.routeMap.add(new HPVector3(tempVector.x, tempVector.y, point.getSequence()));
 
-            // brisaen oyllpics
+            // COMPARE this TRIP against each BRISBANE OLYMPICS EVENT
             for (Map.Entry<String, HPVector3> entry : HermesSim.brisbaneOlympics.entrySet()) {
-                HPVector2 position = new HPVector2(entry.getValue().getX(), entry.getValue().getY());
-                if (tempVector2_1.dst(position) <= entry.getValue().getZ()) {
-                    Logger.debug("yo check it out: {}", position);
+                HPVector2 stadiumPos = new HPVector2(entry.getValue().getX(), entry.getValue().getY());
+                // remember z is the radius
+                if (pointPos.dst(stadiumPos) <= entry.getValue().getZ()) {
+                    // yeah nah we got an effected route didn't we
+                    HermesSim.affectedRoutes.add(trip.routeName);
                 }
             }
         }

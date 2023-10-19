@@ -52,6 +52,8 @@ public class HermesSim {
 
     public static FrontendData frontendData;
 
+    public static Set<String> affectedRoutes = new HashSet<>();
+
     /**
      * ticks time by x seconds.
      * tick speed set by end user.
@@ -146,6 +148,7 @@ public class HermesSim {
 //        frontendData = AtlasUtils.INSTANCE.fillWithJunk(frontendData);
 
         frontendData.setInterestPoints(HermesSim.brisbaneOlympics);
+        frontendData.setBusesInInterest(affectedRoutes.stream().toList());
 
         FrontendEndpoint.broadcast(frontendData);
     }
@@ -191,6 +194,7 @@ public class HermesSim {
 //            vehicleMap.put(trip.routeID, vehicle);
 //
 //        }
+
         Logger.info("GTFS Data Loaded");
     }
 
