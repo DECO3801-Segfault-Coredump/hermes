@@ -18,6 +18,7 @@ import kotlin.io.path.exists
 import kotlin.io.path.readText
 import kotlin.io.path.writeText
 import kotlin.math.*
+import kotlin.random.Random
 
 /**
  * @author Various (see comments)
@@ -196,10 +197,12 @@ object AtlasUtils {
     }
 
     fun fillWithJunk(frontendData: FrontendData): FrontendData {
+        val buses = listOf("69", "420", "1337", "NHAM", "CATHY", "CONNOR", "train")
+
         frontendData.interestPoints = HermesSim.brisbaneOlympics
-        frontendData.busesInInterest = listOf("69", "420", "1337")
-        frontendData.routeFrequency = mapOf(Pair("69", 1000), Pair("420", 1337))
-        frontendData.vehicleTypes = mapOf(Pair("Train", 420), Pair("Bus", 69), Pair("Ferry", 3))
+        frontendData.busesInInterest = listOf(buses.random(), buses.random(), buses.random())
+        frontendData.routeFrequency = mapOf(Pair(buses.random(), Random.nextInt(420)), Pair(buses.random(), Random.nextInt(1337)))
+        frontendData.vehicleTypes = mapOf(Pair("Train", Random.nextInt(420)), Pair("Bus", Random.nextInt(69)), Pair("Ferry", Random.nextInt(10)))
         return frontendData
     }
 }

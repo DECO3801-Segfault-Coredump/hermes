@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Map;
 
 public class FrontendData {
-    // red circles
+    // red circles -> name: lat, long, radius
     private Map<String, HPVector3> interestPoints;
 
     // list of all the buses in the circles
