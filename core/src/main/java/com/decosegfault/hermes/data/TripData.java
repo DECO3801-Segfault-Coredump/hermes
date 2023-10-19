@@ -1,5 +1,7 @@
 package com.decosegfault.hermes.data;
 
+import com.badlogic.gdx.math.Vector3;
+import com.decosegfault.atlas.util.AtlasUtils;
 import com.decosegfault.atlas.util.HPVector2;
 import com.decosegfault.atlas.util.HPVector3;
 import com.decosegfault.hermes.HermesSim;
@@ -7,10 +9,14 @@ import com.decosegfault.hermes.RouteHandler;
 import com.decosegfault.hermes.frontend.RouteExpectedReal;
 import com.decosegfault.hermes.types.SimType;
 import com.decosegfault.hermes.types.VehicleType;
+import org.tinylog.Logger;
+
 import java.util.ArrayList;
 import java.util.List;
 
 /**
+ * Contains the data for each individual trips.
+ *
  * @author Lachlan Ellis
  * @author Henry Batt
  */
@@ -19,7 +25,7 @@ public class TripData {
     public String routeID;
     public String routeName;
     public String routeVehicleName;
-    public List<HPVector3> routeMap = new ArrayList<>();
+    public List<HPVector3> routeMap =  new ArrayList<>();
     public VehicleData vehicle;
 
     public double pathLength = 0;
@@ -27,6 +33,8 @@ public class TripData {
     public int startTime = 0;
     /** optional, only used in history mode */
     public int endTime = -1;
+    //debug
+    int tickCount = 0;
 
     // these two only used in Simulated mode
     double previousDist;
@@ -38,6 +46,9 @@ public class TripData {
 
     boolean didRouteEnd = false;
 
+    /**
+     * @param type
+     */
     public TripData(int type) {
         switch (type) {
             case 2 -> routeType = VehicleType.TRAIN;
@@ -47,22 +58,32 @@ public class TripData {
         vehicle = new VehicleData(routeType);
     }
 
+    /**
+     * @param type
+     * @param in
+     */
     public TripData(VehicleType type, String in) {
         routeType = type;
         vehicle = new VehicleData(routeType);
         inBound = in;
     }
 
+    /**
+     *
+     */
     public void initTrip() {
-        if (routeMap.size() > 1) {
-            for (int i = 1; i < routeMap.size(); i++) {
-                pathLength += routeMap.get(i).dst(routeMap.get(i - 1));
+        if(routeMap.size() > 1) {
+            for(int i = 1; i < routeMap.size(); i++) {
+                pathLength += routeMap.get(i).dst(routeMap.get(i-1));
             }
         } else {
-            // throw error, badly formatted data
+            //throw error, badly formatted data
         }
     }
 
+    /**
+     *
+     */
     public void tick() {
         if (startTime <= HermesSim.time && endTime >= HermesSim.time) {
             vehicle.hidden = false;
@@ -70,12 +91,12 @@ public class TripData {
             int shapeIndex = 0;
             if (RouteHandler.simType != SimType.LIVE) {
                 double traversedDist;
-                if (RouteHandler.simType == SimType.SIMULATED) {
+                if(RouteHandler.simType == SimType.SIMULATED) {
                     traversedDist = previousDist + (HermesSim.time - previousTime) * RouteHandler.vehicleSpeed;
                     previousDist = traversedDist;
                     previousTime = HermesSim.time;
                 } else {
-                    double traversedPercent = (HermesSim.time - startTime) / (endTime - startTime);
+                    double traversedPercent = (HermesSim.time - startTime) /  (endTime - startTime);
                     traversedDist = traversedPercent * pathLength;
                 }
 
@@ -87,19 +108,19 @@ public class TripData {
                         if (recordedDist + Math.abs(routeMap.get(i).dst(routeMap.get(i - 1))) >= traversedDist) {
                             shapeIndex = i;
                             newPosition = tempLastVect.add((tempCurVect.sub(tempLastVect))
-                                .scl((Math.abs(traversedDist - recordedDist) / Math.abs(routeMap.get(i).dst(routeMap.get(i - 1))))));
+                                .scl( (Math.abs(traversedDist - recordedDist)
+                                                                    / Math.abs(routeMap.get(i).dst(routeMap.get(i - 1))))));
                             break;
                         }
                         recordedDist += Math.abs(routeMap.get(i).dst(routeMap.get(i - 1)));
                     }
                 } else {
-                    // throw error, badly formatted data
+                    //throw error, badly formatted data
                 }
             } else {
-                // any live updates
+                //any live updates
             }
-
-            if (shapeIndex == 0) {
+            if(shapeIndex == 0) {
                 vehicle.hidden = true;
                 if (HermesSim.time >= startTime && !didRouteEnd) {
                     actualEndTime = (int) HermesSim.time;
@@ -107,9 +128,11 @@ public class TripData {
                 }
             } else {
                 double angle = (-1 * new HPVector2(routeMap.get(shapeIndex).getX() - routeMap.get(shapeIndex - 1).getX(),
-                    routeMap.get(shapeIndex).getY() - routeMap.get(shapeIndex - 1).getY()).angleDeg()) % 360;
-                vehicle.position.set(newPosition.getX(), newPosition.getY(), angle);
+                    routeMap.get(shapeIndex).getY() - routeMap.get(shapeIndex - 1).getY()).angleDeg())%360;
+                vehicle.position.set(newPosition.getX(), newPosition.getY(),
+                    angle);
                 vehicle.oldPosition = new HPVector3(vehicle.position.getX(), vehicle.position.getY(), vehicle.position.getZ());
+                Vector3 testVector = AtlasUtils.INSTANCE.latLongZoomToSlippyCoord(vehicle.position.getX(), vehicle.position.getY());
             }
 
         } else {

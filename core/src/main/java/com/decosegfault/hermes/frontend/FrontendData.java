@@ -10,7 +10,8 @@ public class FrontendData {
     private Map<String, HPVector3> interestPoints;
 
     // list of all the buses in the circles
-    private List<String> busesInInterest;
+//    private List<String> busesInInterest;
+    private Map<String, String> busesInInterest;
 
     // number of each route per tick (Ex. 66s)
     private Map<String, Integer> routeFrequency;
@@ -29,11 +30,11 @@ public class FrontendData {
         this.interestPoints = interestPoints;
     }
 
-    public List<String> getBusesInInterest() {
+    public Map<String, String> getBusesInInterest() {
         return busesInInterest;
     }
 
-    public void setBusesInInterest(List<String> busesInInterest) {
+    public void setBusesInInterest(Map<String, String> busesInInterest) {
         this.busesInInterest = busesInInterest;
     }
 

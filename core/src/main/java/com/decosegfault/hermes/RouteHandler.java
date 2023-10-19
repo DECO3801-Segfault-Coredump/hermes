@@ -15,6 +15,9 @@ import org.tinylog.Logger;
 import java.util.*;
 
 /**
+ * This static class andles all the operations on transport data.
+ * All data added in HermesSim.read is processed in this class.
+ *
  * @author Lachlan Ellis
  * @author Henry Batt
  */
@@ -31,6 +34,11 @@ public class RouteHandler {
     public static float vehicleSpeed = 5;
 
 
+    /**
+     * This function processes a route instance into the hashmap
+     *
+     * @param route The RouteData instance being processed.
+     */
     public static void addRoute(Route route) {
         RouteData newRoute = new RouteData(route.getType());
         newRoute.routeID = route.getShortName();
@@ -39,19 +47,32 @@ public class RouteHandler {
         routes.put(route.getId().getId(), newRoute);
     }
 
+    /**
+     * This function processes a route instance into the hashmap.
+     * Also sets up the shapes map with each shape ID.
+     *
+     * @param trip The TripData instance being processed.
+     */
     public static void addTrip(Trip trip) {
         TripData newTrip = new TripData(routes.get(trip.getRoute().getId().getId()).routeType, trip.getDirectionId());
         newTrip.routeID = trip.getId().getId();
         newTrip.routeName = trip.getTripHeadsign();
         newTrip.routeVehicleName = trip.getRoute().getShortName();
 
-        if (!tripsByShape.containsKey(trip.getShapeId().getId())) {
-            tripsByShape.put(trip.getShapeId().getId(), new ArrayList<>());
+        if (trip.getShapeId() != null) {
+            if (!tripsByShape.containsKey(trip.getShapeId().getId())) {
+                tripsByShape.put(trip.getShapeId().getId(), new ArrayList<>());
+            }
+            tripsByShape.get(trip.getShapeId().getId()).add(newTrip);
         }
-        tripsByShape.get(trip.getShapeId().getId()).add(newTrip);
         tripsbyID.put(trip.getId().getId(), newTrip);
     }
 
+    /**
+     * This function processes a shape instance into all relevant trips.
+     *
+     * @param point The ShapePoint instance being processed.
+     */
     public static void addShape(ShapePoint point) {
         for (TripData trip : tripsByShape.get(point.getShapeId().getId())) {
             Vector3 tempVector2 = new Vector3((float) point.getLat(), (float) point.getLon(), 0);
@@ -64,13 +85,18 @@ public class RouteHandler {
                 HPVector2 stadiumPos = new HPVector2(entry.getValue().getX(), entry.getValue().getY());
                 // remember z is the radius
                 if (pointPos.dst(stadiumPos) <= entry.getValue().getZ()) {
-                    // yeah nah we got an effected route didn't we
-                    HermesSim.affectedRoutes.add(trip.routeName);
+                    // yeah nah we got an affected route didn't we
+                    HermesSim.affectedRoutes.put(entry.getKey(), routes.get(trip.routeID).routeName);
                 }
             }
         }
     }
 
+    /**
+     * This function adds the start and end time for all processed trips.
+     *
+     * @param time The StopTime instance being processed.
+     */
     public static void handleTime(StopTime time) {
         if (tripsbyID.containsKey(time.getTrip().getId().getId())) {
             TripData trip = tripsbyID.get(time.getTrip().getId().getId());
@@ -84,6 +110,9 @@ public class RouteHandler {
         }
     }
 
+    /**
+     * Sorts the shapes into their order in each trip's path.
+     */
     public static void sortShapes() {
         for (TripData element : tripsbyID.values()) {
             element.routeMap.sort(Comparator.comparingDouble(HPVector3::getZ));

@@ -24,6 +24,9 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
+ * This is static class that acts as the interface for the simulator.
+ * Loads and handles all the data from GTFS Live and the imported GTFS data.
+ *
  * @author Lachlan Ellis
  * @author Matt Young
  * @author Henry Batt
@@ -51,7 +54,7 @@ public class HermesSim {
 
     public static FrontendData frontendData;
 
-    public static Set<String> affectedRoutes = new HashSet<>();
+    public static Map<String, String> affectedRoutes;
 
     public static List<RouteExpectedReal> expectedReals = new ArrayList<>();
 
@@ -244,6 +247,11 @@ public class HermesSim {
         Logger.info("GTFS Data Loaded");
     }
 
+    /**
+     * This function reads the data from the offline GTFS data.
+     * The gtfs zip located in <project directory>/hermes/assets/hermes is the source of the data;
+     * this file must be overwritten to use user data.
+     */
     public static void read() {
         GtfsReader reader = new GtfsReader();
         try {
@@ -314,14 +322,23 @@ public class HermesSim {
         }
     }
 
+    /**
+     * Increases the sim speed.
+     */
     public static void increaseSpeed() {
         speed *= 2;
     }
 
+    /**
+     * Decreases the sim speed.
+     */
     public static void decreaseSpeed() {
         speed /= 2;
     }
 
+    /**
+     *
+     */
     public static void shutdown() {
         server.stop();
     }

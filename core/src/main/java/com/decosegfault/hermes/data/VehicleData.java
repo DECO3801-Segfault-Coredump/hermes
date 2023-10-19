@@ -12,10 +12,16 @@ public class VehicleData {
     public HPVector3 oldPosition = new HPVector3(0, 0, 0);
     public boolean hidden = false;
 
+    /**
+     * @param type
+     */
     public VehicleData(VehicleType type) {
         vehicleType = type;
     }
 
+    /**
+     * @param newPosition
+     */
     public void tick(HPVector3 newPosition) {
         oldPosition = position;
         position = newPosition;
