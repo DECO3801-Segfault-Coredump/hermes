@@ -2,6 +2,9 @@ package com.decosegfault.atlas.util
 
 import com.badlogic.gdx.math.*
 import com.badlogic.gdx.math.collision.BoundingBox
+import com.decosegfault.hermes.HermesSim
+import com.decosegfault.hermes.frontend.FrontendData
+import com.decosegfault.hermes.frontend.RouteExpectedReal
 import org.tinylog.kotlin.Logger
 import java.nio.file.Paths
 import kotlin.io.path.createFile
@@ -16,6 +19,7 @@ import kotlin.io.path.exists
 import kotlin.io.path.readText
 import kotlin.io.path.writeText
 import kotlin.math.*
+import kotlin.random.Random
 
 /**
  * @author Matt Young
@@ -193,5 +197,24 @@ object AtlasUtils {
         val coords = Vector2(atlasCoords).add(Vector2(MAP_CENTRE_SLIPPY.x, MAP_CENTRE_SLIPPY.y))
         val latLong = slippyCoordToLatLongZoom(Vector3(coords.x, coords.y, PIXEL_ZOOM))
         return Vector2(latLong.x, latLong.y)
+    }
+
+    fun fillWithJunk(frontendData: FrontendData): FrontendData {
+        val buses = listOf("69", "420", "1337", "NHAM", "CATHY", "CONNOR", "train")
+
+        frontendData.interestPoints = HermesSim.brisbaneOlympics
+        frontendData.busesInInterest = listOf(buses.random(), buses.random(), buses.random())
+        frontendData.routeFrequency = mapOf(Pair(buses.random(), Random.nextInt(420)), Pair(buses.random(), Random.nextInt(1337)))
+        frontendData.vehicleTypes = mapOf(Pair("Train", Random.nextInt(420)), Pair("Bus", Random.nextInt(69)), Pair("Ferry", Random.nextInt(10)))
+
+        val expectedReal1 = RouteExpectedReal().apply {
+            actualTime = Random.nextInt(69).toDouble()
+            expectedTime = Random.nextInt(69).toDouble()
+            routeName = buses.random()
+        }
+
+        frontendData.routeExpectedReals = listOf(expectedReal1)
+
+        return frontendData
     }
 }

@@ -10,6 +10,7 @@ import com.decosegfault.atlas.util.AtlasUtils;
 import com.decosegfault.atlas.util.HPVector2;
 import com.decosegfault.hermes.HermesSim;
 import com.decosegfault.hermes.RouteHandler;
+import com.decosegfault.hermes.frontend.RouteExpectedReal;
 import com.decosegfault.hermes.types.SimType;
 import com.decosegfault.hermes.types.VehicleType;
 import com.decosegfault.atlas.util.HPVector3;
@@ -40,6 +41,10 @@ public class TripData {
     public double previousTime = 0;
 
     String inBound;
+
+    int actualEndTime;
+
+    boolean didRouteEnd = false;
 
     public TripData(int type) {
         switch (type) {
@@ -127,7 +132,11 @@ public class TripData {
             }
             if(shapeIndex == 0) {
                 vehicle.hidden = true;
-                endTime = (int) HermesSim.time;
+                if (HermesSim.time >= startTime && !didRouteEnd) {
+                    actualEndTime = (int) HermesSim.time;
+//                    Logger.debug("ARARHGHGHGAHHAHGHAGHDhsghsg");
+                    didRouteEnd = true;
+                }
             } else {
                 double angle = (-1 * new HPVector2(routeMap.get(shapeIndex).getX() - routeMap.get(shapeIndex - 1).getX(),
                     routeMap.get(shapeIndex).getY() - routeMap.get(shapeIndex - 1).getY()).angleDeg())%360;
@@ -150,6 +159,17 @@ public class TripData {
         } else {
             vehicle.position.set(-27.499593094511493, 153.01620933407332, 0);
             vehicle.hidden = true;
+            if (HermesSim.time >= startTime && !didRouteEnd) {
+                actualEndTime = (int) HermesSim.time;
+
+                RouteExpectedReal expectedReal = new RouteExpectedReal();
+                expectedReal.setRouteName(this.routeName);
+                expectedReal.setActualTime(this.actualEndTime);
+                expectedReal.setExpectedTime(this.endTime);
+                HermesSim.expectedReals.add(expectedReal);
+
+                didRouteEnd = true;
+            }
         }
     }
 }

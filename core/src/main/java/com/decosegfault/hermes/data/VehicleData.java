@@ -2,10 +2,10 @@ package com.decosegfault.hermes.data;
 
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
+import com.decosegfault.hermes.LiveDataFeed;
 import com.decosegfault.atlas.util.HPVector3;
 import com.decosegfault.hermes.types.VehicleType;
-
-import java.util.ArrayList;
+import com.google.transit.realtime.GtfsRealtime;
 import java.util.Objects;
 
 /**
@@ -19,7 +19,8 @@ public class VehicleData {
     public VehicleData(VehicleType type) {
         vehicleType = type;
     }
-    public void tick(Vector3 newPosition) {
-
+    public void tick(HPVector3 newPosition) {
+        oldPosition = position;
+        position = newPosition;
     }
 }

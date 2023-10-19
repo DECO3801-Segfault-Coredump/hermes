@@ -5,6 +5,7 @@ import java.util.*;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.decosegfault.atlas.util.AtlasUtils;
+import com.decosegfault.atlas.util.HPVector2;
 import com.decosegfault.atlas.util.HPVector3;
 import com.decosegfault.hermes.data.RouteData;
 import com.decosegfault.hermes.data.TripData;
@@ -41,6 +42,7 @@ public class RouteHandler {
         newRoute.routeName = route.getLongName();
 
         routes.put(route.getId().getId(), newRoute);
+        //Logger.debug("Route: {} {} {} {}", route.getId().getId(), route.getLongName(), route.getShortName(), route.getType());
     }
 
     //debug
@@ -72,7 +74,18 @@ public class RouteHandler {
             Vector3 tempVector = AtlasUtils.INSTANCE.latLongToAtlas(tempVector2);
 //            Logger.warn("Shape added: {}x {}y {}s", tempVector.x, tempVector.y, tempVector.z);
 //            Logger.warn("original: {}x {}y", point.getLat(), point.getLon());
+            HPVector2 pointPos = new HPVector2(tempVector.x, tempVector.y);
             trip.routeMap.add(new HPVector3(tempVector.x, tempVector.y, point.getSequence()));
+
+            // COMPARE this TRIP against each BRISBANE OLYMPICS EVENT
+            for (Map.Entry<String, HPVector3> entry : HermesSim.brisbaneOlympics.entrySet()) {
+                HPVector2 stadiumPos = new HPVector2(entry.getValue().getX(), entry.getValue().getY());
+                // remember z is the radius
+                if (pointPos.dst(stadiumPos) <= entry.getValue().getZ()) {
+                    // yeah nah we got an effected route didn't we
+                    HermesSim.affectedRoutes.add(trip.routeName);
+                }
+            }
         }
     }
 
