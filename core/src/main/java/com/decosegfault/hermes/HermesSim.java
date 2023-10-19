@@ -58,6 +58,8 @@ public class HermesSim {
 
     public static List<RouteExpectedReal> expectedReals = new ArrayList<>();
 
+    public static int frontendCounter = 0;
+
     /**
      * ticks time by x seconds.
      * tick speed set by end user.
@@ -157,7 +159,10 @@ public class HermesSim {
         frontendData.setRouteExpectedReals(expectedReals);
         frontendData.setRouteFrequency(calculateRouteFrequency());
         frontendData.setVehicleTypes(calculateVehicleTypes());
-        FrontendEndpoint.broadcast(frontendData);
+
+        if (frontendCounter++ % 10 == 0) {
+            FrontendEndpoint.broadcast(frontendData);
+        }
     }
 
     public static Map<String, Integer> calculateRouteFrequency() {
