@@ -41,6 +41,10 @@ public class TripData {
 
     String inBound;
 
+    int actualEndTime;
+
+    boolean didRouteEnd = false;
+
     public TripData(int type) {
         switch (type) {
             case 2 -> routeType = VehicleType.TRAIN;
@@ -127,7 +131,11 @@ public class TripData {
             }
             if(shapeIndex == 0) {
                 vehicle.hidden = true;
-                endTime = (int) HermesSim.time;
+                if (HermesSim.time >= startTime && !didRouteEnd) {
+                    actualEndTime = (int) HermesSim.time;
+//                    Logger.debug("ARARHGHGHGAHHAHGHAGHDhsghsg");
+                    didRouteEnd = true;
+                }
             } else {
                 double angle = (-1 * new HPVector2(routeMap.get(shapeIndex).getX() - routeMap.get(shapeIndex - 1).getX(),
                     routeMap.get(shapeIndex).getY() - routeMap.get(shapeIndex - 1).getY()).angleDeg())%360;
@@ -150,6 +158,11 @@ public class TripData {
         } else {
             vehicle.position.set(-27.499593094511493, 153.01620933407332, 0);
             vehicle.hidden = true;
+            if (HermesSim.time >= startTime && !didRouteEnd) {
+                actualEndTime = (int) HermesSim.time;
+//                Logger.debug("ARARHGHGHGAHHAHGHAGHDhsghsg {} {}", HermesSim.time, routeName);
+                didRouteEnd = true;
+            }
         }
     }
 }

@@ -5,6 +5,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.math.Vector3;
 import com.decosegfault.atlas.util.AtlasUtils;
+import com.decosegfault.atlas.util.HPVector2;
 import com.decosegfault.atlas.util.HPVector3;
 import com.decosegfault.hermes.data.VehicleData;
 import com.decosegfault.hermes.frontend.FrontendData;
@@ -30,15 +31,26 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author Cathy Nguyen
  */
 public class HermesSim {
-
+    public static Map<String, HPVector3> brisbaneOlympics = new HashMap<>() {
+        {
+            put("Suncorp Stadium", new HPVector3(-27.4648, 153.0095, 500.0));
+            put("Brisbane Entertainment Centre", new HPVector3(-27.3422, 153.0704, 700.0));
+            put("The Gabba", new HPVector3(-27.4858, 153.0381, 450.0));
+            put("Emporium Hotel Southbank", new HPVector3(-27.481382543911, 153.02309927206, 300.0));
+            put("Central Station", new HPVector3(-27.4662, 153.0262, 200.0));
+            put("Roma Street Busway Station", new HPVector3(-27.275829, 153.010703, 100.0));
+        }
+    };
     private static FrontendServer server;
     public static ConcurrentHashMap<String, AtlasVehicle> vehicleMap = new ConcurrentHashMap<>();
     /** time of day will be in seconds, max 86400 (one day) before looping back to 0 */
-    public static double time = 44100;
+    public static double time = 0;
 //    static float baseTime = 44100;
     static float speed = 10f;
     public static final List<TripData> vehiclesToCreate = new ArrayList<>();
     public static LiveDataFeed liveDataFeed = new LiveDataFeed();
+
+    public static FrontendData frontendData;
 
     /**
      * ticks time by x seconds.
@@ -54,21 +66,21 @@ public class HermesSim {
 //        Logger.warn("tell me your mf length {}", vehicleMap.size());
         int tripsActive = 0;
 
+        frontendData = new FrontendData();
+
         vehiclesToCreate.clear();
 
         if (RouteHandler.simType == SimType.LIVE) {
             liveDataFeed.update();
-
             ConcurrentHashMap<String, AtlasVehicle> slayMap = new ConcurrentHashMap<>();
 
             for (Map.Entry<String, VehicleData> entry : liveDataFeed.vehicleDataMap.entrySet()) {
-
                 String tripID = entry.getKey();
-
                 if (!vehicleMap.containsKey(tripID)){
                     VehicleType type = entry.getValue().vehicleType;
-                    String name = RouteHandler.routes.get(tripID).routeName;
-                    String id = RouteHandler.routes.get(tripID).routeID;
+                    String routeID = liveDataFeed.tripIDMap.get(tripID);
+                    String name = RouteHandler.routes.get(routeID).routeName;
+                    String id = RouteHandler.routes.get(routeID).routeID;
                     StringBuilder vehicleName = new StringBuilder();
                     if (type == VehicleType.TRAIN) {
                         vehicleName.append(id).append(" line");
@@ -83,15 +95,11 @@ public class HermesSim {
                 } else {
                     slayMap.put(tripID, vehicleMap.get(tripID));
                 }
-
                 HPVector3 position = entry.getValue().position;
                 Vector3 pos = AtlasUtils.INSTANCE.latLongToAtlas(new Vector3((float) position.getX(), (float) position.getY(), (float) position.getZ()));
                 slayMap.get(tripID).updateTransform(pos);
             }
             vehicleMap = slayMap;
-
-
-
         } else {
             RouteHandler.tripsbyID.values().stream().forEach((trip) -> {
                 trip.tick();
@@ -135,9 +143,7 @@ public class HermesSim {
 
 //        Logger.warn("Trips Loaded: {}, {} active", vehicleMap.size(), tripsActive);
         // transmit data to the frontend
-        FrontendData data = new FrontendData();
-        data.setRouteLongName("fuck you");
-        FrontendEndpoint.broadcast(data);
+        FrontendEndpoint.broadcast(frontendData);
     }
 
     /**

@@ -1,87 +1,55 @@
 package com.decosegfault.hermes.frontend;
 
+import com.decosegfault.atlas.util.HPVector2;
+import com.decosegfault.atlas.util.HPVector3;
 import com.decosegfault.hermes.types.VehicleType;
 import org.jetbrains.annotations.Contract;
 
+import java.util.List;
+import java.util.Map;
+
 public class FrontendData {
-    public String routeID;
-    public String routeShortName;
-    public String routeLongName;
-    public VehicleType vehicleType;
-    public String expectedTime;
-    public String actualTime;
+    // red circles
+    private Map<String, HPVector3> interestPoints;
 
-    public void setRouteID(String routeID) {
-        this.routeID = routeID;
+    // list of all the buses in the circles
+    private List<String> busesInInterest;
+
+    // number of 66s per tick
+    private Map<String, Integer> routeFrequency;
+
+    // vehicle types innit
+    private Map<String, Integer> vehicleTypes;
+
+    public Map<String, HPVector3> getInterestPoints() {
+        return interestPoints;
     }
 
-    public void setRouteShortName(String routeShortName) {
-        this.routeShortName = routeShortName;
+    public void setInterestPoints(Map<String, HPVector3> interestPoints) {
+        this.interestPoints = interestPoints;
     }
 
-    public void setRouteLongName(String routeLongName) {
-        this.routeLongName = routeLongName;
+    public List<String> getBusesInInterest() {
+        return busesInInterest;
     }
 
-    public void setVehicleType(VehicleType vehicleType) {
-        this.vehicleType = vehicleType;
+    public void setBusesInInterest(List<String> busesInInterest) {
+        this.busesInInterest = busesInInterest;
     }
 
-    public void setExpectedTime(String expectedTime) {
-        this.expectedTime = expectedTime;
+    public Map<String, Integer> getRouteFrequency() {
+        return routeFrequency;
     }
 
-    public void setActualTime(String actualTime) {
-        this.actualTime = actualTime;
+    public void setRouteFrequency(Map<String, Integer> routeFrequency) {
+        this.routeFrequency = routeFrequency;
     }
 
-    public String getRouteID() {
-        return routeID;
+    public Map<String, Integer> getVehicleTypes() {
+        return vehicleTypes;
     }
 
-    public String getRouteShortName() {
-        return routeShortName;
+    public void setVehicleTypes(Map<String, Integer> vehicleTypes) {
+        this.vehicleTypes = vehicleTypes;
     }
-
-    public String getRouteLongName() {
-        return routeLongName;
-    }
-
-    public VehicleType getVehicleType() {
-        return vehicleType;
-    }
-
-    public String getExpectedTime() {
-        return expectedTime;
-    }
-
-    public String getActualTime() {
-        return actualTime;
-    }
-
-    /**
-    public void setRouteID(String routeId) {
-        routeID = routeId;
-    }
-
-    public void setRouteShortName(String shortName) {
-        routeShortName = shortName;
-    }
-
-    public void setRouteLongName(String longName) {
-        routeLongName = longName;
-    }
-
-    public void setVehicleType(VehicleType type) {
-        vehicleType = type;
-    }
-
-    public void setExpectedTime(String time) {
-        expectedTime = time;
-    }
-
-    public void setActualTime(String time) {
-        actualTime = time;
-    }
-     */
 }

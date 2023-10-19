@@ -1,13 +1,17 @@
 package com.decosegfault.hermes;
 
 import com.decosegfault.atlas.util.HPVector3;
+import com.decosegfault.hermes.data.RouteData;
+import com.decosegfault.hermes.data.TripData;
 import com.decosegfault.hermes.data.VehicleData;
+import com.decosegfault.hermes.frontend.FrontendData;
 import com.decosegfault.hermes.types.VehicleType;
 import com.google.transit.realtime.GtfsRealtime;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -22,7 +26,7 @@ public class LiveDataFeed {
     private final GtfsRealtime.FeedMessage tripFeed;
     private final URL vehiclesURL;
     private GtfsRealtime.FeedMessage vehiclePositionsFeed;
-    public ArrayList<String> routeIDList = new ArrayList<>();
+    public HashMap<String, String> tripIDMap = new HashMap<>();
     public Map<String, HPVector3> vehiclePositions = new HashMap<>();
     public Map<String, VehicleData> vehicleDataMap = new HashMap<>();
 
@@ -31,7 +35,6 @@ public class LiveDataFeed {
             URI vehiclesURI = new URI("https://gtfsrt.api.translink.com.au/api/realtime/SEQ/VehiclePositions");
             vehiclesURL = vehiclesURI.toURL();
             vehiclePositionsFeed = GtfsRealtime.FeedMessage.parseFrom(vehiclesURL.openStream());
-
 
             URI tripURI = new URI("https://gtfsrt.api.translink.com.au/api/realtime/SEQ/TripUpdates");
             URL tripURL = tripURI.toURL();
@@ -42,11 +45,11 @@ public class LiveDataFeed {
         init();
     }
 
-    public GtfsRealtime.FeedMessage getFeed() {
+    public GtfsRealtime.FeedMessage getTripFeed() {
         return tripFeed;
     }
 
-    public GtfsRealtime.FeedMessage getFeed2() {
+    public GtfsRealtime.FeedMessage getVehiclePositionsFeed() {
         return vehiclePositionsFeed;
     }
 
@@ -60,67 +63,87 @@ public class LiveDataFeed {
         } catch (IOException e) {
             System.out.println("rip");
         }
-        routeIDList.clear();
-        storeRouteID();
+        tripIDMap.clear();
+        storeTripID();
         vehiclePositions.clear();
         setVehiclePositions();
         // Calls tick() on existing VehicleData
         // If routeID exists in vehicleDataMap, call tick() to updates its position
         // Otherwise, add new vehicleDataMap entry
-        for (String routeID : routeIDList) {
+        for (Map.Entry<String, HPVector3> entry : vehiclePositions.entrySet()) {
             VehicleData vehicleData;
+            String routeID = tripIDMap.get(entry.getKey());
             if (RouteHandler.routes.get(routeID) != null) {
-                if (vehicleDataMap.containsKey(routeID)) {
-                    VehicleData existingVehicleData = vehicleDataMap.get(routeID);
-                    existingVehicleData.hidden = false;
-                    existingVehicleData.tick(vehiclePositions.get(routeID));
+                String tripID = entry.getKey();
+                if (vehicleDataMap.containsKey(entry.getKey())) {
+                    VehicleData existingVehicleData = vehicleDataMap.get(tripID);
+                    existingVehicleData.tick(vehiclePositions.get(tripID));
                 } else {
                     VehicleType vehicleType = RouteHandler.routes.get(routeID).routeType;
                     vehicleData = new VehicleData(vehicleType);
-                    vehicleData.position = vehiclePositions.get(routeID);
-                    vehicleDataMap.put(routeID, vehicleData);
+                    vehicleData.position = vehiclePositions.get(tripID);
+                    vehicleDataMap.put(tripID, vehicleData);
                 }
-            }
-        }
-        // Now check for routeIDs in vehicleDataMap no longer present in routeIDList and hide vehicle
-        for (Map.Entry<String, VehicleData> entry : vehicleDataMap.entrySet()) {
-            if (!routeIDList.contains(entry.getKey())) {
-                entry.getValue().hidden = true;
             }
         }
     }
 
     private void init() {
-        storeRouteID();
+        storeTripID();
         setVehiclePositions();
         storeVehicleData();
     }
 
-    private void storeRouteID() {
+    private void storeTripID() {
         for (GtfsRealtime.FeedEntity entity : vehiclePositionsFeed.getEntityList()) {
-            routeIDList.add(entity.getVehicle().getTrip().getRouteId());
+            tripIDMap.put(entity.getVehicle().getTrip().getTripId(), entity.getVehicle().getTrip().getRouteId());
         }
     }
 
     private void setVehiclePositions() {
         for (GtfsRealtime.FeedEntity entity : vehiclePositionsFeed.getEntityList()) {
-            String routeID = entity.getVehicle().getTrip().getRouteId();
+            String tripID = entity.getVehicle().getTrip().getTripId();
             double latitude = entity.getVehicle().getPosition().getLatitude();
             double longitude = entity.getVehicle().getPosition().getLongitude();
             HPVector3 position = new HPVector3(latitude, longitude, 0.0);
-            vehiclePositions.put(routeID, position);
+            vehiclePositions.put(tripID, position);
         }
     }
 
     private void storeVehicleData() {
         for (Map.Entry<String, HPVector3> entry : vehiclePositions.entrySet()) {
-            String routeID = entry.getKey();
+            String tripID = entry.getKey();
+            String routeID = tripIDMap.get(tripID);
             if (RouteHandler.routes.get(routeID) != null) {
                 VehicleType routeType = RouteHandler.routes.get(routeID).routeType;
                 VehicleData vehicleData = new VehicleData(routeType);
                 vehicleData.position = entry.getValue();
-                vehicleDataMap.put(routeID, vehicleData);
+                vehicleDataMap.put(tripID, vehicleData);
             }
         }
+    }
+
+
+    // DATA FOR FRONTEND
+    public void sendFrontendData() {
+        FrontendData frontendData = new FrontendData();
+        frontendData.setInterestPoints(HermesSim.brisbaneOlympics);
+
+//        HashMap<String, String> frontendMap = new HashMap<>();
+//        for (GtfsRealtime.FeedEntity entity : tripFeed.getEntityList()) {
+////            frontendMap.put(entity.getTripUpdate().getTrip().getTripId(), entity.)
+//        }
+//        ArrayList<FrontendData> frontendData = new ArrayList<>();
+//        for (Map.Entry<String, String> entry : tripIDMap.entrySet()) {
+//            FrontendData data = new FrontendData();
+//            if (RouteHandler.routes.get(entry.getValue()) != null) {
+//                String routeID = entry.getValue();
+//                data.setRouteID(routeID);
+//                data.setRouteName(RouteHandler.routes.get(routeID).routeName);
+//                data.setVehicleType(RouteHandler.routes.get(routeID).routeType);
+//                data.setActualTime(String.valueOf());
+                //data.setActualTime(String.valueOf());
+                //data.setExpectedTime(tripFeed)
+
     }
 }
