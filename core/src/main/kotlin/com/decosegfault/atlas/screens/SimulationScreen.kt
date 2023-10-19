@@ -511,7 +511,7 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
 
         private val BASE_DATE = LocalDateTime.of(2023, Month.DECEMBER, 23, 0, 0)
 
-        private val TIME_FORMATTER = DateTimeFormatter.ofPattern("h:m:ss a")
+        private val TIME_FORMATTER = DateTimeFormatter.ofPattern("hh:mm:ss a")
 
         fun addWork(runnable: Runnable) {
             WORK_QUEUE.add(runnable)
