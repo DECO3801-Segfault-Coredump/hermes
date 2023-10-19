@@ -166,7 +166,7 @@ public class HermesSim {
             String routeID = entry.getKey();
             if (routeFrequency.containsKey(routeID)) {
                 Integer count = routeFrequency.get(routeID);
-                routeFrequency.put(routeID, count += 1);
+                routeFrequency.put(routeID, count + 1);
             } else {
                 routeFrequency.put(routeID, 1);
             }
@@ -180,7 +180,7 @@ public class HermesSim {
             String type = entry.getValue().routeType.toString();
             if (vehicleTypes.containsKey(type)) {
                 Integer count = vehicleTypes.get(type);
-                vehicleTypes.put(type, count += 1);
+                vehicleTypes.put(type, count + 1);
             } else {
                 vehicleTypes.put(type, 1);
             }
