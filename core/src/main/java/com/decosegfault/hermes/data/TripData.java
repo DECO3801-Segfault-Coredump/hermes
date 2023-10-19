@@ -22,6 +22,7 @@ import java.util.List;
  */
 public class TripData {
     public VehicleType routeType;
+    public String routeIDReal;
     public String routeID;
     public String routeName;
     public String routeVehicleName;
