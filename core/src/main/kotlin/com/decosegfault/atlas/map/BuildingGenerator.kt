@@ -165,9 +165,6 @@ class BuildingGenerator : Disposable {
         val modelRunnable = Runnable {
             val model = modelBuilder.end() // FIXME: memory leak here (need to free model)
 
-//            if (model.nodes.isNotEmpty())
-//                exporter.export(model, Gdx.files.absolute("/tmp/atlas_model_${model.hashCode().toHexString()}.gltf"))
-
             modelFuture.complete(ModelInstance(model))
         }
         SimulationScreen.addWork(modelRunnable)
