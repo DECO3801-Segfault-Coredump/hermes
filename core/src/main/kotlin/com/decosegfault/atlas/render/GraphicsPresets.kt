@@ -3,7 +3,10 @@ package com.decosegfault.atlas.render
 import org.tinylog.kotlin.Logger
 import java.io.IOException
 import java.nio.file.Paths
-import kotlin.io.path.*
+import kotlin.io.path.createFile
+import kotlin.io.path.exists
+import kotlin.io.path.readText
+import kotlin.io.path.writeText
 
 /**
  * Graphics presets for Atlas

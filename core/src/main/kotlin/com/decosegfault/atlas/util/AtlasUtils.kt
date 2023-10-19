@@ -1,19 +1,16 @@
 package com.decosegfault.atlas.util
 
-import com.badlogic.gdx.math.*
+import com.badlogic.gdx.math.MathUtils
+import com.badlogic.gdx.math.Vector2
+import com.badlogic.gdx.math.Vector3
 import com.badlogic.gdx.math.collision.BoundingBox
 import com.decosegfault.hermes.HermesSim
 import com.decosegfault.hermes.frontend.FrontendData
 import com.decosegfault.hermes.frontend.RouteExpectedReal
-import org.tinylog.kotlin.Logger
-import java.nio.file.Paths
-import kotlin.io.path.createFile
-import kotlin.io.path.exists
-import kotlin.io.path.writeText
-import kotlin.math.*
 import com.decosegfault.hermes.types.SimType
+import org.tinylog.kotlin.Logger
 import java.io.IOException
-import java.lang.IllegalArgumentException
+import java.nio.file.Paths
 import kotlin.io.path.createFile
 import kotlin.io.path.exists
 import kotlin.io.path.readText
@@ -62,12 +59,7 @@ object AtlasUtils {
     // https://gdbooks.gitbooks.io/3dcollisions/content/Chapter1/closest_point_aabb.html
     fun bboxClosestPoint(point: Vector3, bounds: BoundingBox): Vector3 {
         return Vector3(
-            // This is fucking insane, but coerceIn fucking ends up turning these into infinity
-            // somehow. So yes a standard Kotlin function is bugged to shit. Good one.
-//            point.x.coerceIn(bounds.min.x, bounds.max.x),
-//            point.y.coerceIn(bounds.min.y, bounds.max.y),
-//            point.z.coerceIn(bounds.min.z, bounds.max.z)
-
+            // Use Java MathUtils clamp as Kotlin coerceIn is bugged and sends to infinity.
             MathUtils.clamp(point.x, bounds.min.x, bounds.max.x),
             MathUtils.clamp(point.y, bounds.min.y, bounds.max.y),
             MathUtils.clamp(point.z, bounds.min.z, bounds.max.z)
@@ -109,7 +101,7 @@ object AtlasUtils {
      * @param latLongZoom   Vector containing the latitude, longitude, and zoom level to find.
      * @return A vector containing the x, y, zoom values for the tile.
      */
-    fun latLongZoomToSlippyCoord(latLongZoom: Vector3) : Vector3 {
+    fun latLongZoomToSlippyCoord(latLongZoom: Vector3): Vector3 {
         // Tile lookup calculation from Open Street Map Wiki
         // [https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames]
         val n = 1 shl latLongZoom.z.toInt()
@@ -121,7 +113,7 @@ object AtlasUtils {
     /**
      * See [latLongZoomToSlippyCoord]
      */
-    fun latLongZoomToSlippyCoord(lat: Double, long: Double) : Vector3 {
+    fun latLongZoomToSlippyCoord(lat: Double, long: Double): Vector3 {
         // Tile lookup calculation from Open Street Map Wiki
         // [https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames]
         val n = 1 shl PIXEL_ZOOM.toInt()
@@ -137,7 +129,7 @@ object AtlasUtils {
      * @param xYZoom    Vector containing the x, y, zoom of a tile to get latitude and longitude of.
      * @return  A vector with the latitude, and longitude of the given tile.
      */
-    fun slippyCoordToLatLongZoom(xYZoom: Vector3) : Vector3 {
+    fun slippyCoordToLatLongZoom(xYZoom: Vector3): Vector3 {
         // Tile conversion calculation from Open Street Map Wiki
         // [https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames]
         val n = 1 shl xYZoom.z.toInt()

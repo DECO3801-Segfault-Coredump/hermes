@@ -1,7 +1,7 @@
 package com.decosegfault.hermes.types;
 
 /**
-* @author Lachlan Ellis
+ * @author Lachlan Ellis
  */
 public enum VehicleType {
     BUS,

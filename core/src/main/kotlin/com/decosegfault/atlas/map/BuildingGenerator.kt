@@ -1,15 +1,11 @@
 package com.decosegfault.atlas.map
 
-import com.badlogic.gdx.Gdx
-import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.GL20
 import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.graphics.VertexAttributes
 import com.badlogic.gdx.graphics.g3d.Material
-import com.badlogic.gdx.graphics.g3d.Model
 import com.badlogic.gdx.graphics.g3d.ModelCache
 import com.badlogic.gdx.graphics.g3d.ModelInstance
-import com.badlogic.gdx.graphics.g3d.Renderable
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder
 import com.badlogic.gdx.math.MathUtils
 import com.badlogic.gdx.math.Vector2
@@ -21,16 +17,13 @@ import com.decosegfault.atlas.util.Triangle
 import io.github.sebasbaumh.postgis.MultiPolygon
 import io.github.sebasbaumh.postgis.PGgeometry
 import io.github.sebasbaumh.postgis.Polygon
-import ktx.collections.isNotEmpty
 import net.mgsx.gltf.exporters.GLTFExporter
-import net.mgsx.gltf.scene3d.attributes.PBRColorAttribute
 import net.mgsx.gltf.scene3d.attributes.PBRTextureAttribute
 import org.postgresql.PGConnection
 import org.postgresql.geometric.PGpolygon
 import org.tinylog.kotlin.Logger
 import java.sql.DriverManager
 import java.sql.SQLException
-import java.util.UUID
 import java.util.concurrent.CompletableFuture
 
 /**
@@ -41,7 +34,7 @@ import java.util.concurrent.CompletableFuture
  */
 class BuildingGenerator : Disposable {
     private val conn = DriverManager.getConnection(DB_URI, DB_USERPASS, DB_USERPASS).apply {
-        with (this as PGConnection) {
+        with(this as PGConnection) {
             addDataType("geometry", PGgeometry::class.java)
             addDataType("polygon", PGpolygon::class.java)
         }
@@ -68,8 +61,6 @@ class BuildingGenerator : Disposable {
         // convert to WGS84 lat/long
         val minWGS84 = AtlasUtils.atlasToLatLong(min)
         val maxWGS84 = AtlasUtils.atlasToLatLong(max)
-//        Logger.debug("Min Atlas: $min, Min WGS84: $minWGS84 (lat/long)")
-//        Logger.debug("Max Atlas: $max, Max WGS84: $maxWGS84 (lat/long)")
 
         // PostGIS requires lon/lat order, but we have lat/lon, hence we supply y,x
         statement.setFloat(1, minWGS84.y)
@@ -83,7 +74,6 @@ class BuildingGenerator : Disposable {
                 val id = result.getLong(1)
                 val geometry = result.getObject(2) as PGgeometry
                 val floors = result.getInt(3)
-//                Logger.debug("ID: $id, geom: $geometry, floors: $floors")
 
                 // extract all polygons from PostGIS
                 val pgPolys = mutableListOf<Polygon>()

@@ -30,14 +30,19 @@ import java.util.concurrent.ConcurrentHashMap
 class AtlasVehicle(private val modelHigh: SceneAsset, private val modelLow: SceneAsset, val name: String = "") {
     /** actual transform of the vehicle shared between model instances */
     val transform = Matrix4()
+
     /** original bbox for the model itself */
     private val bboxOrig = BoundingBox()
+
     /** transformed bbox for current model */
     val bbox = BoundingBox()
+
     /** true if the vehicle was culled in the last render pass */
     var didCull = false
+
     /** true if the vehicle used low LoD model in the last render pass */
     var didUseLowLod = false
+
     /** If true, force this vehicle to be hidden */
     var hidden = false
 
@@ -107,13 +112,13 @@ class AtlasVehicle(private val modelHigh: SceneAsset, private val modelLow: Scen
     fun debug(render: ShapeRenderer) {
         if (didCull || hidden) return
         render.color = if (didUseLowLod) Color.GREEN else Color.RED
-        render.box(bbox.min.x , bbox.min.y, bbox.max.z, bbox.width, bbox.height, bbox.depth)
+        render.box(bbox.min.x, bbox.min.y, bbox.max.z, bbox.width, bbox.height, bbox.depth)
     }
 
     fun draw(render: ShapeRenderer, selected: Boolean) {
         if (didCull || hidden) return
         render.color = if (selected) Color.valueOf("#00de30") else Color.valueOf("#0d0063")
-        render.box(bbox.min.x , bbox.min.y, bbox.max.z, bbox.width, bbox.height, bbox.depth)
+        render.box(bbox.min.x, bbox.min.y, bbox.max.z, bbox.width, bbox.height, bbox.depth)
     }
 
     /** @return The model to render, or null if we should not render this vehicle */

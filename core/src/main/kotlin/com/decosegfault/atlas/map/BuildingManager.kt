@@ -1,10 +1,8 @@
 package com.decosegfault.atlas.map
 
 import com.badlogic.gdx.graphics.Camera
-import com.badlogic.gdx.math.Vector3
 import com.decosegfault.atlas.render.GraphicsPreset
 import com.decosegfault.atlas.util.AtlasUtils
-import org.tinylog.Logger
 import kotlin.math.pow
 
 /**

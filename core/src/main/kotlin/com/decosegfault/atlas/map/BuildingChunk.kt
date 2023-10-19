@@ -3,7 +3,6 @@ package com.decosegfault.atlas.map
 import com.badlogic.gdx.graphics.Camera
 import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.g3d.ModelCache
-import com.badlogic.gdx.graphics.g3d.ModelInstance
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.math.Vector3
@@ -61,7 +60,7 @@ class BuildingChunk(val x: Float, val z: Float, val size: Float) {
         if (size <= targetSize) {
             allChunks.add(this)
 
-            //  Not at target yet, add all sub-chunks at size.
+            // Not at target yet, add all sub-chunks at size.
         } else {
             for (chunk in subChunks) {
                 for (subChunk in chunk.getAllChunks()) {
@@ -80,7 +79,7 @@ class BuildingChunk(val x: Float, val z: Float, val size: Float) {
      * @param cam           The Scene camera to cull chunks in relation to.
      * @param graphics      The graphics preset to dictate culling amounts.
      */
-    fun getChunksCulled(targetSize: Float, cam: Camera, graphics: GraphicsPreset): MutableList<BuildingChunk>{
+    fun getChunksCulled(targetSize: Float, cam: Camera, graphics: GraphicsPreset): MutableList<BuildingChunk> {
         val allChunks = mutableListOf<BuildingChunk>()
         didCull = false
         didUseSubChunk = false

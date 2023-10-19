@@ -1,13 +1,13 @@
 package com.decosegfault.hermes;
 
-import java.util.*;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.math.Vector3;
+import com.decosegfault.atlas.render.AtlasVehicle;
 import com.decosegfault.atlas.util.AtlasUtils;
-import com.decosegfault.atlas.util.HPVector2;
 import com.decosegfault.atlas.util.HPVector3;
 import com.decosegfault.hermes.data.RouteData;
+import com.decosegfault.hermes.data.TripData;
 import com.decosegfault.hermes.data.VehicleData;
 import com.decosegfault.hermes.frontend.FrontendData;
 import com.decosegfault.hermes.frontend.FrontendEndpoint;
@@ -17,13 +17,10 @@ import com.decosegfault.hermes.types.SimType;
 import com.decosegfault.hermes.types.VehicleType;
 import org.onebusaway.gtfs.impl.GtfsDaoImpl;
 import org.onebusaway.gtfs.model.*;
-import org.tinylog.Logger;
-import com.decosegfault.atlas.render.AtlasVehicle;
 import org.onebusaway.gtfs.serialization.GtfsReader;
-import org.onebusaway.gtfs.model.Route;
-import org.onebusaway.gtfs.model.Trip;
-import com.decosegfault.hermes.data.TripData;
+import org.tinylog.Logger;
 import java.io.IOException;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -48,7 +45,6 @@ public class HermesSim {
     /** time of day will be in seconds, max 86400 (one day) before looping back to 0 */
     public static double time = 0;
     public static double MAX_TIME = 86400;
-//    static float baseTime = 44100;
     static float speed = 10f;
     public static final List<TripData> vehiclesToCreate = new ArrayList<>();
     public static LiveDataFeed liveDataFeed = new LiveDataFeed();
@@ -71,9 +67,6 @@ public class HermesSim {
     public static void tick(float delta) {
         if (System.getProperty("nohermes") != null) return;
         time = (time + (delta * speed)) % MAX_TIME;
-//        Logger.warn("Time: {} {}", floatTime, time);
-//        Logger.warn("tell me your mf length {}", vehicleMap.size());
-        int tripsActive = 0;
 
         frontendData = new FrontendData();
 
@@ -86,7 +79,7 @@ public class HermesSim {
 
             for (Map.Entry<String, VehicleData> entry : liveDataFeed.vehicleDataMap.entrySet()) {
                 String tripID = entry.getKey();
-                if (!vehicleMap.containsKey(tripID)){
+                if (!vehicleMap.containsKey(tripID)) {
                     VehicleType type = entry.getValue().vehicleType;
                     String routeID = liveDataFeed.tripIDMap.get(tripID);
                     String name = RouteHandler.routes.get(routeID).routeName;
@@ -151,10 +144,7 @@ public class HermesSim {
             });
         }
 
-//        Logger.warn("Trips Loaded: {}, {} active", vehicleMap.size(), tripsActive);
         // transmit data to the frontend
-//        frontendData = AtlasUtils.INSTANCE.fillWithJunk(frontendData);
-
         frontendData.setInterestPoints(HermesSim.brisbaneOlympics);
         frontendData.setBusesInInterest(affectedRoutes.stream().toList());
         frontendData.setRouteExpectedReals(expectedReals);
@@ -235,28 +225,14 @@ public class HermesSim {
             read();
         }
 
-        //placeholder
         RouteHandler.sortShapes();
         RouteHandler.initTrips();
-        //RouteHandler.logRoutes();
-//        RouteHandler.logTrips();
-        //RouteHandler.logShapes();
         Logger.warn("Trips Loaded: {}", RouteHandler.tripsbyID.size());
         Logger.info("Linking Hermes-Atlas vehicles");
-//	    for (TripData trip : RouteHandler.tripsbyID.values()) {
-//	        if (trip.vehicle == null || trip.vehicle.vehicleType == null) {
-//                Logger.warn("Null trip vehicle! {} {}", trip.routeName, trip.routeID);
-//                continue;
-//            }
-//            var vehicle = AtlasVehicle.Companion.createFromHermes(trip.vehicle.vehicleType);
-//            vehicleMap.put(trip.routeID, vehicle);
-//
-//        }
-
         Logger.info("GTFS Data Loaded");
     }
 
-    public static void read()  {
+    public static void read() {
         GtfsReader reader = new GtfsReader();
         try {
             // gtfs.zip is internal, extract it to /tmp so that the file reader can read it
@@ -272,16 +248,9 @@ public class HermesSim {
             throw new IllegalArgumentException(noFile);
         }
 
-        /**
-         * You can register an entity handler that listens for new objects as they
-         * are read
-         */
-//        reader.addEntityHandler(new GtfsEntityHandler());
+        // You can register an entity handler that listens for new objects as they are read.
+        // Or you can use the internal entity store, which has references to all the loaded entities.
 
-        /**
-         * Or you can use the internal entity store, which has references to all the
-         * loaded entities
-         */
         GtfsDaoImpl store = new GtfsDaoImpl();
         reader.setEntityStore(store);
 
@@ -296,7 +265,7 @@ public class HermesSim {
             AgencyAndId.class, Route.class);
 
         Map<AgencyAndId, Trip> tripsById = store.getEntitiesByIdForEntityType(
-                AgencyAndId.class, Trip.class);
+            AgencyAndId.class, Trip.class);
 
         Map<AgencyAndId, ShapePoint> shapesById = null;
         Map<AgencyAndId, StopTime> stopTimesById = null;
@@ -344,19 +313,5 @@ public class HermesSim {
     public static void shutdown() {
         server.stop();
     }
-
-
-
-//    private static class GtfsEntityHandler implements EntityHandler {
-//
-//        public void handleEntity(Object bean) {
-//            if (bean instanceof Route) {
-//                RouteHandler.addRoute((Route) bean);
-//            }
-//            if (bean instanceof Trip) {
-//                RouteHandler.addTrip((Trip) bean);
-//            }
-//        }
-//    }
 }
 

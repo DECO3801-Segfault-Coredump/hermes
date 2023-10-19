@@ -80,7 +80,6 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
         fieldOfView = 75f
         near = 0.5f
         far = max(graphics.tileDrawDist, graphics.vehicleDrawDist) * 20
-//        rotate(Vector3.X, -90f)
         translate(0f, 300f, 0f)
         update()
     }
@@ -210,8 +209,6 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
         sceneManager.environment.set(PBRTextureAttribute(PBRTextureAttribute.BRDFLUTTexture, brdfLut))
         sceneManager.environment.set(PBRCubemapAttribute.createSpecularEnv(specularCubemap))
         sceneManager.environment.set(PBRCubemapAttribute.createDiffuseEnv(diffuseCubemap))
-//        sceneManager.environment.set(ColorAttribute(ColorAttribute.Fog, Color.GRAY))
-//        sceneManager.environment.set(FogAttribute(FogAttribute.FogEquation).set(1f, 2000f, 8f))
 
         // setup skybox
         sceneManager.skyBox = SceneSkybox(environmentCubemap)
@@ -252,7 +249,6 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
 
         createTextUI()
         initialise3D()
-//        constructBenchmarkScene()
         initialiseHermes()
 
         mux.addProcessor(camController)
@@ -443,7 +439,7 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
      * Calculates the time of current buses being displayed.
      * Live time for live data, and or historical time.
      */
-    private fun calculateTime() : String {
+    private fun calculateTime(): String {
         if (RouteHandler.simType == SimType.LIVE) {
             return java.time.LocalTime.now().format(TIME_FORMATTER)
         }
@@ -471,7 +467,7 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
     override fun resize(width: Int, height: Int) {
         stage.viewport.update(width, height, true)
         cameraViewport.update(width, height, true)
-                stage.camera.update()
+        stage.camera.update()
     }
 
     override fun hide() {

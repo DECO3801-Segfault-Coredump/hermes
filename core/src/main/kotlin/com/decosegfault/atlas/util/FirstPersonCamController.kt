@@ -4,10 +4,8 @@ import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.Input
 import com.badlogic.gdx.InputAdapter
 import com.badlogic.gdx.graphics.PerspectiveCamera
-import com.badlogic.gdx.math.MathUtils
 import com.badlogic.gdx.math.Quaternion
 import com.badlogic.gdx.math.Vector3
-import ktx.math.unaryMinus
 
 /**
  * This is a port of ThreeJS PointerLockControls:
@@ -52,8 +50,6 @@ class FirstPersonCamController(private val cam: PerspectiveCamera) : InputAdapte
         val movementX = Gdx.input.deltaX.toFloat()
         val movementY = Gdx.input.deltaY.toFloat()
 
-        // TODO for some reason, I feel like pitch speed gets faster when its closer to zero?
-
         var pitch = quat.pitch
         val roll = quat.roll
         var yaw = quat.yaw
@@ -68,6 +64,7 @@ class FirstPersonCamController(private val cam: PerspectiveCamera) : InputAdapte
         // we want to SET the rotation of the camera, so first reset direction and up
         cam.direction.set(0f, 0f, -1f)
         cam.up.set(0f, 1f, 0f)
+
         // now we can actually apply the rotation
         cam.rotate(quat)
         cam.normalizeUp()

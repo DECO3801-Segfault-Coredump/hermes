@@ -7,7 +7,7 @@ import javax.websocket.Decoder;
 import javax.websocket.EndpointConfig;
 
 public class FrontendDataDecoder implements Decoder.Text<FrontendData> {
-    private Gson gson = new Gson();
+    private final Gson gson = new Gson();
 
     @Override
     public FrontendData decode(String s) throws DecodeException {

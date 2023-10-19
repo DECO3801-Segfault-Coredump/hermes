@@ -38,7 +38,7 @@ data class Tile(val x: Float, val z: Float, val size: Float, val tileLookup : Ve
     var didUseSubTiles = false
 
     /** Decal display of tile */
-    private var decal : Decal? = null
+    private var decal: Decal? = null
 
     private var connectedSubs = mutableListOf<Tile>()
 
@@ -48,9 +48,8 @@ data class Tile(val x: Float, val z: Float, val size: Float, val tileLookup : Ve
     private var subTiles = mutableListOf<Tile>()
 
     init {
-        val minX = x
-        val minZ = z
-        bbox = BoundingBox(Vector3(minX - 64, 0f, minZ - 64), Vector3(minX + size + 64, 0f, minZ + size + 64))
+        bbox = BoundingBox(Vector3(x - 64, 0f, z - 64),
+            Vector3(x + size + 64, 0f, z + size + 64))
     }
 
     /**
@@ -87,17 +86,16 @@ data class Tile(val x: Float, val z: Float, val size: Float, val tileLookup : Ve
         q2.addConnectedSubs(subTiles)
         q3.addConnectedSubs(subTiles)
         q4.addConnectedSubs(subTiles)
-
-
     }
 
     /** Return the decal that represents this tile */
     fun getDecal(): Decal? {
-        // If first time rendering, generate the decal.
+        // We don't need this tile yet, skip for now
         if (!shouldDraw) {
             return null
         }
 
+        // If first time rendering, generate the decal.
         if (decal == null) {
             generateDecal()
             setDrawAllConnected(false)
@@ -107,11 +105,11 @@ data class Tile(val x: Float, val z: Float, val size: Float, val tileLookup : Ve
         return decal
     }
 
-    fun addConnectedSubs(connectedTiles : MutableList<Tile>) {
+    private fun addConnectedSubs(connectedTiles: MutableList<Tile>) {
         this.connectedSubs = connectedTiles
     }
 
-    private fun setDraw(shouldDraw : Boolean){
+    private fun setDraw(shouldDraw: Boolean) {
         this.shouldDraw = shouldDraw
     }
 
@@ -180,7 +178,7 @@ data class Tile(val x: Float, val z: Float, val size: Float, val tileLookup : Ve
      *
      * @return All the sub-tiles at given scale that haven't been culled
      */
-    fun getTilesCulledHeightScaled(height: Float, cam: Camera, graphics: GraphicsPreset):  MutableList<Tile>{
+    fun getTilesCulledHeightScaled(height: Float, cam: Camera, graphics: GraphicsPreset): MutableList<Tile> {
         val allTiles = mutableListOf<Tile>()
         didCull = false
         didUseSubTiles = false
@@ -197,7 +195,7 @@ data class Tile(val x: Float, val z: Float, val size: Float, val tileLookup : Ve
         }
 
         val distance = 2.0.pow((dist / AtlasUtils.MAX_DIST).toInt()).toFloat()
-        val size =  AtlasUtils.MIN_SIZE * distance
+        val size = AtlasUtils.MIN_SIZE * distance
 
         // We are at correct resolution, draw this tile. Base Case
         if (this.size <= size) {
@@ -232,72 +230,6 @@ data class Tile(val x: Float, val z: Float, val size: Float, val tileLookup : Ve
         }
         return allTiles
     }
-
-//    /**
-//     * Get all sub-tiles that make up tile at a given resolution,
-//     * but apply culling methods to reduce amount to only desired.
-//     *
-//     * @param intersection  Position of camera ray with ground plane.
-//     * @param cam           Scene camera to cull in relation to.
-//     * @param graphics      Graphics preset to dictate culling amount.
-//     *
-//     * @return All the sub-tiles at given scale that haven't been culled
-//     */
-//    fun getTilesCulled(intersection: Vector3, cam: Camera, graphics: GraphicsPreset):  MutableList<Tile>{
-//        val allTiles = mutableListOf<Tile>()
-//        didCull = false
-//        didUseSubTiles = false
-//        shouldDraw = true
-//
-//        // Check iff tile can be culled
-//        val closestPoint = AtlasUtils.bboxClosestPoint(cam.position, bbox)
-//        val dist = cam.position.dst(closestPoint)
-//        if (dist >= graphics.tileDrawDist || !cam.frustum.boundsInFrustum(bbox)) {
-//            didCull = true
-//            decal = null
-//            subTiles.clear()
-//            return allTiles
-//        }
-//
-//        val rayDist = intersection.dst(closestPoint)
-//        val distance = 2.0.pow((rayDist / MAX_DIST).toInt()).toFloat()
-//        val size = MIN_SIZE * distance
-//        println(size)
-//
-//        // We are at correct resolution, draw this tile. Base Case
-//        if (this.size <= size) {
-//            // tell the GCTileCache that we are in use
-//            generateDecal()
-//            GCTileCache.markUsed(tileLookup)
-//            allTiles.add(this)
-//        }
-//
-//        // Can get more detailed, check them all and see
-//        if (this.size > size) {
-//
-//            // Dynamically create sub-tiles if not saved.
-//            if (subTiles.size == 0) {
-//                generateSubTiles(size)
-//            }
-//
-//            if (this.size != size * 2) {
-//                this.decal = null
-//            } else {
-//                generateDecal()
-//                GCTileCache.markUsed(tileLookup)
-//            }
-//
-//            // Add sub-tiles sub-tiles
-//            for (tile in subTiles) {
-//                didUseSubTiles = true
-//                for (subTile in tile.getTilesCulled(size, cam, graphics)) {
-//                    allTiles.add(subTile)
-//                }
-//            }
-//        }
-//        return allTiles
-//    }
-
 
     /** Clean up tile and all corresponding sub-tiles */
     override fun dispose() {

@@ -5,8 +5,6 @@ import com.badlogic.gdx.math.Polygon
 import com.badlogic.gdx.math.Vector2
 import com.decosegfault.atlas.util.AtlasUtils
 import com.decosegfault.atlas.util.Triangle
-import org.tinylog.kotlin.Logger
-import java.lang.IllegalStateException
 
 /**
  * An OpenStreetMap building
@@ -25,7 +23,7 @@ data class Building(
     // we were using Delaunay triangulation before but there appears to be an infinite loop
     // on Westfield Chermside lmao (OSM ID 10072620)
     private val triangulator = EarClippingTriangulator()
-//    private val triangulator = DelaunayTriangulator()
+
     private var isAtlas = false
 
     /** Triangulates the polygons in this building. Returns a list of triangles for each polygon (so a list of lists). */

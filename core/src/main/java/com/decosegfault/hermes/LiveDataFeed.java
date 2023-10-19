@@ -1,23 +1,19 @@
 package com.decosegfault.hermes;
 
 import com.decosegfault.atlas.util.HPVector3;
-import com.decosegfault.hermes.data.RouteData;
-import com.decosegfault.hermes.data.TripData;
 import com.decosegfault.hermes.data.VehicleData;
-import com.decosegfault.hermes.frontend.FrontendData;
 import com.decosegfault.hermes.types.VehicleType;
 import com.google.transit.realtime.GtfsRealtime;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.sql.Timestamp;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
 /**
  * Retrieves and stores live vehicle data
+ *
  * @author Cathy Nguyen
  * @author Lachlan Ellis
  */
@@ -52,9 +48,6 @@ public class LiveDataFeed {
     public GtfsRealtime.FeedMessage getVehiclePositionsFeed() {
         return vehiclePositionsFeed;
     }
-
-
-
 
 
     public void update() {

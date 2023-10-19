@@ -1,11 +1,9 @@
 package com.decosegfault.hermes.data;
 
+import com.decosegfault.hermes.types.VehicleType;
+
 import java.util.ArrayList;
 import java.util.List;
-import java.util.HashMap;
-import java.util.Map;
-
-import com.decosegfault.hermes.types.VehicleType;
 
 /**
  * @author Lachlan Ellis
@@ -23,6 +21,7 @@ public class RouteData {
             default -> routeType = VehicleType.BUS;
         }
     }
+
     public void tick() {
 
     }

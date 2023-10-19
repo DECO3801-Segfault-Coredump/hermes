@@ -8,7 +8,7 @@ import com.decosegfault.atlas.screens.SimulationScreen
 import com.decosegfault.atlas.util.AbstractGarbageCollectedCache
 import ktx.assets.disposeSafely
 import org.tinylog.kotlin.Logger
-import java.util.concurrent.*
+import java.util.concurrent.CompletableFuture
 
 /** **Soft** limit of tiles in VRAM, size will be approx 100 KiB * this */
 private const val MAX_TILES_RAM = 4096.0

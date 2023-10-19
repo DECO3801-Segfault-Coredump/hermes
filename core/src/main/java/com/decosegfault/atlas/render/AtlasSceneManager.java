@@ -1,7 +1,10 @@
 package com.decosegfault.atlas.render;
 
 import com.badlogic.gdx.graphics.Camera;
-import com.badlogic.gdx.graphics.g3d.*;
+import com.badlogic.gdx.graphics.g3d.Attribute;
+import com.badlogic.gdx.graphics.g3d.Environment;
+import com.badlogic.gdx.graphics.g3d.ModelBatch;
+import com.badlogic.gdx.graphics.g3d.RenderableProvider;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.attributes.DirectionalLightsAttribute;
 import com.badlogic.gdx.graphics.g3d.attributes.PointLightsAttribute;
@@ -20,8 +23,8 @@ import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Disposable;
 import com.decosegfault.atlas.map.BuildingChunk;
 import com.decosegfault.atlas.map.BuildingManager;
-import com.decosegfault.atlas.map.TileManager;
 import com.decosegfault.atlas.map.Tile;
+import com.decosegfault.atlas.map.TileManager;
 import net.mgsx.gltf.scene3d.attributes.PBRMatrixAttribute;
 import net.mgsx.gltf.scene3d.lights.DirectionalShadowLight;
 import net.mgsx.gltf.scene3d.lights.PointLightEx;
@@ -210,7 +213,9 @@ public class AtlasSceneManager implements Disposable {
         }
     }
 
-    /** Only used for debug in UVTexturingScreen, updates models directly */
+    /**
+     * Only used for debug in UVTexturingScreen, updates models directly
+     */
     public void updateDirect(float delta, Collection<RenderableProvider> renderables) {
         renderableProviders.clear();
         for (RenderableProvider p : renderables) {
@@ -300,6 +305,7 @@ public class AtlasSceneManager implements Disposable {
 
     /**
      * Returns the rate for the given metric
+     *
      * @param metric which metric to query
      * @return the percentage of total vehicles this metric occupies
      */
@@ -392,8 +398,6 @@ public class AtlasSceneManager implements Disposable {
 
         renderShadows();
 
-        //renderMirror(); // Matt: shouldn't be necessary in Atlas
-
         renderTransmission();
 
         renderColors();
@@ -469,7 +473,7 @@ public class AtlasSceneManager implements Disposable {
     public void renderDecal() {
         if (decalBatch == null) return;
 
-        for (Decal decal: tileDecals) {
+        for (Decal decal : tileDecals) {
             decalBatch.add(decal);
         }
 
@@ -522,7 +526,7 @@ public class AtlasSceneManager implements Disposable {
     /**
      * Sets the tile manager to used for ground plane.
      *
-     * @param tileManager  Tile manager instance to use.
+     * @param tileManager Tile manager instance to use.
      */
     public void setTileManager(TileManager tileManager) {
         this.tileManager = tileManager;
@@ -530,6 +534,7 @@ public class AtlasSceneManager implements Disposable {
 
     /**
      * Sets the building manager
+     *
      * @param buildingManager New building manager instance
      */
     public void setBuildingManager(BuildingManager buildingManager) {
