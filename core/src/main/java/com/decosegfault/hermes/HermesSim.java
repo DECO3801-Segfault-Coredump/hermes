@@ -173,6 +173,7 @@ public class HermesSim {
         } else {
             for (Map.Entry<String, TripData> entry : RouteHandler.tripsbyID.entrySet()) {
                 String routeName = entry.getValue().routeName;
+                if (entry.getValue().vehicle.hidden) continue;
                 if (routeFrequency.containsKey(routeName)) {
                     Integer count = routeFrequency.get(routeName);
                     routeFrequency.put(routeName, count + 1);
