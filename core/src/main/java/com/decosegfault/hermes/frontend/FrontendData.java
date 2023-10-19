@@ -21,6 +21,9 @@ public class FrontendData {
     // number of vehicles in the entire simulation per type (pie chart)
     private Map<String, Integer> vehicleTypes;
 
+    // expected vs real route arrival time
+    private List<RouteExpectedReal> routeExpectedReals;
+
     public Map<String, HPVector3> getInterestPoints() {
         return interestPoints;
     }
@@ -51,5 +54,13 @@ public class FrontendData {
 
     public void setVehicleTypes(Map<String, Integer> vehicleTypes) {
         this.vehicleTypes = vehicleTypes;
+    }
+
+    public List<RouteExpectedReal> getRouteExpectedReals() {
+        return routeExpectedReals;
+    }
+
+    public void setRouteExpectedReals(List<RouteExpectedReal> routeExpectedReals) {
+        this.routeExpectedReals = routeExpectedReals;
     }
 }

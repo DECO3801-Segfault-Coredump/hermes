@@ -4,6 +4,7 @@ import com.badlogic.gdx.math.*
 import com.badlogic.gdx.math.collision.BoundingBox
 import com.decosegfault.hermes.HermesSim
 import com.decosegfault.hermes.frontend.FrontendData
+import com.decosegfault.hermes.frontend.RouteExpectedReal
 import org.tinylog.kotlin.Logger
 import java.nio.file.Paths
 import kotlin.io.path.createFile
@@ -203,6 +204,15 @@ object AtlasUtils {
         frontendData.busesInInterest = listOf(buses.random(), buses.random(), buses.random())
         frontendData.routeFrequency = mapOf(Pair(buses.random(), Random.nextInt(420)), Pair(buses.random(), Random.nextInt(1337)))
         frontendData.vehicleTypes = mapOf(Pair("Train", Random.nextInt(420)), Pair("Bus", Random.nextInt(69)), Pair("Ferry", Random.nextInt(10)))
+
+        val expectedReal1 = RouteExpectedReal().apply {
+            actualTime = Random.nextInt(69).toDouble()
+            expectedTime = Random.nextInt(69).toDouble()
+            routeName = buses.random()
+        }
+
+        frontendData.routeExpectedReals = listOf(expectedReal1)
+
         return frontendData
     }
 }
