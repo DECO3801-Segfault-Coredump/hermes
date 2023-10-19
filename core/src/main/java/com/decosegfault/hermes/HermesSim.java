@@ -54,7 +54,7 @@ public class HermesSim {
 
     public static FrontendData frontendData;
 
-    public static Map<String, String> affectedRoutes = new HashMap<>();
+    public static List<List<String>> affectedRoutes = new ArrayList<>();
 
     public static List<RouteExpectedReal> expectedReals = new ArrayList<>();
 
