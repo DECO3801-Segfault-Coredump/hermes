@@ -39,8 +39,8 @@ public class HermesSim {
             put("Brisbane Entertainment Centre", new HPVector3(-27.3422, 153.0704, 700.0));
             put("The Gabba", new HPVector3(-27.4858, 153.0381, 450.0));
             put("Emporium Hotel Southbank", new HPVector3(-27.481382543911, 153.02309927206, 300.0));
-            put("Central Station", new HPVector3(-27.4662, 153.0262, 200.0));
-            put("Roma Street Busway Station", new HPVector3(-27.275829, 153.010703, 100.0));
+            put("Central Station", new HPVector3(-27.465646,153.026133, 300.0));
+            put("Roma Street Busway Station", new HPVector3(-27.465342,153.019088, 300.0));
         }
     };
     private static FrontendServer server;
