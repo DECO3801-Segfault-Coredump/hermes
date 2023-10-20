@@ -19,6 +19,7 @@ import kotlin.math.*
 import kotlin.random.Random
 
 /**
+ * Various utilities used across the Atlas rendering system.
  * @author Matt Young
  * @author Henry Batt
  * @author Various (see comments)

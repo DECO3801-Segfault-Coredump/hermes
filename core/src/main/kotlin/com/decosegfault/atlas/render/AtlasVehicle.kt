@@ -22,10 +22,10 @@ import java.util.concurrent.ConcurrentHashMap
 /**
  * Atlas's representation of a vehicle, includes gdx-gltf high detail and low detail models and bounding box.
  *
- * @author Matt Young
- * @author Henry Batt
  * @param modelHigh high poly 3D model
  * @param modelLow low poly 3D model
+ * @author Matt Young
+ * @author Henry Batt
  */
 class AtlasVehicle(private val modelHigh: SceneAsset, private val modelLow: SceneAsset, val name: String = "") {
     /** actual transform of the vehicle shared between model instances */

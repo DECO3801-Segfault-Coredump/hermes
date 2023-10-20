@@ -5,7 +5,10 @@ import com.badlogic.gdx.math.MathUtils
 import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.math.Vector3
 
-/** @author Matt Young */
+/**
+ * A 2D triangle geometry which can be extruded into 3D.
+ * @author Matt Young
+ */
 data class Triangle(
     val v1: Vector2,
     val v2: Vector2,
@@ -32,7 +35,11 @@ data class Triangle(
         return Vector2(u, v)
     }
 
+    /**
+     * @see [extrudeUpToPrismMesh]
+     */
     fun extrudeUpToPrismMesh(mpb: MeshPartBuilder, height: Float) {
+        // UVs computed in UVTexturingScreen
         val uvs: Array<Vector2?> = arrayOf(
             Vector2(1.0f, 1.0f),
             Vector2(0.62f, 1.0f),

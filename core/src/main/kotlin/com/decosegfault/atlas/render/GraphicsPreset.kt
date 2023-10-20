@@ -10,6 +10,7 @@ package com.decosegfault.atlas.render
  * @param msaa MSAA samples
  * @param shadows true/false should shadows be rendered
  * @param workPerFrame number of items from SimulationScreen.WORK_QUEUE to process per frame
+ *
  * @author Matt Young
  */
 data class GraphicsPreset(
