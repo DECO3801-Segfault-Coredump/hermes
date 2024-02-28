@@ -93,7 +93,7 @@ abstract class AbstractGarbageCollectedCache<K, V>(
             return
         }
 
-        // check if a pending fetch is in progress, and if so, tell caller to fuck off
+        // check if a pending fetch is in progress, and if so, tell caller to sod off
         if (pendingFetches.contains(item)) return
         pendingFetches.add(item)
 
