@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023 DECO3801 Team Segmentation fault (core dumped).
+ *
+ * See the "@author" comment for who retains the copyright on this file.
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
+
 package com.decosegfault.atlas.screens
 
 import com.badlogic.gdx.*
@@ -58,6 +68,7 @@ import kotlin.system.measureNanoTime
 class SimulationScreen(private val game: Game) : ScreenAdapter() {
     private val graphics = GraphicsPresets.getSavedGraphicsPreset()
 
+    /** GL30 profiler */
     private val profiler = GLProfiler(Gdx.graphics as Lwjgl3Graphics)
 
     /** UI stage */
@@ -65,15 +76,19 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
 
     /** Debug text */
     private lateinit var debugLabel: Label
+
     private val mux = InputMultiplexer()
 
     /** Status text */
     private lateinit var statusLabel: Label
 
+    /** Current selected vehicle */
     private var selectedVehicle: AtlasVehicle? = null
 
+    /** True if we are following a vehicle, else false */
     private var followingBus = false
 
+    /** If true, show crosshair and bounding boxes */
     private var showUIAdjustments = true
 
     private val cam = PerspectiveCamera().apply {
@@ -88,6 +103,7 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
 
     /** Viewport for main 3D camera */
     private val cameraViewport = ExtendViewport(1920f, 1080f, cam)
+
     private lateinit var sceneManager: AtlasSceneManager
 
     /** The sun light */
@@ -112,12 +128,16 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
 
     private val batch = SpriteBatch()
 
+    /** Time it took Hermes to compute in ms */
     private var hermesDelta = 0f
 
+    /** Gdx.graphics.deltaTime statistics (mean, median, etc) */
     private val deltaWindow = DescriptiveStatistics(1024)
 
+    /** Crosshair UI */
     private lateinit var crosshairContainer: Table
 
+    /** Create Scene2D UI elements */
     private fun createTextUI() {
         // hack to use linear scaling instead of nearest neighbour for text
         // makes the text slightly less ugly, but ideally we should use FreeType
@@ -184,11 +204,12 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
         stage.addActor(osmContainer)
     }
 
-    // based on:
-    // - https://github.com/mgsx-dev/gdx-gltf/blob/master/demo/core/src/net/mgsx/gltf/examples/GLTFQuickStartExample.java
-    // - https://github.com/UQRacing/gazilla/blob/master/core/src/main/kotlin/com/uqracing/gazilla/client/screens/SimulationScreen.kt
-    // -     (this is my [Matt's] own code from a previous project)
+    /** Initialise 3D rendering system */
     private fun initialise3D() {
+        // based on:
+        // - https://github.com/mgsx-dev/gdx-gltf/blob/master/demo/core/src/net/mgsx/gltf/examples/GLTFQuickStartExample.java
+        // - https://github.com/UQRacing/gazilla/blob/master/core/src/main/kotlin/com/uqracing/gazilla/client/screens/SimulationScreen.kt
+        // -     (this is my [Matt's] own code from a previous project)
         sceneManager = AtlasSceneManager(graphics)
         sceneManager.setCamera(cam)
 
@@ -228,6 +249,7 @@ class SimulationScreen(private val game: Game) : ScreenAdapter() {
         Logger.info("GL version: ${v.majorVersion}.${v.minorVersion}.${v.releaseVersion} vendor: ${v.vendorString} renderer: ${v.rendererString}")
     }
 
+    /** Initialise Hermes simulator */
     private fun initialiseHermes() {
         // tell Hermes to tick every 100 ms, in its own thread asynchronously, so we don't block the renderer
         Logger.info("Hermes tick rate: $HERMES_TICK_RATE ms (delta: $HERMES_DELTA s)")

@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023 DECO3801 Team Segmentation fault (core dumped).
+ *
+ * See the "@author" comment for who retains the copyright on this file.
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
+
 package com.decosegfault.atlas.render
 
 import com.badlogic.gdx.graphics.Camera
@@ -22,10 +32,10 @@ import java.util.concurrent.ConcurrentHashMap
 /**
  * Atlas's representation of a vehicle, includes gdx-gltf high detail and low detail models and bounding box.
  *
- * @author Matt Young
- * @author Henry Batt
  * @param modelHigh high poly 3D model
  * @param modelLow low poly 3D model
+ * @author Matt Young
+ * @author Henry Batt
  */
 class AtlasVehicle(private val modelHigh: SceneAsset, private val modelLow: SceneAsset, val name: String = "") {
     /** actual transform of the vehicle shared between model instances */

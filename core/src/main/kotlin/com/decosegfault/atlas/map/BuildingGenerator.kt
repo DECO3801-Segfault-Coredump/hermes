@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023 DECO3801 Team Segmentation fault (core dumped).
+ *
+ * See the "@author" comment for who retains the copyright on this file.
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
+
 package com.decosegfault.atlas.map
 
 import com.badlogic.gdx.graphics.GL20
@@ -164,9 +174,6 @@ class BuildingGenerator : Disposable {
         val modelFuture = CompletableFuture<ModelInstance>()
         val modelRunnable = Runnable {
             val model = modelBuilder.end() // FIXME: memory leak here (need to free model)
-
-//            if (model.nodes.isNotEmpty())
-//                exporter.export(model, Gdx.files.absolute("/tmp/atlas_model_${model.hashCode().toHexString()}.gltf"))
 
             modelFuture.complete(ModelInstance(model))
         }

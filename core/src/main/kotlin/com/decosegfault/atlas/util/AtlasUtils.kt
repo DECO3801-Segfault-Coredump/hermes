@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023 DECO3801 Team Segmentation fault (core dumped).
+ *
+ * See the "@author" comment for who retains the copyright on this file.
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
+
 package com.decosegfault.atlas.util
 
 import com.badlogic.gdx.math.MathUtils
@@ -19,6 +29,7 @@ import kotlin.math.*
 import kotlin.random.Random
 
 /**
+ * Various utilities used across the Atlas rendering system.
  * @author Matt Young
  * @author Henry Batt
  * @author Various (see comments)
@@ -195,7 +206,7 @@ object AtlasUtils {
         val buses = listOf("69", "420", "1337", "NHAM", "CATHY", "CONNOR", "train")
 
         frontendData.interestPoints = HermesSim.brisbaneOlympics
-        frontendData.busesInInterest = listOf(buses.random(), buses.random(), buses.random())
+//        frontendData.busesInInterest = mapOf(buses.random(), buses.random(), buses.random())
         frontendData.routeFrequency = mapOf(Pair(buses.random(), Random.nextInt(420)), Pair(buses.random(), Random.nextInt(1337)))
         frontendData.vehicleTypes = mapOf(Pair("Train", Random.nextInt(420)), Pair("Bus", Random.nextInt(69)), Pair("Ferry", Random.nextInt(10)))
 

@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023 DECO3801 Team Segmentation fault (core dumped).
+ *
+ * See the "@author" comment for who retains the copyright on this file.
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
+
 package com.decosegfault.hermes;
 
 import com.badlogic.gdx.Gdx;
@@ -24,6 +34,9 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
+ * This is static class that acts as the interface for the simulator.
+ * Loads and handles all the data from GTFS Live and the imported GTFS data.
+ *
  * @author Lachlan Ellis
  * @author Matt Young
  * @author Henry Batt
@@ -36,8 +49,8 @@ public class HermesSim {
             put("Brisbane Entertainment Centre", new HPVector3(-27.3422, 153.0704, 700.0));
             put("The Gabba", new HPVector3(-27.4858, 153.0381, 450.0));
             put("Emporium Hotel Southbank", new HPVector3(-27.481382543911, 153.02309927206, 300.0));
-            put("Central Station", new HPVector3(-27.4662, 153.0262, 200.0));
-            put("Roma Street Busway Station", new HPVector3(-27.275829, 153.010703, 100.0));
+            put("Central Station", new HPVector3(-27.465646,153.026133, 300.0));
+            put("Roma Street Busway Station", new HPVector3(-27.465342,153.019088, 300.0));
         }
     };
     private static FrontendServer server;
@@ -51,7 +64,7 @@ public class HermesSim {
 
     public static FrontendData frontendData;
 
-    public static Set<String> affectedRoutes = new HashSet<>();
+    public static Map<List<String>, String> affectedRoutes = new HashMap<>();
 
     public static List<RouteExpectedReal> expectedReals = new ArrayList<>();
 
@@ -146,7 +159,7 @@ public class HermesSim {
 
         // transmit data to the frontend
         frontendData.setInterestPoints(HermesSim.brisbaneOlympics);
-        frontendData.setBusesInInterest(affectedRoutes.stream().toList());
+        frontendData.setBusesInInterest(affectedRoutes);
         frontendData.setRouteExpectedReals(expectedReals);
         frontendData.setRouteFrequency(calculateRouteFrequency());
         frontendData.setVehicleTypes(calculateVehicleTypes());
@@ -244,6 +257,11 @@ public class HermesSim {
         Logger.info("GTFS Data Loaded");
     }
 
+    /**
+     * This function reads the data from the offline GTFS data.
+     * The gtfs zip located in <project directory>/hermes/assets/hermes is the source of the data;
+     * this file must be overwritten to use user data.
+     */
     public static void read() {
         GtfsReader reader = new GtfsReader();
         try {
@@ -314,14 +332,23 @@ public class HermesSim {
         }
     }
 
+    /**
+     * Increases the sim speed.
+     */
     public static void increaseSpeed() {
         speed *= 2;
     }
 
+    /**
+     * Decreases the sim speed.
+     */
     public static void decreaseSpeed() {
         speed /= 2;
     }
 
+    /**
+     *
+     */
     public static void shutdown() {
         server.stop();
     }

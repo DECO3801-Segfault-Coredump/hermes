@@ -103,14 +103,14 @@ can try pass `-Ddebug` to the game to skip the launch prompts, which may unbreak
 will be easiest to run in IntelliJ.
 
 ## Licence
-Once the assessment is over, and pending group approval, this project will probably be open-sourced under the
-Mozilla Public License v2.0.
+The code written by us during the semster is licenced under the **Mozilla Public License v2.0**. See LICENSE.txt.
+Note that this applies _only_ to the code written by us, not any third party code, libraries or assets. Each
+file is written by one or more authors listed in the "@author" comments, who retain the copyright to that 
+specific file.
 
 Hermes and Atlas use open-source data and 3D models, which are available in 
-[atlas_data_raw](https://github.com/DECO3801-Segfault-Coredump/atlas_data_raw).
-The following copyright applies to them:
-
-**Attribution**
+[atlas_data_raw](https://github.com/DECO3801-Segfault-Coredump/atlas_data_raw). The following copyright applies 
+to them:
 
 - Translink GTFS data by Translink
     - CC Attribution
@@ -128,3 +128,7 @@ The following copyright applies to them:
 - Tow Boat (ferry model) by BoatUS Foundation
     - CC Attribution
     - https://sketchfab.com/3d-models/tow-boat-86939cf48b914951aa3c6ed2bc8bb446
+
+Please note that some of these are non-commercial licences only, which may be incompatible with the MPL 2.0
+when combined. If you want to make a fully legally valid end product, you will probably have to ship your
+own assets.

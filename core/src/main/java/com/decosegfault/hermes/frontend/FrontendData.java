@@ -1,3 +1,13 @@
+/*
+ * Copyright (c) 2023 DECO3801 Team Segmentation fault (core dumped).
+ *
+ * See the "@author" comment for who retains the copyright on this file.
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
+
 package com.decosegfault.hermes.frontend;
 
 import com.decosegfault.atlas.util.HPVector3;
@@ -10,7 +20,8 @@ public class FrontendData {
     private Map<String, HPVector3> interestPoints;
 
     // list of all the buses in the circles
-    private List<String> busesInInterest;
+//    private List<String> busesInInterest;
+    private Map<List<String>, String> busesInInterest;
 
     // number of each route per tick (Ex. 66s)
     private Map<String, Integer> routeFrequency;
@@ -29,11 +40,11 @@ public class FrontendData {
         this.interestPoints = interestPoints;
     }
 
-    public List<String> getBusesInInterest() {
+    public Map<List<String>, String> getBusesInInterest() {
         return busesInInterest;
     }
 
-    public void setBusesInInterest(List<String> busesInInterest) {
+    public void setBusesInInterest(Map<List<String>, String> busesInInterest) {
         this.busesInInterest = busesInInterest;
     }
 

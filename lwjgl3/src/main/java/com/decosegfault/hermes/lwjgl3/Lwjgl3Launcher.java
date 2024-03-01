@@ -82,7 +82,17 @@ public class Lwjgl3Launcher {
 
         Lwjgl3ApplicationConfiguration configuration = new Lwjgl3ApplicationConfiguration();
         configuration.setTitle("Hermes + Atlas (DECO3801)");
-        configuration.useVsync(System.getProperty("debug") == null); // release = vsync, debug = no vsync
+
+        // Enable vsync if we are on Mac in release mode
+        // VSync looks better on Mac (the game appears as if its lagging at high framerates otherwise)
+        if (System.getProperty("debug") == null) {
+            Logger.info("Debug mode, disabling vsync");
+            configuration.useVsync(false);
+        } else if (System.getProperty("os.name").toLowerCase().contains("mac")) {
+            Logger.info("Release mode, Mac, enabling vsync");
+            configuration.useVsync(true);
+        }
+
         // force the use of OpenGL 3.2 - if this causes the game to go nuclear, tag @Matt
 //        configuration.setOpenGLEmulation(Lwjgl3ApplicationConfiguration.GLEmulation.GL32, 3, 2);
         configuration.setWindowedMode(1600, 900);
