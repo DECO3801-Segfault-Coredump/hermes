@@ -85,7 +85,7 @@ public class Lwjgl3Launcher {
 
         // Enable vsync if we are on Mac in release mode
         // VSync looks better on Mac (the game appears as if its lagging at high framerates otherwise)
-        if (System.getProperty("debug") == null) {
+        if (System.getProperty("debug") != null) {
             Logger.info("Debug mode, disabling vsync");
             configuration.useVsync(false);
         } else if (System.getProperty("os.name").toLowerCase().contains("mac")) {
